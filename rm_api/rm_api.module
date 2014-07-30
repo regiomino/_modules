@@ -1,0 +1,333 @@
+<?php
+/**
+ * Method for creating new node objects.
+ *
+ * @param $type
+ * 		The content type of the node
+ *
+ * @param $title
+ *		The node title
+ *
+ * @param $lang
+ *		The language of the node
+ *
+ * @param $author
+ *		The author of the node
+ *
+ * @param $status
+ *		The publishing status of the node
+ *
+ * @param $suppressed
+ *		Custom publishing option
+ *
+ * @param $sticky
+ *		The sticky option of the node
+ *
+ * @param $promote
+ *		The promote option of the node
+ *
+ * @return object
+ */
+function rm_api_create_new_node($type = '', $title = '', $lang = '', $author = 0, $status = 0, $suppressed = 0, $sticky = 0, $promote = 0) {
+	//Define new node
+	$new_node = new stdClass();
+	$new_node->type = $type;
+	$new_node->is_new = TRUE;
+	
+	//Store title
+	$new_node->title = $title;
+	
+	//Prepare object
+	node_object_prepare($new_node);
+	
+	//Define language
+	$new_node->language = $lang;
+	
+	//Define as guest content
+	$new_node->uid = $author;
+	
+	//Store states
+	$new_node->status = $status;
+	$new_node->suppressed = $suppressed;
+	$new_node->sticky = $sticky;
+	$new_node->promote = $promote;
+	
+	//Submit and save node
+	$new_node = node_submit($new_node);
+	node_save($new_node);
+	
+	return $new_node;
+}
+
+/**
+ * Method for creating csv files.
+ *
+ * @param $array
+ * 		A multidimensional array. For each line the array contains another
+ *		array with the items in the order they are supposed to be output
+ *
+ * @param $filename
+ *		The name of the file
+ *
+ * @param $delimiter
+ *		The delimiter for the csv items
+ *
+ * @param $return
+ *		Whether the file should be output with the given filename or returned as a file object
+ *
+ * @return string
+ */
+function rm_api_array_to_csv_download($array, $filename = "export.csv", $delimiter=";", $return = FALSE) {
+	if($return) {
+		$time = time();
+		$filepath = 'private://' . $time . '.csv';
+		$f = fopen($filepath, 'w');
+		foreach ($array as $line) {
+			fputcsv($f, $line, $delimiter);
+		}
+		fclose($f);
+		return $filepath;
+	}
+	else {
+		header('Content-Type: application/csv; charset=UTF-8');
+		header('Content-Disposition: attachement; filename="'.$filename.'";');
+		$f = fopen('php://output', 'w');
+		foreach ($array as $line) {
+			fputcsv($f, $line, $delimiter);
+		}
+		die();
+	}
+}
+
+/**
+ * Method for deleting a specific field collection item in a field collection
+ *
+ * @param $entity_type
+ * 		The entity_type that the field collection is bound to, e.g. 'node' or 'user'
+ *
+ * @param $entity_id
+ *		The entity_id of the entity_type
+ *
+ * @param $field_collection_name
+ *		The name of the host field collection
+ *
+ * @param $delta
+ *		The delta of the field collection item within the field collection. Default is 0.
+ *		If this is set to -1 all field collection items are removed from the field collection.
+ *
+ * @param $lang
+ *		The language of the field collection item. Default is LANGUAGE_NONE
+ *
+ * @return string
+ */
+function rm_api_delete_fci($entity_type, $entity_id, $field_collection_name, $delta = 0, $lang = LANGUAGE_NONE) {
+	//Load entity object
+	$object = entity_load($entity_type, array($entity_id));
+	//Define array for storing of to be deleted field collection ids
+	$field_collection_item_values = array();
+	if($delta < 0) {
+		//Delete all field collection items from field collection
+		foreach ($object[$entity_id]->{$field_collection_name}[$lang] as $key => $value) {
+			//Store to be deleted field collection id in array
+			$field_collection_item_values[] = $value['value'];
+			//Unset field collection item from field collection
+			unset($object[$entity_id]->{$field_collection_name}[$lang][$key]);
+		}
+	}
+	else {
+		//Store to be deleted field collection id in array
+		$field_collection_item_values[] = $object[$entity_id]->{$field_collection_name}[$lang][$delta]['value'];
+		//Unset field collection item from field collection
+		unset($object[$entity_id]->{$field_collection_name}[$lang][$delta]);
+		//Reset the array to zero-based sequential keys
+		$object[$entity_id]->{$field_collection_name}[$lang] = array_values($object[$entity_id]->{$field_collection_name}[$lang]);
+	}
+	//Delete all unset field collection items from database
+	entity_delete_multiple('field_collection_item', $field_collection_item_values);
+	//Save entity
+	entity_save($entity_type, $object[$entity_id]);
+}
+
+/**
+ * Method for attaching a field api widget to a custom form
+ * This only works for fields of a specific content, so the default
+ * values of that content will be present within the field unless
+ * you alter it afterwards.
+ *
+ * @param $field_name
+ * 		A string with the name of the field (e.g. field_body)
+ *
+ * @param $entity_type
+ *		A string with the entity_type (e.g. 'node')
+ *
+ * @param $bundle
+ *		An entity object of the given entity type that contains the field
+ *
+ * @param $entity
+ *		An entity object of the given entity type that contains the field
+ *
+ * @param $form
+ *		The form array that the field shall be attached to
+ *
+ * @param $form_state
+ *		The current state of the form
+ *
+ * @param $langcode
+ *		The language of the field. Defaults to NULL, which is the site language
+ */
+function rm_api_attach_field_to_form($field_name, $entity_type, $bundle, $entity, &$form, &$form_state, $langcode = NULL) {
+
+	$instances = field_info_instances($entity_type, $bundle);
+  $field_name = $instances[$field_name];
+	
+  // Set #parents to 'top-level' if it doesn't exist.
+  $form += array('#parents' => array());
+
+  // If no language is provided use the default site language.
+  $options = array(
+    'language' => field_valid_language($langcode),
+    'default' => TRUE,
+  );
+  module_load_include("inc","ctools","includes/fields");
+  $form += (array) ctools_field_invoke_field($field_name, 'form', $entity_type, $entity, $form, $form_state, $options);
+}
+
+/**
+ * Method for validating if all required fields of a node are filled with values
+ *
+ * @param $nid
+ * @param $lang
+ * @return boolean
+ */
+function rm_api_node_validate_required($nid, $lang = LANGUAGE_NONE) {
+	$nodeobject = node_load($nid);
+	$fields = field_info_instances('node', $nodeobject->type);
+	$return = array();
+	foreach($fields as $field_name => $field_definition) {
+		if($field_definition['required']) {
+			if(empty($nodeobject->{$field_name}[$lang])) $return[] = $field_name;
+		}
+	}
+	return $return;
+}
+
+/**
+ * Method for validating if all required fields of a node are filled with values
+ *
+ * @param $nid
+ */
+function rm_api_node_publish($nid) {
+	$nodeobject = node_load($nid);
+	$nodeobject->status = 1;
+	node_save($nodeobject);
+}
+
+/**
+ * Method for changing the type of a node and removing all
+ * fields that are not present within the new node type anymore
+ *
+ * @param $nid
+ * @param $nodetype
+ */
+function rm_api_change_node_type($nid, $nodetype) {
+	//Get field list for the new content type
+	$fields_for_new_type = field_info_instances('node', $nodetype);
+	//Load the node object that shall be converted
+	$nodeobject = node_load($nid);
+	//Get field list for the old content type
+	$fields_for_old_type = field_info_instances('node', $nodeobject->type);
+	
+	//Iterate through all fields of the old content type
+	foreach($fields_for_old_type as $old_field_name => $old_field_definitions) {
+		//If a field of the old content type does not exist within the new content type then remove it from the nodeobject
+		if(!array_key_exists($old_field_name, $fields_for_new_type)) unset($nodeobject->$old_field_name);
+	}
+	//Save the node to properly remove the unset fields
+	node_save($nodeobject);
+	//Change the type
+	$nodeobject->type = $nodetype;
+	//Save the node again
+	node_save($nodeobject);
+}
+
+function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return = TRUE) {
+  module_load_include('inc', 'phpexcel');
+  $headers['default'] = $header;
+  $data['default'] = $rows;
+  $dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
+  $filename = 'exports.xls';
+  $path = "$dir/$filename";
+  $options = array('format' => 'xls');
+  $result = phpexcel_export($headers, $data, $path, $options);
+  if ($result == PHPEXCEL_SUCCESS) {
+		if($return) {
+			$fp = fopen($path, 'rb');
+			header('Content-type: application/vnd.ms-excel');
+			header('Content-Disposition: attachment; filename="' . $filename . '"');
+			fpassthru($fp);
+			exit;
+		}
+  }
+  else {
+    drupal_set_message(t("An error occured while creating the xls file!"), 'error');
+  }
+}
+
+function mymodule_export_stuff() {
+  module_load_include('inc', 'phpexcel');
+  $data = array();
+  $headers = array();
+  // First worksheet
+  // Get the nodes
+  $result = db_select('node', 'n')
+                 ->fields('n', array('nid', 'type', 'status'))
+                 ->execute();
+  while($row = $result->fetchAssoc()) {
+    if (!count($headers)) {
+      // Add the headers for the first worksheet
+      $headers['Nodes'] = array_keys($row);
+    }
+    // Add the data
+    $data['Nodes'][] = array_values($row);
+  }
+  // Second worksheet
+  // Get the latest revisions
+  $query = db_select('node_revision', 'v');
+  $query->leftJoin('node', 'n', 'n.vid = v.vid');
+  $result = $query->fields('v', array('nid', 'vid', 'title'))
+                 ->execute();
+  while($row = $result->fetchAssoc()) {
+    if (count($headers) == 1) {
+      // Add the headers for the second worksheet
+      $headers['Revisions'] = array_keys($row);
+    }
+    // Add the data
+    $data['Revisions'][] = array_values($row);
+  }
+  // Store the file in sites/default/files
+  $dir = file_stream_wrapper_get_instance_by_uri('public://')->realpath();
+  $filename = 'export.xls';
+  $path = "$dir/$filename";
+  // Use the .xls format
+  $options = array('format' => 'xls');
+  $result = phpexcel_export($headers, $data, $path, $options);
+  if ($result == PHPEXCEL_SUCCESS) {
+    drupal_set_message(t("We did it !"));
+  }
+  else {
+    drupal_set_message(t("Oops ! An error occured !"), 'error');
+  }
+}
+
+function rm_api_excel_import($path) {
+  module_load_include('inc', 'phpexcel');
+  // The path to the excel file
+  //$path = 'sites/default/files/export.xls';
+  $result = phpexcel_import($path);
+  if (is_array($result)) {
+    return $result;
+  }
+  else {
+    drupal_set_message(t("Oops ! An error occured !"), 'error');
+  }
+}

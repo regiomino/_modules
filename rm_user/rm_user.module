@@ -1,0 +1,150 @@
+<?php
+
+/**
+* Implements hook_menu().
+*/
+function rm_user_menu() {
+	$items = array();
+
+  $items['admin/myaccount'] = array(
+    'title' => 'Transactions',
+    'page callback' => 'drupal_get_form',
+		'page arguments' => array('rm_user_myaccount', 'transactions_purchase'),
+		'access arguments' => array('authenticated user'),
+    'file' => 'rm_user.inc',
+    'file path' => drupal_get_path('module', 'rm_user'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+	$items['admin/myaccount/purchase'] = array(
+    'title' => 'Purchase Transactions',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $items['admin/myaccount/sales'] = array(
+    'title' => 'Sales Transactions',
+    'page callback' => 'drupal_get_form',
+		'page arguments' => array('rm_user_myaccount', 'transactions_sales'),
+		'access arguments' => array('authenticated user'),
+    'file' => 'rm_user.inc',
+    'file path' => drupal_get_path('module', 'rm_user'),
+    'type' => MENU_LOCAL_TASK,
+  );
+	return $items;
+}
+
+/**
+ * Implements hook_username_alter.
+ * @param $name
+ * @param $account
+ */
+function rm_sales_username_alter(&$name, $account) {
+	$account = user_load($account->uid);
+	if(isset($account->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) && isset($account->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_last_name[LANGUAGE_NONE][0]['value'])) {
+		$name = $account->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $account->field_last_name[LANGUAGE_NONE][0]['value'];
+	}
+	else {
+		$name = $account->mail;
+	}
+}
+
+/**
+ * Function to easily store an entry in the users activity log
+ *
+ * @param $message
+ *		The message that describes the action the user took
+ *
+ * @param $entityid
+ *		The id of the entity that the users action is related to
+ *
+ * @param entitytype
+ *		The entity type that the users action is related to
+ *
+ * @param uid
+ *		The uid of the user that took the action. If left at null this is set to the current users uid.
+ */
+function rm_user_activity($message, $entityid = NULL, $entitytype = NULL, $uid = NULL) {
+	if(is_null($uid)) {
+		global $user;
+		$uid = $user->uid;
+	}
+	
+	$new_node = rm_api_create_new_node('activity_log', substr(strip_tags($message), 0, 128), 'de', $uid, 1, 0, 0, 0);
+	
+	$new_node->body[LANGUAGE_NONE][0]['value'] = $message;
+	if(!is_null($entityid)) $new_node->field_entityid[LANGUAGE_NONE][0]['value'] = $entityid;
+	if(!is_null($entitytype)) $new_node->field_entitytype[LANGUAGE_NONE][0]['value'] = $entitytype;
+	
+	node_save($new_node);
+}
+
+/**
+ * Function to easily store a transaction in the userobject
+ *
+ * @param $amount
+ *		The amount of the transaction
+ *
+ * @param $reason
+ *		The reason for the transaction
+ *
+ * @param $node_type
+ *		The name of the node type (e.g. 'transactions_purchase' for purchase transactions
+ *		or 'transactions_sales' for selling transactions
+ *
+ * @param $entityid
+ *		The id of the entity that the transaction is related to
+ *
+ * @param entitytype
+ *		The entity type that the transaction is related to
+ *
+ * @param uid
+ *		The uid of the user that receives the transaction. If left at null this is set to the current users uid.
+ */
+function rm_user_transaction($amount, $reason, $node_type, $entityid = NULL, $entitytype = NULL, $uid = NULL) {
+
+	if(is_null($uid)) {
+		global $user;
+		$uid = $user->uid;
+	}
+	
+	$query = new EntityFieldQuery();
+	$tmp = $query
+		->entityCondition('entity_type', 'node')
+		->entityCondition('bundle', $node_type)
+		->propertyCondition('status', 1)
+		->propertyOrderBy('created', 'DESC')
+		->execute();
+	if(isset($tmp['node'])) {
+		$allnids = array_keys($tmp['node']);
+		$txn_node = node_load($allnids[0]);
+	}
+	if(isset($txn_node)) {
+		$balance = $amount + $txn_node->field_balance[LANGUAGE_NONE][0]['value'];
+	}
+	else {
+		$balance = $amount;
+	}
+	
+	$new_node = rm_api_create_new_node($node_type, substr(strip_tags($reason), 0, 128), 'de', $uid, 1, 0, 0, 0);
+	
+	$new_node->body[LANGUAGE_NONE][0]['value'] = $reason;
+	$new_node->field_amount[LANGUAGE_NONE][0]['value'] = $amount;
+	$new_node->field_balance[LANGUAGE_NONE][0]['value'] = $balance;
+	if(!is_null($entityid)) $new_node->field_entityid[LANGUAGE_NONE][0]['value'] = $entityid;
+	if(!is_null($entitytype)) $new_node->field_entitytype[LANGUAGE_NONE][0]['value'] = $entitytype;
+	
+	node_save($new_node);
+}
+
+function rm_user_mail($key, &$message, $params) {
+	global $base_url;
+	global $base_path;
+	switch($key) {
+		//switching on $key lets you create variations of the email based on the $key parameter
+		case 'profile_published_user_registered':
+			$message['subject'] = 'Ihr Profil regiomino.de';
+
+			$message['body'][] = '<p>Hi,</p><p>Ihr Profil auf www.regiomino.de wurde freigeschaltet und es wurde ein neues Benutzerkonto für Sie angelegt. Sie können sich jetzt mit folgenden Daten auf www.regiomino.de anmelden.</p><p>E-Mail: ' . $params['account']->mail . '<br />Passwort: ' . $params['password'] . '</p><p>Viele Grüße,<br />Ihr Regiomino-Team</p>';
+			
+		break;
+	}
+}

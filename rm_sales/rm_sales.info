@@ -1,0 +1,5 @@
+name = Regiomino Sales
+description = Implements features around sales, i.e. managing seller and customer profiles, such as the suggest form and loading or storing methods
+core = 7.x
+package = Regiomino
+files[] = rm_sales.module

@@ -1,0 +1,5 @@
+name = Regiomino User
+description = Implements features around the user object
+core = 7.x
+package = Regiomino
+files[] = rm_user.module
