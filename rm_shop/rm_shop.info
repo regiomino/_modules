@@ -1,0 +1,5 @@
+name = Regiomino Shop
+description = Implements features around the shop functionality such as blocks, pages and menu items
+core = 7.x
+package = Regiomino
+files[] = rm_shop.module

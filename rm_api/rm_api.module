@@ -319,15 +319,32 @@ function mymodule_export_stuff() {
   }
 }
 
-function rm_api_excel_import($path) {
-  module_load_include('inc', 'phpexcel');
-  // The path to the excel file
-  //$path = 'sites/default/files/export.xls';
-  $result = phpexcel_import($path);
-  if (is_array($result)) {
-    return $result;
-  }
-  else {
-    drupal_set_message(t("Oops ! An error occured !"), 'error');
-  }
+function rm_api_is_holiday($timestamp) {
+
+	$tag = date('d', $timestamp);
+	$monat = date('m', $timestamp);
+	$jahr = date('Y', $timestamp);
+
+	// Feste Feiertage werden nach dem Schema ddmm eingetragen
+	$feiertage[] = "0101"; // Neujahrstag
+	$feiertage[] = "0105"; // Tag der Arbeit
+	$feiertage[] = "0310"; // Tag der Deutschen Einheit
+	$feiertage[] = "2512"; // Erster Weihnachtstag
+	$feiertage[] = "2612"; // Zweiter Weihnachtstag
+
+	// Bewegliche Feiertage berechnen
+	$tage = 60 * 60 * 24;
+	$ostersonntag = easter_date($jahr);
+	$feiertage[] = date("dm", $ostersonntag - 2 * $tage);  // Karfreitag
+	$feiertage[] = date("dm", $ostersonntag + 1 * $tage);  // Ostermontag
+	$feiertage[] = date("dm", $ostersonntag + 39 * $tage); // Himmelfahrt
+	$feiertage[] = date("dm", $ostersonntag + 50 * $tage); // Pfingstmontag
+
+	// Prüfen, ob Feiertag
+	$code = $tag.$monat;
+	if(in_array($code, $feiertage)) {
+		return true;
+	} else {
+		return false;
+	}
 }

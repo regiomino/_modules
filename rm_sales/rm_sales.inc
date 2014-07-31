@@ -80,6 +80,11 @@ function rm_sales_agreement_edit($form, &$form_state, $agreement_id) {
 		rm_api_attach_field_to_form($field_name, 'node', $agreement->type, $agreement, $form['rm_edit_agreement'], $form_state, LANGUAGE_NONE);
 	}
 	
+	$form['rm_add_agreement']['field_names'] = array(
+		'#type' => 'value',
+		'#value' => $instances,
+	);
+	
 	$form['rm_edit_agreement']['nid'] = array(
 		'#type' => 'value',
 		'#value' => $agreement_id,
@@ -98,9 +103,18 @@ function rm_sales_agreement_edit_validate($form, &$form_state) {
 
 function rm_sales_agreement_edit_submit($form, &$form_state) {
 	$nodeobject = node_load($form_state['values']['nid']);
-	if(!empty($form_state['values']['body'][LANGUAGE_NONE][0]['value'])) $nodeobject->body = $form_state['values']['body'];
-	$nodeobject->field_commission = $form_state['values']['field_commission'];
-	if(!empty($form_state['values']['field_user_reference'][LANGUAGE_NONE][0]['target_id'])) $nodeobject->field_user_reference = $form_state['values']['field_user_reference'];
+	
+	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
+		if($field_name == 'field_regular_times') {
+			foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+			}
+			$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+		}
+		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
+		$nodeobject->{$field_name} = $form_state['values'][$field_name];
+	}
+	
 	node_save($nodeobject);
 	global $user;
 }
@@ -120,6 +134,11 @@ function rm_sales_agreement_add($form, &$form_state, $agreement_type, $suid) {
 		'#value' => $agreement_type,
 	);
 	
+	$form['rm_add_agreement']['field_names'] = array(
+		'#type' => 'value',
+		'#value' => $instances,
+	);
+	
 	$form['rm_add_agreement']['suid'] = array(
 		'#type' => 'value',
 		'#value' => $suid,
@@ -136,12 +155,19 @@ function rm_sales_agreement_add($form, &$form_state, $agreement_type, $suid) {
 function rm_sales_agreement_add_validate($form, &$form_state) {
 }
 
-function rm_sales_agreement_add_submit($form, &$form_state) {
+function rm_sales_agreement_add_submit($form, &$form_state) {	
 	$title = node_type_get_name($form_state['values']['agreement_type']);
 	$new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
-	if(!empty($form_state['values']['body'][LANGUAGE_NONE][0]['value'])) $new_node->body = $form_state['values']['body'];
-	$new_node->field_commission = $form_state['values']['field_commission'];
-	if(!empty($form_state['values']['field_user_reference'][LANGUAGE_NONE][0]['target_id'])) $new_node->field_user_reference = $form_state['values']['field_user_reference'];
+	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
+		if($field_name == 'field_regular_times') {
+			foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+			}
+			$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+		}
+		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
+		$new_node->{$field_name} = $form_state['values'][$field_name];
+	}
 	node_save($new_node);
 }
 
@@ -396,7 +422,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$shipping_agreement .= '<li>' . l($agrnode->title, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$shipping_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
 				}
 			}
 			$shipping_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
@@ -413,7 +446,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$dispatch_agreement .= '<li>' . l($agrnode->title, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$dispatch_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
 				}
 			}
 			$dispatch_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
@@ -430,7 +470,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$pickup_agreement .= '<li>' . l($agrnode->title, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$pickup_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
 				}
 			}
 			$pickup_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
@@ -446,7 +493,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$commission_agreement .= '<li>' . l($agrnode->title, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$commission_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
 				}
 			}
 			$commission_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
@@ -462,7 +516,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$payment_agreement .= '<li>' . l($agrnode->title, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$payment_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
 				}
 			}
 			$payment_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
@@ -480,7 +541,14 @@ function rm_sales_profilecare() {
 			if(isset($agrtmp['node'])) {
 				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
 				foreach($agrnodes as $agrnid => $agrnode) {
-					$offer_table .= '<li>' . l($agrnode->title, file_create_url($agrnode->field_offer_table[LANGUAGE_NONE][0]['uri'])) . '</li>';
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+						$agrtitle .= $userobject->mail;
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$offer_table .= '<li>' . l($agrtitle, file_create_url($agrnode->field_offer_table[LANGUAGE_NONE][0]['uri'])) . '</li>';
 				}
 			}
 			$offer_table .= '</ul><em>' . l(t('add new one'), 'admin/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';

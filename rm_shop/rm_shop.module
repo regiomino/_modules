@@ -1,0 +1,78 @@
+<?php
+
+function rm_shop_theme() {
+	return array(
+		'rm_shop_theme_entry_header' => array(
+			'template' => 'rm_shop_entry_header_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+	);
+}
+
+/**
+* Implementation of hook_block_info().
+*/
+function rm_shop_block_info() {
+	$blocks['regiomino_entry_header'] = array(
+    'info' => t('Regiomino Entry Header'), //The name that will appear in the block list.
+    'cache' => DRUPAL_CACHE_GLOBAL, //Default
+  );
+  return $blocks;
+}
+
+/**
+* Implementation of hook_block_view().
+*/
+function rm_shop_block_view($delta = '') {
+  switch($delta){		
+		case 'regiomino_entry_header':
+			$block['subject'] = '';
+			if(user_access('access content')) {
+				$regionselect = drupal_get_form('rm_shop_regionselect');
+				$directoryselect = drupal_get_form('rm_shop_directoryselect');
+				$block['content'] = theme('rm_shop_theme_entry_header', array(
+															'vars' => array(
+																'regionselect' => $regionselect,
+																'directoryselect' => $directoryselect,
+															),
+														));
+			}
+			return $block;
+	}
+}
+
+function rm_shop_directoryselect($form, &$form_state) {
+	$form = array();
+	$form['rm_shop_directory']['name'] = array(
+		'#type' => 'textfield',
+		'#required' => FALSE,
+		'#attributes' => array('placeholder' => 'Gemüsebau Müller', 'class' => array('form-control')),
+		'#title' => t('Name of seller'),
+		'#title_display' => 'invisible',
+	);
+	$form['rm_shop_directory']['submit'] = array(
+		'#prefix' => '<button type="submit" id="opendirectory" class="btn btn-success">',
+		'#suffix' => '</button>',
+		'#markup' => t('Open directory'),
+	);
+	return $form;
+}
+
+function rm_shop_regionselect($form, &$form_state) {
+	$form = array();
+	$form['rm_shop_zipcode']['zipcode'] = array(
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#attributes' => array('placeholder' => '96052 Bamberg', 'class' => array('form-control')),
+		'#title' => t('Your zipcode'),
+		'#title_display' => 'invisible',
+	);
+	$form['rm_shop_zipcode']['submit'] = array(
+		'#prefix' => '<button type="submit" id="openregion" class="btn btn-success">',
+		'#suffix' => '</button>',
+		'#markup' => t('Start shopping'),
+	);
+	return $form;
+}
