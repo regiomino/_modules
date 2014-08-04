@@ -105,12 +105,13 @@ function rm_sales_agreement_edit_submit($form, &$form_state) {
 	$nodeobject = node_load($form_state['values']['nid']);
 	
 	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
-		if($field_name == 'field_regular_times') {
-			foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+		foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+			if($field_name == 'field_regular_times') {
 				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
 			}
-			$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+			if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
 		}
+		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
 		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
 		$nodeobject->{$field_name} = $form_state['values'][$field_name];
 	}
@@ -159,12 +160,13 @@ function rm_sales_agreement_add_submit($form, &$form_state) {
 	$title = node_type_get_name($form_state['values']['agreement_type']);
 	$new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
 	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
-		if($field_name == 'field_regular_times') {
-			foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+		foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+			if($field_name == 'field_regular_times') {
 				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
 			}
-			$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+			if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
 		}
+		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
 		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
 		$new_node->{$field_name} = $form_state['values'][$field_name];
 	}

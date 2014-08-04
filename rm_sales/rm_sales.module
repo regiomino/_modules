@@ -157,11 +157,18 @@ function rm_sales_assignprofile_access($nid, $uid) {
  */
 function rm_sales_suggest_form($form, &$form_state) {
 
-	$form = array();
+	$form = array(
+        '#attributes' => array(
+            'class' => array('form-vertical', 'well'),
+        ),
+    );
 
 	$form['suggest']['type'] = array(
 		'#type' => 'select',
 		'#title' => t('Vendor or gastronomy'),
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
 		'#options' => array(
 			'seller_profile' => t('Vendor'),
 			'customer_profile' => t('Gastronomy'),
@@ -175,6 +182,8 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#title' => t('Name of the vendor or gastronomy'),
 		'#attributes' => array(
 			'placeholder' => t('Name of the vendor or gastronomy'),
+            'class' => array('form-control'),
+            'required' => NULL,
 		),
 		'#required' => TRUE,
 	);
@@ -184,6 +193,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#title' => t('City'),
 		'#attributes' => array(
 			'placeholder' => t('City'),
+            'class' => array('form-control'),
 		),
 		'#required' => TRUE,
 	);
@@ -193,6 +203,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#title' => t('Street'),
 		'#attributes' => array(
 			'placeholder' => t('Street'),
+            'class' => array('form-control'),
 		),
 		'#required' => TRUE,
 	);
@@ -202,6 +213,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#title' => t('Postal code'),
 		'#attributes' => array(
 			'placeholder' => t('Zip'),
+            'class' => array('form-control'),
 		),
 		'#required' => FALSE,
 	);
@@ -211,15 +223,17 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#title' => t('Phone'),
 		'#attributes' => array(
 			'placeholder' => t('Phone'),
+            'class' => array('form-control'),
 		),
 		'#required' => FALSE,
 	);
-	
+
 	$form['suggest']['suggester'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Your E-Mail'),
 		'#attributes' => array(
 			'placeholder' => t('Your E-Mail'),
+            'class' => array('form-control'),
 		),
 		'#required' => FALSE,
 	);
@@ -228,11 +242,12 @@ function rm_sales_suggest_form($form, &$form_state) {
 	if($user->uid > 0) {
 		$form['suggest']['suggester']['#default_value'] = $user->mail;
 	}
-	
-	$form['suggest']['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Suggest'),
-	);
+
+    $form['suggest']['submit'] = array(
+        '#prefix' => '<button type="submit" id="suggestbtn" class="btn btn-success">',
+        '#suffix' => '</button>',
+        '#markup' => t('Suggest'),
+    );
 	
 	return $form;
 }
