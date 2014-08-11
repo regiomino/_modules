@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_shop_theme_jobs.tpl.php

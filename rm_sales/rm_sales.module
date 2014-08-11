@@ -4,24 +4,16 @@
 * Implements hook_menu().
 */
 function rm_sales_menu() {
-	$items = array();
-  $items['suggest'] = array(
-    'title' => 'Suggest a participant',
-		'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_suggest_form'),
-		'access arguments' => array('access content'),
-    'type' => MENU_NORMAL_ITEM,
-		'weight' => 1,
-  );
-  $items['admin/sales'] = array(
-    'title' => 'Sales',
-    'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_profilequeue'),
-		'access callback' => 'rm_sales_user_is_salesguy',
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
-    'type' => MENU_NORMAL_ITEM,
-  );
+    $items = array();
+    $items['admin/sales'] = array(
+        'title' => 'Sales',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_sales_profilequeue'),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+        'type' => MENU_NORMAL_ITEM,
+    );
 	$items['admin/sales/suggested'] = array(
     'title' => '1. Adopt profile suggestions',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -80,6 +72,22 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
+    $items['admin/sales/makeprospect/%'] = array(
+        'title' => 'Sales',
+        'page callback' => 'rm_sales_makeprospect',
+        'page arguments' => array(3),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
+    $items['admin/sales/removeprospect/%'] = array(
+        'title' => 'Sales',
+        'page callback' => 'rm_sales_removeprospect',
+        'page arguments' => array(3),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
   $items['admin/sales/changeprofiletype/%/%'] = array(
     'title' => 'Sales',
     'page callback' => 'rm_sales_changeprofiletype',
@@ -157,96 +165,75 @@ function rm_sales_assignprofile_access($nid, $uid) {
  */
 function rm_sales_suggest_form($form, &$form_state) {
 
-	$form = array(
-        '#attributes' => array(
-            'class' => array('form-vertical', 'well'),
-        ),
+    $form['suggest']['necessary'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('These infos we need...'),
     );
-
-	$form['suggest']['type'] = array(
-		'#type' => 'select',
+	$form['suggest']['necessary']['type'] = array(
+		'#type' => 'radios',
 		'#title' => t('Vendor or gastronomy'),
-        '#attributes' => array(
-            'class' => array('form-control'),
-        ),
 		'#options' => array(
-			'seller_profile' => t('Vendor'),
-			'customer_profile' => t('Gastronomy'),
+			'seller_profile' => t('Suggest vendor'),
+			'customer_profile' => t('Suggest gastronomy'),
 		),
-		'#default_value' => 'seller_profile',
 		'#required' => TRUE,
 	);
 	
-	$form['suggest']['title'] = array(
+	$form['suggest']['necessary']['title'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Name of the vendor or gastronomy'),
-		'#attributes' => array(
-			'placeholder' => t('Name of the vendor or gastronomy'),
-            'class' => array('form-control'),
-            'required' => NULL,
-		),
 		'#required' => TRUE,
 	);
-	
-	$form['suggest']['locality'] = array(
+
+	$form['suggest']['necessary']['locality'] = array(
 		'#type' => 'textfield',
 		'#title' => t('City'),
-		'#attributes' => array(
-			'placeholder' => t('City'),
-            'class' => array('form-control'),
-		),
 		'#required' => TRUE,
 	);
-	
-	$form['suggest']['thoroughfare'] = array(
+
+	$form['suggest']['necessary']['thoroughfare'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Street'),
-		'#attributes' => array(
-			'placeholder' => t('Street'),
-            'class' => array('form-control'),
-		),
 		'#required' => TRUE,
 	);
-	
-	$form['suggest']['postal_code'] = array(
-		'#type' => 'textfield',
-		'#title' => t('Postal code'),
-		'#attributes' => array(
-			'placeholder' => t('Zip'),
-            'class' => array('form-control'),
-		),
-		'#required' => FALSE,
-	);
-	
-	$form['suggest']['phone'] = array(
+
+    $form['suggest']['nicetohave'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('... and these infos are helpful'),
+    );
+
+    $form['suggest']['nicetohave']['postal_code'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Postal code'),
+        '#required' => FALSE,
+    );
+
+	$form['suggest']['nicetohave']['phone'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Phone'),
-		'#attributes' => array(
-			'placeholder' => t('Phone'),
-            'class' => array('form-control'),
-		),
 		'#required' => FALSE,
 	);
 
-	$form['suggest']['suggester'] = array(
+	$form['suggest']['nicetohave']['suggester'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Your E-Mail'),
-		'#attributes' => array(
-			'placeholder' => t('Your E-Mail'),
-            'class' => array('form-control'),
-		),
 		'#required' => FALSE,
 	);
-	
+
+    $form['suggest']['nicetohave']['owner'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('I am the owner'),
+        '#required' => FALSE,
+    );
+
 	global $user;
 	if($user->uid > 0) {
 		$form['suggest']['suggester']['#default_value'] = $user->mail;
 	}
 
     $form['suggest']['submit'] = array(
-        '#prefix' => '<button type="submit" id="suggestbtn" class="btn btn-success">',
-        '#suffix' => '</button>',
-        '#markup' => t('Suggest'),
+        '#type' => 'submit',
+        '#value' => t('Suggest'),
     );
 	
 	return $form;
@@ -292,7 +279,8 @@ function rm_sales_suggest_form_validate($form, &$form_state) {
  * @param $form_state
  */
 function rm_sales_suggest_form_submit($form, &$form_state) {
-	
+
+    $owner = (isset($form_state['values']['owner'])) ? 1 : 0;
 	$new_node = rm_api_create_new_node(
 		$form_state['values']['type'], //Type
 		$form_state['values']['title'], //Title
@@ -301,7 +289,8 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 		0, //Status
 		0, //Suppressed
 		0, //Sticky
-		0 //Promote
+		0, //Promote
+        $owner //Prospect
 	);
 	
 	//Store fields

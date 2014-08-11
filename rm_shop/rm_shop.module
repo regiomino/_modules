@@ -1,5 +1,64 @@
 <?php
 
+/**
+ * Implements hook_menu().
+ */
+function rm_shop_menu() {
+    $items = array();
+    $items['rm-shop-participantxml'] = array(
+        'page callback' => 'rm_shop_get_participantxml',
+        'access arguments' => array('access content'),
+    );
+    $items['lieferanten/%/%/%'] = array(
+        'title' => t('Vendors in your region'),
+        'title callback' => 'rm_shop_get_shops_title',
+        'title arguments' => array(1),
+        'type' => MENU_NORMAL_ITEM,
+        'access callback' => 'rm_shop_validate_address',
+        'access arguments' => array(1,2,3),
+        'page callback' => 'rm_shop_get_shops',
+        'page arguments' => array(1,2,3),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
+    $items['kontakt'] = array(
+        'title' => 'Help & Contact',
+        'page callback' => 'rm_shop_get_in_touch',
+        'access arguments' => array('access content'),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
+    $items['jobs'] = array(
+        'title' => 'Jobs',
+        'page callback' => 'rm_shop_jobs',
+        'access arguments' => array('access content'),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
+    return $items;
+}
+
+function rm_shop_get_shops_title($arg) {
+    return t('Vendors in @region', array('@region' => $arg));
+}
+
+function rm_shop_validate_address($city, $zipcode, $street) {
+    if(empty($city) || empty($zipcode) || empty($street)) return FALSE;
+    $result = rm_api_google_address_check($street, $zipcode, $city);
+    $valid = rm_api_validate_google_address($result);
+    if(!empty($valid)) {
+        drupal_set_message($valid[0], 'error');
+        drupal_goto();
+    }
+    else {
+        $_SESSION['gmapsdata'] = $result;
+        return TRUE;
+    }
+}
+
+/**
+ * Implements hook_theme().
+ */
 function rm_shop_theme() {
 	return array(
 		'rm_shop_theme_entry_header' => array(
@@ -8,6 +67,24 @@ function rm_shop_theme() {
 				'vars' => NULL,
 			)
 		),
+        'rm_shop_theme_get_in_touch' => array(
+            'template' => 'rm_shop_get_in_touch_theme',
+            'variables' => array(
+                'vars' => NULL,
+            )
+        ),
+        'rm_shop_theme_jobs' => array(
+            'template' => 'rm_shop_jobs_theme',
+            'variables' => array(
+                'vars' => NULL,
+            )
+        ),
+        'rm_shop_theme_shops' => array(
+            'template' => 'rm_shop_shops_theme',
+            'variables' => array(
+                'vars' => NULL,
+            )
+        ),
 	);
 }
 
@@ -30,49 +107,130 @@ function rm_shop_block_view($delta = '') {
 		case 'regiomino_entry_header':
 			$block['subject'] = '';
 			if(user_access('access content')) {
-				$regionselect = drupal_get_form('rm_shop_regionselect');
-				$directoryselect = drupal_get_form('rm_shop_directoryselect');
+                $regionselect = drupal_get_form('rm_shop_regionselect');
+                $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile'), 1);
 				$block['content'] = theme('rm_shop_theme_entry_header', array(
-															'vars' => array(
-																'regionselect' => $regionselect,
-																'directoryselect' => $directoryselect,
-															),
-														));
+                    'vars' => array(
+                        'regionselect' => $regionselect,
+                        'participants' => $participantobjects,
+                    ),
+                ));
 			}
 			return $block;
 	}
 }
 
-function rm_shop_directoryselect($form, &$form_state) {
+function rm_shop_regionselect($form, &$form_state) {
 	$form = array();
-	$form['rm_shop_directory']['name'] = array(
+    $form['street'] = array(
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#title' => t('Street'),
+    );
+	$form['zipcode'] = array(
 		'#type' => 'textfield',
-		'#required' => FALSE,
-		'#attributes' => array('placeholder' => 'Gemüsebau Müller', 'class' => array('form-control')),
-		'#title' => t('Name of seller'),
-		'#title_display' => 'invisible',
+		'#required' => TRUE,
+		'#title' => t('Postal code'),
 	);
-	$form['rm_shop_directory']['submit'] = array(
-		'#prefix' => '<button type="submit" id="opendirectory" class="btn btn-success">',
-		'#suffix' => '</button>',
-		'#markup' => t('Open directory'),
+    $form['city'] = array(
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#title' => t('City'),
+    );
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Find vendor'),
 	);
 	return $form;
 }
 
-function rm_shop_regionselect($form, &$form_state) {
-	$form = array();
-	$form['rm_shop_zipcode']['zipcode'] = array(
-		'#type' => 'textfield',
-		'#required' => TRUE,
-		'#attributes' => array('placeholder' => '96052 Bamberg', 'class' => array('form-control')),
-		'#title' => t('Your zipcode'),
-		'#title_display' => 'invisible',
-	);
-	$form['rm_shop_zipcode']['submit'] = array(
-		'#prefix' => '<button type="submit" id="openregion" class="btn btn-success">',
-		'#suffix' => '</button>',
-		'#markup' => t('Start shopping'),
-	);
-	return $form;
+function rm_shop_regionselect_validate($form, &$form_state) {
+    $result = rm_api_google_address_check($form_state['values']['street'], $form_state['values']['zipcode'], $form_state['values']['city']);
+    $valid = rm_api_validate_google_address($result);
+    if(!empty($valid)) {
+        form_set_error('street', $valid[0]);
+        form_set_error('zipcode');
+        form_set_error('city');
+    }
+    else {
+        $form_state['values']['gmapsdata'] = $result;
+    }
+}
+
+function rm_shop_regionselect_submit($form, &$form_state) {
+    $street = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'route');
+    $house_no = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'street_number');
+    $zip = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'postal_code');
+    $city = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'locality');
+    drupal_goto('lieferanten/' . $city . '/' . $zip . '/' . $street . ' ' . $house_no);
+}
+
+function rm_shop_get_participantxml() {
+
+    $time = time();
+    $cacheexpire = $time - 1;
+    //Get children of parent item (cache this)
+    $cached = cache_get('directoryGoogleMap');
+    if($cached && $cached->created > $cacheexpire) {
+        $participants = $cached->data;
+    }
+    else {
+        cache_clear_all('directoryGoogleMap', 'cache', TRUE);
+
+        $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile'), -1, 1);
+
+        $participants = array();
+        foreach($participantobjects as $nid=>$value) {
+
+            if( !empty($value->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+                !empty($value->field_address[LANGUAGE_NONE][0]['locality']) &&
+                !empty($value->field_location[LANGUAGE_NONE][0]['lat']) &&
+                !empty($value->field_location[LANGUAGE_NONE][0]['lon'])
+                ) {
+                $address = $value->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+                if(isset($value->field_address[LANGUAGE_NONE][0]['premise']) && !empty($value->field_address[LANGUAGE_NONE][0]['premise'])) {
+                    $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['premise'];
+                }
+                if(!empty($value->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['postal_code'];
+                $address .= ' ' . $value->field_address[LANGUAGE_NONE][0]['locality'];
+                if($value->status != 1) {
+                   $index = 'inactive_profile';
+                }
+                else {
+                   $index = $value->type;
+                }
+                $participants[$index][] = array(
+                    'title' => l($value->title, 'node/' . $nid),
+                    'address' => $address,
+                    'lat' => $value->field_location[LANGUAGE_NONE][0]['lat'],
+                    'lon' => $value->field_location[LANGUAGE_NONE][0]['lon'],
+                );
+            }
+        }
+
+        cache_set('directoryGoogleMap', $participants);
+    }
+
+
+    $dom = new DOMDocument("1.0");
+    $node = $dom->createElement("markers");
+    $parnode = $dom->appendChild($node);
+
+    header("Content-type: text/xml");
+
+    // Iterate through the rows, adding XML nodes for each
+    foreach($participants as $type=>$more) {
+        foreach($more as $key=>$row) {
+            // ADD TO XML DOCUMENT NODE
+            $node = $dom->createElement("marker");
+            $newnode = $parnode->appendChild($node);
+            $newnode->setAttribute("name",$row['title']);
+            $newnode->setAttribute("address", $row['address']);
+            $newnode->setAttribute("lat", $row['lat']);
+            $newnode->setAttribute("lng", $row['lon']);
+            $newnode->setAttribute("type", $type);
+        }
+    }
+
+    echo $dom->saveXML();
 }

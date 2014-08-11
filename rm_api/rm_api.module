@@ -1,4 +1,15 @@
 <?php
+
+function rm_api_menu() {
+    $items = array();
+    $items['simplefaxcallback'] = array(
+        'page callback' => 'rm_api_simplefax_callback',
+        'access arguments' => array('access content'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+    return $items;
+}
+
 /**
  * Method for creating new node objects.
  *
@@ -28,7 +39,7 @@
  *
  * @return object
  */
-function rm_api_create_new_node($type = '', $title = '', $lang = '', $author = 0, $status = 0, $suppressed = 0, $sticky = 0, $promote = 0) {
+function rm_api_create_new_node($type = '', $title = '', $lang = '', $author = 0, $status = 0, $suppressed = 0, $sticky = 0, $promote = 0, $prospect = 0) {
 	//Define new node
 	$new_node = new stdClass();
 	$new_node->type = $type;
@@ -51,6 +62,7 @@ function rm_api_create_new_node($type = '', $title = '', $lang = '', $author = 0
 	$new_node->suppressed = $suppressed;
 	$new_node->sticky = $sticky;
 	$new_node->promote = $promote;
+    $new_node->prospect = $prospect;
 	
 	//Submit and save node
 	$new_node = node_submit($new_node);
@@ -250,6 +262,14 @@ function rm_api_change_node_type($nid, $nodetype) {
 	node_save($nodeobject);
 }
 
+/**
+ * Method for exporting an xls file
+ *
+ * @param $header
+ * @param rows
+ * @param $filename
+ * @param $return
+ */
 function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return = TRUE) {
   module_load_include('inc', 'phpexcel');
   $headers['default'] = $header;
@@ -273,52 +293,12 @@ function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return 
   }
 }
 
-function mymodule_export_stuff() {
-  module_load_include('inc', 'phpexcel');
-  $data = array();
-  $headers = array();
-  // First worksheet
-  // Get the nodes
-  $result = db_select('node', 'n')
-                 ->fields('n', array('nid', 'type', 'status'))
-                 ->execute();
-  while($row = $result->fetchAssoc()) {
-    if (!count($headers)) {
-      // Add the headers for the first worksheet
-      $headers['Nodes'] = array_keys($row);
-    }
-    // Add the data
-    $data['Nodes'][] = array_values($row);
-  }
-  // Second worksheet
-  // Get the latest revisions
-  $query = db_select('node_revision', 'v');
-  $query->leftJoin('node', 'n', 'n.vid = v.vid');
-  $result = $query->fields('v', array('nid', 'vid', 'title'))
-                 ->execute();
-  while($row = $result->fetchAssoc()) {
-    if (count($headers) == 1) {
-      // Add the headers for the second worksheet
-      $headers['Revisions'] = array_keys($row);
-    }
-    // Add the data
-    $data['Revisions'][] = array_values($row);
-  }
-  // Store the file in sites/default/files
-  $dir = file_stream_wrapper_get_instance_by_uri('public://')->realpath();
-  $filename = 'export.xls';
-  $path = "$dir/$filename";
-  // Use the .xls format
-  $options = array('format' => 'xls');
-  $result = phpexcel_export($headers, $data, $path, $options);
-  if ($result == PHPEXCEL_SUCCESS) {
-    drupal_set_message(t("We did it !"));
-  }
-  else {
-    drupal_set_message(t("Oops ! An error occured !"), 'error');
-  }
-}
-
+/**
+ * Method for determining if a given timestamp is a holiday
+ *
+ * @param $timestamp
+ * @return boolean
+ */
 function rm_api_is_holiday($timestamp) {
 
 	$tag = date('d', $timestamp);
@@ -343,8 +323,375 @@ function rm_api_is_holiday($timestamp) {
 	// Prüfen, ob Feiertag
 	$code = $tag.$monat;
 	if(in_array($code, $feiertage)) {
-		return true;
+		return TRUE;
 	} else {
-		return false;
+		return FALSE;
 	}
+}
+
+/**
+ * Method for querying nodes by properties
+ *
+ * @param $type
+ *      needs to be -1 if no node types are given or an array containing
+ *      the node types as string values such as array('type1', 'type2')
+ * @param $status
+ * @param $sticky
+ * @param $promote
+ * @param $suppressed
+ * @param $activated
+ * @return array
+ */
+function rm_api_get_nodes_by_properties($types = -1, $status = -1, $sticky = -1, $promote = -1, $suppressed = -1, $prospect = -1, $uid = -1) {
+    $resobjects = &drupal_static(__FUNCTION__, array());
+    $typeoffset = json_encode($types);
+    if(!isset($resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid])) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node');
+        if(is_array($types)) $query->entityCondition('bundle', $types);
+        if($status >= 0) $query->propertyCondition('status', $status);
+        if($sticky >= 0) $query->propertyCondition('sticky', $sticky);
+        if($promote >= 0) $query->propertyCondition('promote', $promote);
+        if($suppressed >= 0) $query->propertyCondition('suppressed', $suppressed);
+        if($prospect >= 0) $query->propertyCondition('prospect', $prospect);
+        if($uid >= 0) $query->propertyCondition('uid', $uid);
+        $result = $query->execute();
+        if(isset($result['node'])) {
+            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid] = entity_load('node', array_keys($result['node']));
+        }
+        else {
+            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid] = NULL;
+        }
+    }
+    return $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid];
+}
+
+/**
+ * Implements hook_libraries_info().
+ *
+ * For defining external libraries.
+ */
+function rm_api_libraries_info() {
+    // A very simple library. No changing APIs (hence, no versions), no variants.
+    // Expected to be extracted into 'sites/all/libraries/MailChimp'.
+
+    $libraries['MailChimp'] = array(
+        'name' => 'MailChimp API v2 wrapper',
+        'vendor url' => 'https://github.com/drewm/mailchimp-api',
+        'download url' => 'https://github.com/drewm/mailchimp-api/archive/master.zip',
+        'version arguments' => array(
+            'file' => 'changelog.txt',
+            'pattern' => "/@version\s+([0-9\.]+)/",
+            'lines' => 4,
+        ),
+        'files' => array(
+            'php' => array('MailChimp.php'),
+        ),
+    );
+    return $libraries;
+}
+
+/**
+ * Method for subscribing an email to a MailChimp list
+ *
+ * Basic call:
+ *      $result = rm_api_mailchimp_subscribe(
+ *          'mfrericks@regiomino.de',
+ *          array(
+ *              'FNAME' => 'Martin',
+ *              'LNAME' => 'Frericks',
+ *              'SALUTATION' => 'Herr',
+ *              'ROLES' => 'authenticated user'
+ *          )
+ *      );
+ *
+ * @param $email
+ *      a string containing the email address, such as 'abc@gmx.de'
+ *
+ * @param $merge_vars
+ *      an array containing values keyed by MailChimp merge tags
+ *      example: array('FNAME' => 'Max', 'LNAME' => 'Mustermann', 'SALUTATION' => 'Herr')
+ *
+ * @param $double_optin
+ *      whether the user shall receive an email to confirm his subscription (TRUE)
+ *      or be subscribed without additional confirmation (FALSE -> default)
+ *
+ * @param $update_existing
+ *      defaults to TRUE. if set to TRUE, an existing user is updated with the given information.
+ *      when set to FALSE, existing user is skipped.
+ *
+ * @param $replace_interests
+ *      no idea what this means. defaults to TRUE
+ *
+ * @param $send_welcome
+ *      whether the user shall receive a welcome mail. defaults to FALSE.
+ *
+ * @return array
+ *      example:
+ *      Array
+ *      (
+ *        [email] => mfrericks@gmail.com
+ *        [euid] => f24c28bee0
+ *        [leid] => 225234741
+ *      )
+ */
+function rm_api_mailchimp_subscribe($email, $merge_vars, $double_optin = FALSE, $update_existing = TRUE, $replace_interests = TRUE, $send_welcome = FALSE) {
+    if (($library = libraries_load('MailChimp')) && !empty($library['loaded'])) {
+        $mcapikey = variable_get('mailchimp_api_key', 'b8efb78313eadea0afdae0793d86fdef-us8');
+        $MailChimp = new \Drewm\MailChimp($mcapikey);
+        $result = $MailChimp->call('lists/subscribe', array(
+            'id'                => '793255dd46',
+            'email'             => array('email'=>$email),
+            'merge_vars'        => $merge_vars,
+            'double_optin'      => $double_optin,
+            'update_existing'   => $update_existing,
+            'replace_interests' => $replace_interests,
+            'send_welcome'      => $send_welcome,
+        ));
+        return $result;
+    }
+    else {
+        drupal_set_message(t('MailChimp API could not be loaded'), 'error');
+    }
+}
+
+/**
+ * Method for unsubscribing an email to a MailChimp list
+ *
+ * Basic call:
+ *      $result = rm_api_mailchimp_unsubscribe('mfrericks@gmail.com');
+ *
+ * @param $email
+ *      a string containing the email address, such as 'abc@gmx.de'
+ *
+ * @param $delete_member
+ *      completely delete the member from your list instead of just unsubscribing, default to FALSE
+ *
+ * @param $send_goodbye
+ *      send the goodbye email to the email address, defaults to TRUE
+ *
+ * @param $send_notify
+ *      send the unsubscribe notification email to the address defined in the list email notification settings,
+ *      defaults to TRUE
+ *
+ * @return array
+ *      example:
+ *      array(1) {
+ *          ["complete"]=>
+ *          bool(true)
+ *      }
+ */
+function rm_api_mailchimp_unsubscribe($email, $delete_member = FALSE, $send_goodbye = TRUE, $send_notify = TRUE) {
+    if (($library = libraries_load('MailChimp')) && !empty($library['loaded'])) {
+        $mcapikey = variable_get('mailchimp_api_key', 'b8efb78313eadea0afdae0793d86fdef-us8');
+        $MailChimp = new \Drewm\MailChimp($mcapikey);
+        $result = $MailChimp->call('lists/unsubscribe', array(
+            'id'                => '793255dd46',
+            'email'             => array('email'=>$email),
+            'delete_member'    => $delete_member,
+            'send_goodbye'     => $send_goodbye,
+            'send_notify'      => $send_notify,
+        ));
+        return $result;
+    }
+    else {
+        drupal_set_message(t('MailChimp API could not be loaded'), 'error');
+    }
+}
+
+/**
+ * Method for sending a fax via simple-fax.de
+ *
+ * Basic call:
+ *      $result = rm_api_send_fax('private://six_four.pdf', '032223943673');
+ *
+ * @param $filename
+ *      A string with the filename of the pdf file that is supposed to be send, such as 'private://filename.pdf'
+ *
+ * @param $faxnumber
+ *      A string with the complete fax number that the file is supposed to be send to
+ */
+function rm_api_send_fax($filename, $faxnumber, $author = 1, $faxserial = 0) {
+    $fp = fopen($filename, "r");
+    $data = '';
+    while(!feof($fp)) $data .= fread($fp, 1024);
+    $pdffile = base64_encode($data);
+    require_once "SOAP/Client.php";
+    $wsdl = new SOAP_WSDL("http://longisland.simple-fax.de/soap/index.php?wsdl");
+    $proxy = $wsdl->getProxy();
+
+    global $base_url;
+    global $base_path;
+    $response = $proxy->sendfax('support@regiomino.de', 'R3g10m1n0$', $faxnumber, $pdffile, "PDF", "Regiomino GmbH", $base_url . $base_path . 'simplefaxcallback');
+    $response = preg_split("/;/", $response);
+    if($response[0] == 'success') {
+        $faxid = $response[1];
+        //search if a fax node for this fax id already exists
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'fax')
+            ->propertyCondition('status', 1)
+            ->fieldCondition('field_fax_number', 'value', $faxserial)
+            ->execute();
+        if(!empty($tmp['node'])) {
+            //save the new attempt
+            $faxnodeids = array_keys($tmp['node']);
+            $faxnode = node_load($faxnodeids[0]);
+            $faxnode->field_fax_attempts[LANGUAGE_NONE][] = array('first' => $faxid, 'second' => time());
+            $faxnode->field_fax_status[LANGUAGE_NONE][0]['value'] = 'send again';
+            node_save($faxnode);
+        }
+        else {
+            //create new fax node
+            $date = date('d.m.Y H:i:s');
+            $new_node = rm_api_create_new_node('fax', 'Fax an ' . $faxnumber . ' (' . $date . ')', 'de', $author, 1);
+
+            // Create managed File object
+            $file = (object) array(
+                'uid' => $author,
+                'uri' => $filename,
+                'filemime' => file_get_mimetype($filename),
+                'status' => 1,
+                'display' => 1,
+            );
+            // save the file to the root of the files directory.
+            $file = file_copy($file, "private://fax_$faxid.pdf");
+            // attach file to node
+            $new_node->field_pdf[LANGUAGE_NONE][0] = (array)$file;
+            // set initial fax status
+            $new_node->field_fax_status[LANGUAGE_NONE][0]['value'] = 'send';
+            // set first attempt
+            $new_node->field_fax_attempts[LANGUAGE_NONE][] = array('first' => $faxid, 'second' => time());
+            //set fax recipient
+            $new_node->field_fax_recipient[LANGUAGE_NONE][0]['value'] = $faxnumber;
+            node_save($new_node);
+        }
+
+        return $faxid;
+    }
+    else {
+        $error = $response[1];
+        return FALSE;
+    }
+}
+
+function rm_api_simplefax_callback() {
+    //load node with corresponding fax id and update status
+    $queryparams = drupal_get_query_parameters();
+    watchdog('simplefax_callback', print_r($queryparams, TRUE));
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'fax')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('field_fax_attempts', 'first', $queryparams['faxid'])
+        ->execute();
+    if(!empty($tmp['node'])) {
+        $faxnodeids = array_keys($tmp['node']);
+        $faxnode = node_load($faxnodeids[0]);
+        $faxnode->field_fax_status[LANGUAGE_NONE][0]['value'] = $queryparams['status'];
+        if(!empty($queryparams['reason'])) {
+            $reason = '<p>' . date('d.m.Y H:i:s') . ' -> ' . $queryparams['reason'] . '</p>';
+        }
+        else {
+            $reason = '<p>' . date('d.m.Y H:i:s') . ' -> ' . t('no reason given') . '</p>';
+        }
+        if(!empty($faxnode->body[LANGUAGE_NONE][0]['value'])) {
+            $faxnode->body[LANGUAGE_NONE][0]['value'] .= $reason;
+        }
+        else {
+            $faxnode->body[LANGUAGE_NONE][0]['value'] = $reason;
+        }
+        node_save($faxnode);
+        watchdog('simplefax_fax_updated', print_r($queryparams, TRUE));
+    }
+}
+
+function rm_api_cron() {
+    //detect all send but not delivered fax nodes that have been updated 5 minutes ago or longer
+    //if number of tries equals 3 or larger set the fax to undelivered
+    //if number of tries is below 3, send the fax again
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'fax')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('field_fax_status', 'value', 'failed')
+        ->execute();
+    if(!empty($tmp['node'])) {
+        $allfailedfaxes = entity_load('node', array_keys($tmp['node']));
+        foreach($allfailedfaxes as $nid => $faxnode) {
+            $attempts = count($faxnode->field_fax_attempts[LANGUAGE_NONE]);
+            if($attempts >= 3) {
+                //unpublish fax node
+                $faxnode->status = 0;
+                node_save($faxnode);
+                //alert that a fax could not be delivered
+                drupal_mail('rm_api', 'fax_undeliverable', 'system@regiomino.de', NULL, array('nid' => $nid, 'attempts' => $attempts), variable_get('site_mail', 'support@regiomino.de'));
+            }
+            else {
+                //send again
+                $result = rm_api_send_fax($faxnode->field_pdf[LANGUAGE_NONE][0]['uri'], $faxnode->field_fax_recipient[LANGUAGE_NONE][0]['value'], $faxnode->uid, $faxnode->field_fax_number[LANGUAGE_NONE][0]['value']);
+            }
+        }
+    }
+}
+
+function rm_api_google_address_check($street, $zipcode, $city, $country = 'Deutschland') {
+    $result = drupal_http_request('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($street) . ',+' . urlencode($zipcode) . '+' . urlencode($city) . ',+' . $country . '&sensor=false');
+    return json_decode($result->data);
+}
+
+function rm_api_validate_google_address($gmapsdata) {
+    $errors = array();
+    if($gmapsdata->status != 'OK') {
+        $errors[] = t('We cannot confirm your address. Please try again.');
+    }
+    elseif ($gmapsdata->results[0]->geometry->location_type != 'ROOFTOP') {
+        $errors[] = t('We cannot confirm your address. Please check if you entered it alright.');
+    }
+    return $errors;
+}
+
+/**
+ * Method for extracing address components from google maps data object
+ *
+ * Basic call:
+ *      $result = rm_api_gmapsdata_get_element($gmapsdata, 'route');
+ *
+ * @param $gmapsdata
+ *      An object containing gmaps data. Can be collected with rm_api_google_address_check()
+ *
+ * @param $element
+ *      A string with the name of the element.
+ *      Options:
+ *          'street_number'
+ *          'route'
+ *          'sublocality_level_1'
+ *          'sublocality_level_2'
+ *          'locality'
+ *          'administrative_area_level_1'
+ *          'administrative_area_level_2'
+ *          'country'
+ *          'postal_code'
+ *
+ * @param $length
+ *      A string to decide which version of the address component to return
+ *      Options:
+ *          'short_name' (default)
+ *          'long_name'
+ */
+function rm_api_gmapsdata_get_element($gmapsdata, $element, $length = 'short_name') {
+    $result = '';
+    foreach($gmapsdata->results[0]->address_components as $index => $component) {
+        if($component->types[0] == $element) $result = $component->{$length};
+    }
+
+    if(empty($result)) {
+        return NULL;
+    }
+    else {
+        return $result;
+    }
 }

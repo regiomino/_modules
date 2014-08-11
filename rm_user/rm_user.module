@@ -1,5 +1,25 @@
 <?php
 
+function rm_user_init() {
+    global $base_url;
+    if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
+        global $user;
+        if($user->uid > 0) {
+            $userobject = rm_user_address_complete($user->uid);
+            if($userobject) {
+                if(isset($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && isset($userobject->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_last_name[LANGUAGE_NONE][0]['value'])) {
+                    $name = $userobject->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $userobject->field_last_name[LANGUAGE_NONE][0]['value'];
+                }
+                else {
+                    $userobject = $account->mail;
+                }
+                drupal_goto('lieferanten/' . $userobject->field_address[LANGUAGE_NONE][0]['locality'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']);
+                drupal_set_message(t('Welcome back @username. Here are all the available vendors for your last location in @street, @zip @city. If you would like to enter a different address, please <a href="@url">click here</a>.', array('@street' => $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'], '@username' => $name, '@zip' => $userobject->field_address[LANGUAGE_NONE][0]['postal_code'], '@city' => $userobject->field_address[LANGUAGE_NONE][0]['locality'], '@url' => url())));
+            }
+        }
+    }
+}
+
 /**
 * Implements hook_menu().
 */
@@ -147,4 +167,35 @@ function rm_user_mail($key, &$message, $params) {
 			
 		break;
 	}
+}
+
+function rm_user_user_insert(&$edit, $account, $category) {
+    if( !empty($account->mail) &&
+        !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) &&
+        !empty($account->field_last_name[LANGUAGE_NONE][0]['value']) &&
+        !empty($account->field_gender[LANGUAGE_NONE][0]['value'])
+    ) {
+        $result = rm_api_mailchimp_subscribe(
+            $account->mail,
+            array(
+                'FNAME' => $account->field_first_name[LANGUAGE_NONE][0]['value'],
+                'LNAME' => $account->field_last_name[LANGUAGE_NONE][0]['value'],
+                'SALUTATION' => ($account->field_gender[LANGUAGE_NONE][0]['value'] == 'f') ? 'Frau' : 'Herr',
+                'ROLES' => 'authenticated user'
+            )
+        );
+    }
+}
+
+function rm_user_address_complete($uid) {
+    $userobject = user_load($uid);
+    if( !empty($userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+        !empty($userobject->field_address[LANGUAGE_NONE][0]['postal_code']) &&
+        !empty($userobject->field_address[LANGUAGE_NONE][0]['locality'])
+    ) {
+        return $userobject;
+    }
+    else {
+        return FALSE;
+    }
 }

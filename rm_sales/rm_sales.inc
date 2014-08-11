@@ -1,5 +1,19 @@
 <?php
 
+function rm_sales_makeprospect($nid) {
+    $nodeobject = node_load($nid);
+    $nodeobject->prospect = 1;
+    node_save($nodeobject);
+    drupal_goto();
+}
+
+function rm_sales_removeprospect($nid) {
+    $nodeobject = node_load($nid);
+    $nodeobject->prospect = 0;
+    node_save($nodeobject);
+    drupal_goto();
+}
+
 function rm_sales_deleteprofile($form, &$form_state, $nid) {
 	
 	$nodeobject = node_load($nid);
@@ -293,6 +307,15 @@ function rm_sales_publishprofile($nid) {
 			$account = user_save('', $fields);
 			$account->password = $fields['pass'];
 			$uid = $account->uid;
+            $result = rm_api_mailchimp_subscribe(
+                $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
+                array(
+                    'FNAME' => $nodeobject->title,
+                    'LNAME' => $nodeobject->field_address[LANGUAGE_NONE][0]['locality'],
+                    'SALUTATION' => 'Herr',
+                    'ROLES' => 'authenticated user, seller'
+                )
+            );
 			//drupal_mail('rm_user', 'profile_published_user_registered', $nodeobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('account' => $account, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
 		}
 		else {
@@ -414,15 +437,8 @@ function rm_sales_profilecare() {
 			}
 			
 			$shipping_agreement = '<ul>';
-			$agrqry = new EntityFieldQuery();
-			$agrtmp = $agrqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', 'shipping_agreement')
-				->propertyCondition('status', 1)
-				->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-				->execute();
-			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
+            $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+			if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -437,16 +453,8 @@ function rm_sales_profilecare() {
 			$shipping_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
 			
 			$dispatch_agreement = '<ul>';
-
-			$agrqry = new EntityFieldQuery();
-			$agrtmp = $agrqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', 'dispatch_agreement')
-				->propertyCondition('status', 1)
-				->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-				->execute();
-			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
+            $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+            if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -462,15 +470,8 @@ function rm_sales_profilecare() {
 			
 			
 			$pickup_agreement = '<ul>';
-			$agrqry = new EntityFieldQuery();
-			$agrtmp = $agrqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', 'pickup_agreement')
-				->propertyCondition('status', 1)
-				->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-				->execute();
-			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
+            $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+            if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -485,15 +486,8 @@ function rm_sales_profilecare() {
 			$pickup_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
 			
 			$commission_agreement = '<ul>';
-			$agrqry = new EntityFieldQuery();
-			$agrtmp = $agrqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', 'commission_agreement')
-				->propertyCondition('status', 1)
-				->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-				->execute();
-			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
+            $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+            if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -508,15 +502,8 @@ function rm_sales_profilecare() {
 			$commission_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
 			
 			$payment_agreement = '<ul>';
-			$agrqry = new EntityFieldQuery();
-			$agrtmp = $agrqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', 'payment_agreement')
-				->propertyCondition('status', 1)
-				->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-				->execute();
-			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
+            $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+            if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -600,17 +587,21 @@ function rm_sales_profileset() {
 	global $user;
 	
 	$header = array(
+        'prospect' => array(
+            'data' => t('Prospect'),
+            'type' => 'property',
+            'specifier' => 'prospect',
+            'sort' => 'desc',
+        ),
 		'type' => array(
 			'data' => t('Profile type'),
 			'type' => 'property',
 			'specifier' => 'type',
-			'sort' => 'desc',
 		),
 		'title' => array(
 			'data' => t('Name'),
 			'type' => 'property',
 			'specifier' => 'title',
-			'sort' => 'desc',
 		),
 		'field_address_locality' => array(
 			'data' => t('City'),
@@ -700,13 +691,14 @@ function rm_sales_profileset() {
 
 			
 			$options[$nid] = array(
+                'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
 				'type' => node_type_get_name($profileobject) . ' (' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination())) . ')',
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination())) . $publishingpossiblestring . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())),
+				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination())) . $publishingpossiblestring . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())) . ' | ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination())),
 			);
 		}
 		
@@ -781,17 +773,21 @@ function rm_sales_profilequeue() {
 	global $user;
 	
 	$header = array(
+        'prospect' => array(
+            'data' => t('Prospect'),
+            'type' => 'property',
+            'specifier' => 'prospect',
+            'sort' => 'desc',
+        ),
 		'type' => array(
 			'data' => t('Profile type'),
 			'type' => 'property',
 			'specifier' => 'type',
-			'sort' => 'desc',
 		),
 		'title' => array(
 			'data' => t('Name'),
 			'type' => 'property',
 			'specifier' => 'title',
-			'sort' => 'desc',
 		),
 		'field_address_locality' => array(
 			'data' => t('City'),
@@ -882,13 +878,14 @@ function rm_sales_profilequeue() {
 			}
 			
 			$options[$nid] = array(
-				'type' => node_type_get_name($profileobject) . ' (' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination())) . ')',
+				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
+                'type' => node_type_get_name($profileobject) . ' (' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination())) . ')',
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination())) . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())),
+				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination())) . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())) . ' | ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination())),
 			);
 		}
 		
