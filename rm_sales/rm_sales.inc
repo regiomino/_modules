@@ -340,7 +340,7 @@ function rm_sales_publishprofile($nid) {
 	drupal_goto();
 }
 
-function rm_sales_profilecare() {
+function rm_sales_profilecare_form() {
 
 	global $user;
 	
@@ -582,7 +582,7 @@ function rm_sales_profilecare() {
 	return $form;
 }
 
-function rm_sales_profileset() {
+function rm_sales_profileset_form() {
 
 	global $user;
 	
@@ -687,18 +687,18 @@ function rm_sales_profileset() {
 			$publishingpossiblestring = '';
 			$publishingpossible = rm_api_node_validate_required($nid);
 			if(isset($publishingpossible[0]['field_user_reference'])) unset($publishingpossible[0]);
-			if(empty($publishingpossible)) $publishingpossiblestring = ' | ' . l(t('Publish'), 'admin/sales/' . $nid . '/publish', array('query' => drupal_get_destination()));
+			if(empty($publishingpossible)) $publishingpossiblestring = ' ' . l(t('Publish'), 'admin/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
 
 			
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
-				'type' => node_type_get_name($profileobject) . ' (' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination())) . ')',
+				'type' => node_type_get_name($profileobject) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination())) . $publishingpossiblestring . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())) . ' | ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination())),
+				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
 			);
 		}
 		
@@ -768,7 +768,8 @@ function rm_sales_export_profiles($form, &$form_state) {
 	rm_api_excel_export($header, $rows);
 }
 
-function rm_sales_profilequeue() {
+
+function rm_sales_profilequeue_form() {
 
 	global $user;
 	
@@ -879,13 +880,13 @@ function rm_sales_profilequeue() {
 			
 			$options[$nid] = array(
 				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
-                'type' => node_type_get_name($profileobject) . ' (' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination())) . ')',
+                'type' => node_type_get_name($profileobject) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination())) . ' | ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination())) . ' | ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination())),
+				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
 			);
 		}
 		
@@ -910,9 +911,10 @@ function rm_sales_profilequeue() {
 	}
 
 	return $form;
+
 }
 
-function rm_sales_profilequeue_validate($form, &$form_state) {
+function rm_sales_profilequeue_form_validate($form, &$form_state) {
 	//Check if at least two suggestions have been selected
 	$counter = 0;
 	$conflatable = array();
@@ -939,7 +941,7 @@ function rm_sales_profilequeue_validate($form, &$form_state) {
 	}
 }
 
-function rm_sales_profilequeue_submit($form, &$form_state) {
+function rm_sales_profilequeue_form_submit($form, &$form_state) {
 	$first = TRUE;
 	foreach($form_state['values']['suggestions'] as $nid => $bool) {
 		if($first) {
