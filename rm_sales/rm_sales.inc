@@ -117,21 +117,23 @@ function rm_sales_agreement_edit_validate($form, &$form_state) {
 
 function rm_sales_agreement_edit_submit($form, &$form_state) {
 	$nodeobject = node_load($form_state['values']['nid']);
-	
+
 	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
-		foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
-			if($field_name == 'field_regular_times') {
-				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
-			}
-			if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
-		}
+        if($field_name == 'field_regular_times') {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+                if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+                if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+				else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $values) {
+                if(!is_array($values) || empty($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
 		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
-		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
 		$nodeobject->{$field_name} = $form_state['values'][$field_name];
 	}
-	
 	node_save($nodeobject);
-	global $user;
 }
 
 function rm_sales_agreement_add($form, &$form_state, $agreement_type, $suid) {
@@ -170,21 +172,25 @@ function rm_sales_agreement_add($form, &$form_state, $agreement_type, $suid) {
 function rm_sales_agreement_add_validate($form, &$form_state) {
 }
 
-function rm_sales_agreement_add_submit($form, &$form_state) {	
-	$title = node_type_get_name($form_state['values']['agreement_type']);
-	$new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
-	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
-		foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
-			if($field_name == 'field_regular_times') {
-				if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
-			}
-			if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
-		}
-		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
-		if($field_name == 'field_user_reference') $form_state['values'][$field_name][LANGUAGE_NONE][0]['target_id'] = 0;
-		$new_node->{$field_name} = $form_state['values'][$field_name];
-	}
-	node_save($new_node);
+function rm_sales_agreement_add_submit($form, &$form_state) {
+    $title = node_type_get_name($form_state['values']['agreement_type']);
+    $new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
+    foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
+        if($field_name == 'field_regular_times') {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+                if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+                if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+        else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $values) {
+                if(!is_array($values) || empty($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+        $form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+        $new_node->{$field_name} = $form_state['values'][$field_name];
+    }
+    node_save($new_node);
 }
 
 function rm_sales_editprofile($form, &$form_state, $nid) {
@@ -436,23 +442,24 @@ function rm_sales_profilecare_form() {
 				$publicphone = '+49 - ' . $profileobject->field_publicphone[LANGUAGE_NONE][0]['number'];
 			}
 			
-			$shipping_agreement = '<ul>';
+			$shipping_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
 			if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+					if($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'] > 0) {
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
 					}
-					$shipping_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$shipping_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$shipping_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$shipping_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
-			$dispatch_agreement = '<ul>';
+			$dispatch_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
@@ -463,13 +470,13 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$dispatch_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$dispatch_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$dispatch_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$dispatch_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			
-			$pickup_agreement = '<ul>';
+			$pickup_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
@@ -480,12 +487,12 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$pickup_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$pickup_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$pickup_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$pickup_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
-			$commission_agreement = '<ul>';
+			$commission_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
@@ -496,12 +503,12 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$commission_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$commission_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$commission_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$commission_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
-			$payment_agreement = '<ul>';
+			$payment_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
 				foreach($agrnodes as $agrnid => $agrnode) {
@@ -512,12 +519,12 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$payment_agreement .= '<li>' . l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination())) . '</li>';
+					$payment_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$payment_agreement .= '</ul><em>' . l(t('add new one'), 'admin/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$payment_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
-			$offer_table = '<ul>';
+			$offer_table = '<div class="list-group">';
 			$agrqry = new EntityFieldQuery();
 			$agrtmp = $agrqry
 				->entityCondition('entity_type', 'node')
@@ -537,10 +544,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$offer_table .= '<li>' . l($agrtitle, file_create_url($agrnode->field_offer_table[LANGUAGE_NONE][0]['uri'])) . '</li>';
+					$offer_table .= l($agrtitle, file_create_url($agrnode->field_offer_table[LANGUAGE_NONE][0]['uri']), array('attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$offer_table .= '</ul><em>' . l(t('add new one'), 'admin/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination())) . '</em>';
+			$offer_table .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$options[$nid] = array(
 				'type' => node_type_get_name($profileobject),
@@ -692,13 +699,13 @@ function rm_sales_profileset_form() {
 			
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
-				'type' => node_type_get_name($profileobject) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+				'type' => node_type_get_name($profileobject),
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+				'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
 		
@@ -880,13 +887,13 @@ function rm_sales_profilequeue_form() {
 			
 			$options[$nid] = array(
 				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
-                'type' => node_type_get_name($profileobject) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+                'type' => node_type_get_name($profileobject),
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
 		

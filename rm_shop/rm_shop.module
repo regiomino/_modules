@@ -161,7 +161,7 @@ function rm_shop_regionselect_submit($form, &$form_state) {
     $street = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'route');
     $house_no = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'street_number');
     $zip = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'postal_code');
-    $city = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'locality');
+    $city = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'locality', 'long_name');
     drupal_goto('lieferanten/' . $city . '/' . $zip . '/' . $street . ' ' . $house_no);
 }
 

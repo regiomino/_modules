@@ -58,13 +58,15 @@ function rm_user_menu() {
  * @param $account
  */
 function rm_sales_username_alter(&$name, $account) {
-	$account = user_load($account->uid);
-	if(isset($account->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) && isset($account->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_last_name[LANGUAGE_NONE][0]['value'])) {
-		$name = $account->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $account->field_last_name[LANGUAGE_NONE][0]['value'];
-	}
-	else {
-		$name = $account->mail;
-	}
+	if($account->uid > 0) {
+        $account = user_load($account->uid);
+        if(isset($account->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) && isset($account->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_last_name[LANGUAGE_NONE][0]['value'])) {
+            $name = $account->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $account->field_last_name[LANGUAGE_NONE][0]['value'];
+        }
+        else {
+            $name = $account->mail;
+        }
+    }
 }
 
 /**
