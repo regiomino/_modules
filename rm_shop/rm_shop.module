@@ -10,7 +10,7 @@ function rm_shop_menu() {
         'access arguments' => array('access content'),
     );
     $items['lieferanten/%/%/%'] = array(
-        'title' => t('Vendors in your region'),
+        'title' => 'Vendors in your region',
         'title callback' => 'rm_shop_get_shops_title',
         'title arguments' => array(1),
         'type' => MENU_NORMAL_ITEM,

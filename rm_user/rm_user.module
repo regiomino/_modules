@@ -21,6 +21,49 @@ function rm_user_init() {
 }
 
 /**
+* Checks if a user has the admin role
+*
+* @param $uid
+*   The user id of the user to be checked. If left at null, the current user is detected
+*
+* @return boolean
+*/
+function rm_user_is_admin($uid = NULL) {
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $account = user_load($uid);
+    return (in_array('admin', $account->roles)) ? TRUE : FALSE;
+}
+
+/**
+* Returns all users for a given role
+*
+* @param $role
+*   The role that all users are supposed to have
+*
+* @return array
+*/
+function rm_user_get_users_by_role($role) {
+    $static = &drupal_static(__FUNCTION__);
+    if(!isset($static[$role])) {
+        $query = db_select('users', 'u');
+        $query->join('users_roles', 'ur', 'u.uid = ur.uid');
+        $query->join('role', 'r', 'ur.rid = r.rid');
+        $query->fields('u',array('uid'));
+        $query->condition('r.name', $role, '=');
+        $result = $query->execute();
+        $uids = array();
+        while($record = $result->fetchAssoc()) {
+            $uids[] = $record['uid'];
+        }
+        $static[$role] = $uids;
+    }
+    return $static[$role];
+}
+
+/**
 * Implements hook_menu().
 */
 function rm_user_menu() {
@@ -49,7 +92,91 @@ function rm_user_menu() {
     'file path' => drupal_get_path('module', 'rm_user'),
     'type' => MENU_LOCAL_TASK,
   );
+    $items['user/%/shadow/%'] = array(
+        'page callback' => 'rm_user_shadow',
+        'page arguments' => array(1,3),
+        'access arguments' => array('shadow a user'),
+	);
+    $items['user/%/disable/%'] = array(
+        'page callback' => 'rm_user_disable',
+        'page arguments' => array(1,3),
+        'access callback' => 'rm_user_is_admin',
+	);
+    $items['user/%/enable/%'] = array(
+        'page callback' => 'rm_user_enable',
+        'page arguments' => array(1,3),
+        'access callback' => 'rm_user_is_admin',
+	);
 	return $items;
+}
+
+function rm_user_permission() {
+  return array(
+    'shadow a user' => array(
+      'title' => t('Shadow a user'),
+      'description' => t('Shadow another user.'),
+    ),
+  );
+}
+
+function rm_user_disable($cuid, $tuid) {
+	if (rm_user_is_admin() && $tuid != 1) {
+		$tuserobject = user_load($tuid);
+        $tuserobject->status = 0;
+        user_save($tuserobject);
+        drupal_goto();
+    }
+	else {
+		drupal_access_denied();
+	}
+}
+
+function rm_user_enable($cuid, $tuid) {
+	if (rm_user_is_admin() && $tuid != 1) {
+		$tuserobject = user_load($tuid);
+        $tuserobject->status = 1;
+        user_save($tuserobject);
+        drupal_goto();
+    }
+	else {
+		drupal_access_denied();
+	}
+}
+
+function rm_user_shadow($cuid, $tuid) {
+	$performlogin = FALSE;
+	if (user_access('shadow a user') && $tuid != 1) {
+		$performlogin = TRUE;
+		global $user;
+		$tuserobject = user_load($tuid);
+		$cuserobject = user_load($user->uid);
+		/* if(in_array('Betreuer', $cuserobject->roles) && !in_array('Redakteur', $cuserobject->roles)) {
+			//Check if the $tuid has a zipcode within the assigned area of the coop
+			$coopprofile = node_load($cuserobject->field_profilereference_coop[LANGUAGE_NONE][0]['target_id']);
+			$assignedarea = $coopprofile->field_region[LANGUAGE_NONE][0]['value'];
+			$userpostal = $tuserobject->field_address[LANGUAGE_NONE][0]['postal_code'];
+ 			if (strpos($userpostal,$assignedarea) > 0 || strpos($userpostal,$assignedarea) === FALSE) {
+				$performlogin = FALSE;
+				drupal_set_message(t('This user is not located in your assigned area'), 'error');
+			}
+			//Check if $tuid is not a Redakteur or another Betreuer
+			//if(in_array('Betreuer', $tuserobject->roles) || in_array('Redakteur', $tuserobject->roles)) {
+			if(in_array('Redakteur', $tuserobject->roles)) {
+				$performlogin = FALSE;
+				drupal_set_message(t('This user cannot be shadowed because of his permission levels'), 'error');
+			}
+		} */
+    }
+	if($performlogin) {
+		$user = user_load($tuid);
+		$login_array = array ('name' => $user->name);
+		drupal_set_message(t('You are now logged in as @username', array('@username' => format_username($user))));
+		user_login_finalize($login_array);
+		drupal_goto();
+	}
+	else {
+		drupal_access_denied();
+	}
 }
 
 /**

@@ -15,10 +15,10 @@ function rm_sales_menu() {
         'type' => MENU_NORMAL_ITEM,
     );
 	$items['admin/sales/suggested'] = array(
-    'title' => '1. Adopt profile suggestions',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 0,
-  );
+        'title' => '1. Adopt profile suggestions',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => 0,
+      );
 	$items['admin/sales/assigned'] = array(
     'title' => '2. Complete profiles',
     'page callback' => 'drupal_get_form',
@@ -30,15 +30,25 @@ function rm_sales_menu() {
     'weight' => 1,
   );
 	$items['admin/sales/manage'] = array(
-    'title' => '3. Supervise profiles',
-    'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_profilecare_form'),
-		'access callback' => 'rm_sales_user_is_salesguy',
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 2,
-  );
+        'title' => '3. Supervise profiles',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_sales_profilecare_form'),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 2,
+    );
+    $items['admin/sales/useraccounts'] = array(
+        'title' => 'User accounts',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_sales_useraccounts_form'),
+        'access callback' => 'rm_user_is_admin',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 3,
+    );
   $items['admin/sales/addoffertable/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
@@ -51,6 +61,14 @@ function rm_sales_menu() {
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_agreement_add', 3, 4),
+		'access callback' => 'rm_sales_user_is_salesguy',
+    'file' => 'rm_sales.inc',
+    'file path' => drupal_get_path('module', 'rm_sales'),
+  );
+  $items['admin/sales/addnote/%'] = array(
+    'title' => 'Sales',
+    'page callback' => 'drupal_get_form',
+		'page arguments' => array('rm_sales_note_add', 3),
 		'access callback' => 'rm_sales_user_is_salesguy',
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
@@ -108,8 +126,8 @@ function rm_sales_menu() {
   $items['admin/sales/%/delete'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_deleteprofile', 2),
-		'access callback' => 'rm_sales_deleteprofile_access',
+		'page arguments' => array('rm_sales_deletenode', 2),
+		'access callback' => 'rm_sales_deletenode_access',
 		'access arguments' => array(2),
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
@@ -139,11 +157,19 @@ function rm_sales_editprofile_access($nid) {
 	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
 }
 
-function rm_sales_deleteprofile_access($nid) {
-	$profileobject = node_load($nid);
+function rm_sales_deletenode_access($nid) {
+	$object = node_load($nid);
 	global $user;
-	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
-	if(in_array('salesguy', $user->roles) && $profileobject->uid == 0) return TRUE;
+    if($object->type == 'seller_profile' || $object->type == 'customer_profile') {
+        if(isset($object->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $object->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
+        if(in_array('salesguy', $user->roles) && $object->uid == 0) return TRUE;
+    }
+    else if($object->type == 'shipping_agreement' || $object->type == 'dispatch_agreement' || $object->type == 'pickup_agreement' || $object->type == 'payment_agreement') {
+        if(rm_sales_user_is_salesguy()) return TRUE;
+    }
+    else {
+        if(rm_user_is_admin()) return TRUE;
+    }
 }
 
 function rm_sales_user_is_salesguy() {
