@@ -147,12 +147,14 @@ function rm_sales_menu() {
 function rm_sales_publishprofile_access($nid) {
 	$profileobject = node_load($nid);
 	global $user;
+    if(rm_user_is_admin()) return TRUE;
 	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
 }
 
 function rm_sales_editprofile_access($nid) {
 	$profileobject = node_load($nid);
 	global $user;
+    if(rm_user_is_admin()) return TRUE;
 	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
 	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
 }

@@ -38,6 +38,13 @@ function rm_shop_menu() {
     return $items;
 }
 
+function rm_shop_sort_agreements_by_mov($a, $b) {
+    if ($a->field_minimum_order_value[LANGUAGE_NONE][0]['value'] == $b->field_minimum_order_value[LANGUAGE_NONE][0]['value']) {
+        return 0;
+    }
+    return ($a->field_minimum_order_value[LANGUAGE_NONE][0]['value'] < $b->field_minimum_order_value[LANGUAGE_NONE][0]['value']) ? -1 : 1;
+}
+
 function rm_shop_get_shops_title($arg) {
     return t('Vendors in @region', array('@region' => $arg));
 }

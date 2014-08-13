@@ -1,0 +1,53 @@
+<?php
+
+/**
+* Implements hook_menu().
+*/
+function rm_seller_menu() {
+    $items = array();
+    $items['admin/seller'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_offermanagement',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+	$items['admin/seller/offers'] = array(
+        'title' => 'Manage offers',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => 0,
+    );
+	$items['admin/seller/assigned'] = array(
+        'title' => 'Manage profile',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_editprofile'),
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 1,
+    );
+	return $items;
+}
+
+function rm_seller_user_is_seller() {
+    if(rm_user_is_admin()) return TRUE;
+    global $user;
+    $account = user_load($user->uid);
+    if(in_array($account->roles, 'seller')) return TRUE;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function rm_seller_theme() {
+	return array(
+		'rm_seller_theme_offermanagement' => array(
+			'template' => 'rm_seller_offermanagement_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+	);
+}

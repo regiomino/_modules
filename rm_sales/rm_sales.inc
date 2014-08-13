@@ -386,6 +386,9 @@ function rm_sales_editprofile($form, &$form_state, $nid) {
 		'#attributes' => array('placeholder' => t('Title of the profile')),
 		'#title' => t('Profile title'),
 	);
+    
+	if($profileobject->type == 'seller_profile') rm_api_attach_field_to_form('field_sellercategories', 'node', $profileobject->type, $profileobject, $form['profile'], $form_state, LANGUAGE_NONE);
+    
 	
 	$form['profile']['nid'] = array(
 		'#type' => 'value',
@@ -425,7 +428,8 @@ function rm_sales_editprofile_submit($form, &$form_state) {
 	$nodeobject->field_bic = $form_state['values']['field_bic'];
 	$nodeobject->field_taxnumber = $form_state['values']['field_taxnumber'];
 	$nodeobject->field_kleinunternehmer = $form_state['values']['field_kleinunternehmer'];	
-	$nodeobject->field_image = $form_state['values']['field_image'];
+	$nodeobject->field_image = $form_state['values']['field_image'];	
+	if(isset($nodeobject->field_sellercategories)) $nodeobject->field_sellercategories = $form_state['values']['field_sellercategories'];
 	$nodeobject->body = $form_state['values']['body'];
 	node_save($nodeobject);
 	global $user;
@@ -438,8 +442,8 @@ function rm_sales_editprofile_submit($form, &$form_state) {
 }
 
 function rm_sales_publishprofile($nid) {
-
-	if(rm_api_node_validate_required($nid)) {
+    $validation = rm_api_node_validate_required($nid);
+	if(empty($validation)) {
 		$nodeobject = node_load($nid);
 		
 		$userexists = user_load_by_mail($nodeobject->field_email[LANGUAGE_NONE][0]['email']);
@@ -482,16 +486,21 @@ function rm_sales_publishprofile($nid) {
 		node_save($nodeobject);
 		
 		rm_api_node_publish($nid);
-	}
-	global $user;
-	rm_user_activity(
-		t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
-		$nodeobject->nid,
-		'node',
-		$user->uid
-	);
-	
-	drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
+        
+        global $user;
+        rm_user_activity(
+            t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
+            $nodeobject->nid,
+            'node',
+            $user->uid
+        );
+        
+        drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
+        
+    }
+    else {
+        drupal_set_message(t('Profile <a href="@url">@profile</a> has not been published due to a validation error', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'error');
+    }
 	drupal_goto();
 }
 
@@ -721,7 +730,7 @@ function rm_sales_profilecare_form() {
 			
 			$options[$nid] = array(
 				'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title,
+				'title' => $profileobject->title . '<br />' . l(t('edit'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))),
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,

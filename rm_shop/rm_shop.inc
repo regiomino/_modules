@@ -40,7 +40,6 @@ function rm_shop_get_shops($city, $zipcode, $street) {
     //Merge all
     $allagreements = array_merge($otheragreements, $shippingagreements);
 
-    //Remove all agreements that are
     //Extract all uids from agreements
     $alluids = array();
     foreach($allagreements as $agreementobject) {
@@ -56,29 +55,67 @@ function rm_shop_get_shops($city, $zipcode, $street) {
             }
         }
         //write the current key
-        $alluids[$agreementobject->uid][$agreementobject->type][$agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']] = $agreementobject;
+        $alluids[$agreementobject->uid][$agreementobject->type][$agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']][] = $agreementobject;
     }
-
-
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node');
-    $query->entityCondition('bundle', array('seller_profile'));
-    $query->propertyCondition('status', 1);
-    $query->propertyCondition('uid', array_keys($alluids));
-    $result = $query->execute();
-
-    $shops = entity_load('node', array_keys($result['node']));
-
+    
+    $shops = array();
+    
+    if(!empty($alluids)) {
+        //Filter out all uids that do not have active trading units
+        $alluidkeys = array_keys($alluids);
+        $relevantuids = rm_shop_filter_sellers_with_active_offers($alluidkeys);#
+        
+        //then select all seller profiles that match the relevant uids
+        if(!empty($relevantuids)) {
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node');
+            $query->entityCondition('bundle', array('seller_profile'));
+            $query->propertyCondition('status', 1);
+            $query->propertyCondition('uid', $relevantuids);
+            $query->pager(15);
+            $result = $query->execute();
+            if(isset($result['node'])) {
+                $shops = entity_load('node', array_keys($result['node']));
+            }
+        }
+    }
+    //add all agreement infos to the shop profile
     foreach($shops as $nid => $shop) {
         $shops[$nid]->agreements = $alluids[$shop->uid];
     }
 
+    //pass to tpl
     return theme('rm_shop_theme_shops', array(
         'vars' => array(
             'title' => t('Vendors in @region', array('@region' => arg(1))),
             'shops' => $shops,
+            'pager' => theme('pager'),
         ),
     ));
+}
+
+function rm_shop_filter_sellers_with_active_offers($uids) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node');
+    $query->entityCondition('bundle', array('trading_unit'));
+    $query->propertyCondition('status', 1);
+    $query->propertyCondition('uid', $uids);
+    $result = $query->execute();
+
+    $intersecting_uids = array();
+    
+    if(isset($result['node'])) {
+        $tradingunitowners = array();
+        $alltradingunits = entity_load('node', array_keys($result['node']));
+        foreach($alltradingunits as $nid => $trading_unit_object) {
+            $tradingunitowners[$trading_unit_object->uid] = TRUE;
+        }
+        $tmp = array_intersect(array_keys($tradingunitowners), $uids);
+        
+        $intersecting_uids = array_values($tmp);
+    }
+    
+    return $intersecting_uids;
 }
 
 function rm_shop_jobs() {
