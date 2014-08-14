@@ -38,6 +38,33 @@ function rm_shop_menu() {
     return $items;
 }
 
+function rm_shop_get_structured_seller_offers($uid) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('offer_description', 'offer_variation', 'trading_unit'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid)
+        ->execute();
+    $alloffers = array();
+    if(isset($tmp['node'])) $alloffers = entity_load('node', array_keys($tmp['node']));
+    $offers = array();
+    foreach($alloffers as $nid => $offerobject) {
+        if($offerobject->type == 'offer_description') $offers[$nid] = $offerobject;
+    }
+    foreach($offers as $nid => $offer_description) {
+        foreach($offer_description->field_offer_variation_reference[LANGUAGE_NONE] as $delta => $offer_variation) {
+            $offers[$nid]->offer_variations[$delta] = $alloffers[$offer_variation['target_id']];
+        }
+        foreach($offers[$nid]->offer_variations as $delta => $offer_variation) {
+            foreach($offer_variation->field_trading_unit_reference[LANGUAGE_NONE] as $deltaa => $trading_unit) {
+                $offers[$nid]->offer_variations[$delta]->trading_units[$deltaa] = $alloffers[$trading_unit['target_id']];
+            }
+        }
+    }
+    return $offers;
+}
+
 function rm_shop_sort_agreements_by_mov($a, $b) {
     if ($a->field_minimum_order_value[LANGUAGE_NONE][0]['value'] == $b->field_minimum_order_value[LANGUAGE_NONE][0]['value']) {
         return 0;
