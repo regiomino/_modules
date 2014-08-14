@@ -35,7 +35,7 @@ function rm_seller_user_is_seller() {
     if(rm_user_is_admin()) return TRUE;
     global $user;
     $account = user_load($user->uid);
-    if(in_array($account->roles, 'seller')) return TRUE;
+    if(in_array('seller', $account->roles)) return TRUE;
 }
 
 /**

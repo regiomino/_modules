@@ -43,7 +43,7 @@ function rm_sales_menu() {
         'title' => 'User accounts',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_sales_useraccounts_form'),
-        'access callback' => 'rm_user_is_admin',
+        'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
         'type' => MENU_LOCAL_TASK,

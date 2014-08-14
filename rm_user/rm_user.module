@@ -95,7 +95,8 @@ function rm_user_menu() {
     $items['user/%/shadow/%'] = array(
         'page callback' => 'rm_user_shadow',
         'page arguments' => array(1,3),
-        'access arguments' => array('shadow a user'),
+        'access callback' => 'rm_user_may_be_shadowed',
+        'access arguments' => array(1,3),
 	);
     $items['user/%/disable/%'] = array(
         'page callback' => 'rm_user_disable',
@@ -110,13 +111,28 @@ function rm_user_menu() {
 	return $items;
 }
 
-function rm_user_permission() {
-  return array(
-    'shadow a user' => array(
-      'title' => t('Shadow a user'),
-      'description' => t('Shadow another user.'),
-    ),
-  );
+function rm_user_may_be_shadowed($cuid, $tuid) {
+    global $user;
+    if($tuid == 1) return FALSE;
+    if(rm_user_is_admin()) return TRUE;
+    if(rm_sales_user_is_salesguy()) {
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', $user->uid)
+            ->execute();
+        $alluids = array();
+        if(isset($tmp['node'])) {
+            $allprofiles = entity_load('node', array_keys($tmp['node']));
+            if(isset($allprofiles)) {
+                foreach($allprofiles as $nid => $profile) {
+                    $alluids[$profile->uid] = TRUE;
+                }
+            }
+        }
+        if(in_array($tuid, array_keys($alluids))) return TRUE;
+    }
 }
 
 function rm_user_disable($cuid, $tuid) {
@@ -144,39 +160,14 @@ function rm_user_enable($cuid, $tuid) {
 }
 
 function rm_user_shadow($cuid, $tuid) {
-	$performlogin = FALSE;
-	if (user_access('shadow a user') && $tuid != 1) {
-		$performlogin = TRUE;
-		global $user;
-		$tuserobject = user_load($tuid);
-		$cuserobject = user_load($user->uid);
-		/* if(in_array('Betreuer', $cuserobject->roles) && !in_array('Redakteur', $cuserobject->roles)) {
-			//Check if the $tuid has a zipcode within the assigned area of the coop
-			$coopprofile = node_load($cuserobject->field_profilereference_coop[LANGUAGE_NONE][0]['target_id']);
-			$assignedarea = $coopprofile->field_region[LANGUAGE_NONE][0]['value'];
-			$userpostal = $tuserobject->field_address[LANGUAGE_NONE][0]['postal_code'];
- 			if (strpos($userpostal,$assignedarea) > 0 || strpos($userpostal,$assignedarea) === FALSE) {
-				$performlogin = FALSE;
-				drupal_set_message(t('This user is not located in your assigned area'), 'error');
-			}
-			//Check if $tuid is not a Redakteur or another Betreuer
-			//if(in_array('Betreuer', $tuserobject->roles) || in_array('Redakteur', $tuserobject->roles)) {
-			if(in_array('Redakteur', $tuserobject->roles)) {
-				$performlogin = FALSE;
-				drupal_set_message(t('This user cannot be shadowed because of his permission levels'), 'error');
-			}
-		} */
-    }
-	if($performlogin) {
-		$user = user_load($tuid);
-		$login_array = array ('name' => $user->name);
-		drupal_set_message(t('You are now logged in as @username', array('@username' => format_username($user))));
-		user_login_finalize($login_array);
-		drupal_goto();
-	}
-	else {
-		drupal_access_denied();
-	}
+    global $user;
+    $tuserobject = user_load($tuid);
+    $cuserobject = user_load($user->uid);
+    $user = user_load($tuid);
+    $login_array = array ('name' => $user->name);
+    drupal_set_message(t('You are now logged in as @username', array('@username' => format_username($user))));
+    user_login_finalize($login_array);
+    drupal_goto();
 }
 
 /**

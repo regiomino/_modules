@@ -287,9 +287,28 @@ function rm_sales_useraccounts_form($form, &$form_state) {
         'actions' => t('Actions'),
 	);
     
+    if(!rm_user_is_admin()) {
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', $user->uid)
+            ->execute();
+        $alluids = array();
+        if(isset($tmp['node'])) {
+            $allprofiles = entity_load('node', array_keys($tmp['node']));
+            if(isset($allprofiles)) {
+                foreach($allprofiles as $nid => $profile) {
+                    $alluids[$profile->uid] = TRUE;
+                }
+            }
+        }
+    }
+    
     $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'user');
+    if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
     $tmp = $query
-        ->entityCondition('entity_type', 'user')
 		->tableSort($header)
 		->pager(100)
 		->execute();
