@@ -308,7 +308,7 @@ function rm_sales_suggest_form_validate($form, &$form_state) {
  */
 function rm_sales_suggest_form_submit($form, &$form_state) {
 
-    $owner = (isset($form_state['values']['owner'])) ? 1 : 0;
+    $owner = (!empty($form_state['values']['owner'])) ? 1 : 0;
 	$new_node = rm_api_create_new_node(
 		$form_state['values']['type'], //Type
 		$form_state['values']['title'], //Title
