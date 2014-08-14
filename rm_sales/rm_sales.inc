@@ -202,7 +202,7 @@ function rm_sales_note_add($form, &$form_state, $nid) {
 	
 	$form['title'] = array(
         '#type' => 'textfield',
-        '#title' => t('Note'),
+        '#title' => t('Add note to @title', array('@title' => node_load($nid)->title)),
     );
     
     $form['nid'] = array(
@@ -912,10 +912,8 @@ function rm_sales_profileset_form() {
             $notes = '';
             
             if(!empty($allnotes)) {
-                $notes = '
-                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#noteModal' . $nid . '">
-                      ' . t('Notes') . '
-                    </button>
+                $notes = l(t('Notes'), '#', array('external' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary'), 'data-toggle' => 'modal', 'data-target' => '#noteModal' . $nid))) . '
+                    
                     <div class="modal fade" id="noteModal' . $nid . '">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -934,6 +932,7 @@ function rm_sales_profileset_form() {
             
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
+                //'suggester' => (!empty($profileobject->field_suggester[LANGUAGE_NONE])) ? count($profileobject->field_suggester[LANGUAGE_NONE]) : 0,
 				'type' => node_type_get_name($profileobject),
 				'title' => $profileobject->title,
 				'field_address_locality' => $locality,
