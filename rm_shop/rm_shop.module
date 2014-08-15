@@ -35,6 +35,13 @@ function rm_shop_menu() {
         'file' => 'rm_shop.inc',
         'file path' => drupal_get_path('module', 'rm_shop'),
     );
+    $items['sitemap'] = array(
+        'title' => 'Sitemap',
+        'page callback' => 'rm_shop_sitemap',
+        'access arguments' => array('access content'),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
     return $items;
 }
 
@@ -115,6 +122,12 @@ function rm_shop_theme() {
         ),
         'rm_shop_theme_shops' => array(
             'template' => 'rm_shop_shops_theme',
+            'variables' => array(
+                'vars' => NULL,
+            )
+        ),
+        'rm_shop_theme_sitemap' => array(
+            'template' => 'rm_shop_sitemap_theme',
             'variables' => array(
                 'vars' => NULL,
             )

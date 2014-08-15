@@ -126,6 +126,18 @@ function rm_shop_jobs() {
     ));
 }
 
+function rm_shop_sitemap() {
+    $nodes = rm_api_get_nodes_by_properties(-1, 1);
+    
+    $sitemap = $nodes;
+    
+    return	theme('rm_shop_theme_sitemap', array(
+        'vars' => array(
+            'sitemap' => $sitemap,
+        ),
+    ));
+}
+
 function rm_shop_get_in_touch() {
 
     $form = drupal_get_form('rm_shop_contact_form');
