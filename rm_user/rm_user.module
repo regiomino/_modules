@@ -25,7 +25,8 @@ function rm_user_get_navbar() {
     $html = '';
     if($user->uid > 0) {
         $account = user_load($user->uid);
-        if(in_array('salesguy', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => t('Sales'))), 'admin/sales', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+        if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success')))) . ' ';
+        if(in_array('salesguy', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/sales', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
         $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-user', '@linktitle' => t('Log out'))), 'user/logout', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-warning'))));
     }
     else {
@@ -83,7 +84,7 @@ function rm_user_get_users_by_role($role) {
 function rm_user_menu() {
 	$items = array();
 
-  $items['admin/myaccount'] = array(
+  $items['manage/myaccount'] = array(
     'title' => 'Transactions',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_user_myaccount', 'transactions_purchase'),
@@ -92,12 +93,12 @@ function rm_user_menu() {
     'file path' => drupal_get_path('module', 'rm_user'),
     'type' => MENU_NORMAL_ITEM,
   );
-	$items['admin/myaccount/purchase'] = array(
+	$items['manage/myaccount/purchase'] = array(
     'title' => 'Purchase Transactions',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 0,
   );
-  $items['admin/myaccount/sales'] = array(
+  $items['manage/myaccount/sales'] = array(
     'title' => 'Sales Transactions',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_user_myaccount', 'transactions_sales'),

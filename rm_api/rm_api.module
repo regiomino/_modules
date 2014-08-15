@@ -342,10 +342,10 @@ function rm_api_is_holiday($timestamp) {
  * @param $activated
  * @return array
  */
-function rm_api_get_nodes_by_properties($types = -1, $status = -1, $sticky = -1, $promote = -1, $suppressed = -1, $prospect = -1, $uid = -1) {
+function rm_api_get_nodes_by_properties($types = -1, $status = -1, $sticky = -1, $promote = -1, $suppressed = -1, $prospect = -1, $uid = -1, $order = 'ASC') {
     $resobjects = &drupal_static(__FUNCTION__, array());
     $typeoffset = json_encode($types);
-    if(!isset($resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid])) {
+    if(!isset($resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid][$order])) {
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node');
         if(is_array($types)) $query->entityCondition('bundle', $types);
@@ -355,15 +355,16 @@ function rm_api_get_nodes_by_properties($types = -1, $status = -1, $sticky = -1,
         if($suppressed >= 0) $query->propertyCondition('suppressed', $suppressed);
         if($prospect >= 0) $query->propertyCondition('prospect', $prospect);
         if($uid >= 0) $query->propertyCondition('uid', $uid);
+        $query->propertyOrderBy('nid', $order);
         $result = $query->execute();
         if(isset($result['node'])) {
-            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid] = entity_load('node', array_keys($result['node']));
+            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid][$order] = entity_load('node', array_keys($result['node']));
         }
         else {
-            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid] = NULL;
+            $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid][$order] = NULL;
         }
     }
-    return $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid];
+    return $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid][$order];
 }
 
 /**

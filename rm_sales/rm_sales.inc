@@ -107,7 +107,7 @@ function rm_sales_agreement_edit($form, &$form_state, $agreement_id) {
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Save'),
-		'#suffix' => l(t('Delete'), 'admin/sales/' . $agreement_id . '/delete', array('query' => drupal_get_destination())),
+		'#suffix' => l(t('Delete'), 'manage/sales/' . $agreement_id . '/delete', array('query' => drupal_get_destination())),
 	);
 	
 	return $form;
@@ -640,10 +640,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$shipping_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
+					$shipping_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$shipping_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$shipping_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$dispatch_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
@@ -656,10 +656,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$dispatch_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
+					$dispatch_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$dispatch_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$dispatch_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			
 			$pickup_agreement = '<div class="list-group">';
@@ -673,10 +673,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$pickup_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
+					$pickup_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$pickup_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$pickup_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$commission_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
@@ -689,10 +689,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$commission_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
+					$commission_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$commission_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$commission_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$payment_agreement = '<div class="list-group">';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
@@ -705,10 +705,10 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$payment_agreement .= l($agrtitle, 'admin/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
+					$payment_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$payment_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$payment_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$offer_table = '<div class="list-group">';
 			$agrqry = new EntityFieldQuery();
@@ -733,7 +733,7 @@ function rm_sales_profilecare_form() {
 					$offer_table .= l($agrtitle, file_create_url($agrnode->field_offer_table[LANGUAGE_NONE][0]['uri']), array('attributes' => array('class' => array('list-group-item'))));
 				}
 			}
-			$offer_table .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'admin/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
+			$offer_table .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
             
             $salesguynid = format_username($user);
             if(rm_user_is_admin($user->uid)) {
@@ -749,7 +749,7 @@ function rm_sales_profilecare_form() {
 			
 			$options[$nid] = array(
 				'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title . '<br />' . l(t('edit'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))),
+				'title' => $profileobject->title . '<br />' . l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))),
 				'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
@@ -903,7 +903,7 @@ function rm_sales_profileset_form() {
 			$publishingpossiblestring = '';
 			$publishingpossible = rm_api_node_validate_required($nid);
 			if(isset($publishingpossible[0]['field_user_reference'])) unset($publishingpossible[0]);
-			if(empty($publishingpossible)) $publishingpossiblestring = ' ' . l(t('Publish'), 'admin/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+			if(empty($publishingpossible)) $publishingpossiblestring = ' ' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             
             $salesguynid = format_username($user);
             
@@ -939,7 +939,7 @@ function rm_sales_profileset_form() {
                                 <div class="modal-body"><ul class="list-group">';
                 foreach($allnotes as $notenid => $noteobject) {
                     $notes .= '<li class="list-group-item"><span class="badge">' . date('d.m.Y', $noteobject->created) . ' - ' . format_username(user_load($noteobject->uid));
-                    if(rm_user_is_admin()) $notes .= ' - (' . l('X', 'admin/sales/' . $notenid . '/delete', array('query' => drupal_get_destination())) . ')';
+                    if(rm_user_is_admin()) $notes .= ' - (' . l('X', 'manage/sales/' . $notenid . '/delete', array('query' => drupal_get_destination())) . ')';
                     $notes .= '</span>' . $noteobject->title . '</li>';
                 }
                 $notes .= '
@@ -960,7 +960,7 @@ function rm_sales_profileset_form() {
 				'field_publicphone' => $publicphone,
 				'field_salesguy' => $salesguynid,
                 'notes' => $notes,
-                'actions' => l(t('Complete profile'), 'admin/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . ' ' . l(t('Add note'), 'admin/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))),
+                'actions' => l(t('Complete profile'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . ' ' . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))),
 			);
 		}
 		
@@ -1204,7 +1204,7 @@ function rm_sales_profilequeue_form() {
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'actions' => l(t('Take over'), 'admin/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'admin/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'admin/sales/removeprospect/' . $nid : 'admin/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'admin/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
+				'actions' => l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
 		
@@ -1329,4 +1329,13 @@ function rm_sales_assignprofile($nid, $uid) {
 	);
 	drupal_set_message(t('The profile @profilename has been assigned to you', array('@profilename' => $profileobject->title)), 'status');
 	drupal_goto();
+}
+
+function rm_sales_press() {
+    //pass to tpl
+    return theme('rm_sales_theme_press', array(
+        'vars' => array(
+            'reports' => rm_api_get_nodes_by_properties(array('press_report'), 1, -1, -1, -1, -1, -1, 'DESC'),
+        ),
+    ));
 }

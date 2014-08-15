@@ -5,7 +5,14 @@
 */
 function rm_sales_menu() {
     $items = array();
-    $items['admin/sales'] = array(
+    $items['presse'] = array(
+        'title' => 'Press',
+        'page callback' => 'rm_sales_press',
+        'access arguments' => array('access content'),
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
+    $items['manage/sales'] = array(
         'title' => 'Sales',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_sales_profilequeue_form'),
@@ -14,12 +21,12 @@ function rm_sales_menu() {
         'file path' => drupal_get_path('module', 'rm_sales'),
         'type' => MENU_NORMAL_ITEM,
     );
-	$items['admin/sales/suggested'] = array(
+	$items['manage/sales/suggested'] = array(
         'title' => '1. Adopt profile suggestions',
         'type' => MENU_DEFAULT_LOCAL_TASK,
         'weight' => 0,
       );
-	$items['admin/sales/assigned'] = array(
+	$items['manage/sales/assigned'] = array(
     'title' => '2. Complete profiles',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_profileset_form'),
@@ -29,7 +36,7 @@ function rm_sales_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-	$items['admin/sales/manage'] = array(
+	$items['manage/sales/manage'] = array(
         'title' => '3. Supervise profiles',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_sales_profilecare_form'),
@@ -39,7 +46,7 @@ function rm_sales_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 2,
     );
-    $items['admin/sales/useraccounts'] = array(
+    $items['manage/sales/useraccounts'] = array(
         'title' => 'User accounts',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_sales_useraccounts_form'),
@@ -49,7 +56,7 @@ function rm_sales_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 3,
     );
-  $items['admin/sales/addoffertable/%'] = array(
+  $items['manage/sales/addoffertable/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_offertable_add', 3),
@@ -57,7 +64,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/addagreement/%/%'] = array(
+  $items['manage/sales/addagreement/%/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_agreement_add', 3, 4),
@@ -65,7 +72,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/addnote/%'] = array(
+  $items['manage/sales/addnote/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_note_add', 3),
@@ -73,7 +80,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/editagreement/%'] = array(
+  $items['manage/sales/editagreement/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_agreement_edit', 3),
@@ -81,7 +88,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/assignprofile/%/%'] = array(
+  $items['manage/sales/assignprofile/%/%'] = array(
     'title' => 'Sales',
     'page callback' => 'rm_sales_assignprofile',
 		'page arguments' => array(3,4),
@@ -90,7 +97,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-    $items['admin/sales/makeprospect/%'] = array(
+    $items['manage/sales/makeprospect/%'] = array(
         'title' => 'Sales',
         'page callback' => 'rm_sales_makeprospect',
         'page arguments' => array(3),
@@ -98,7 +105,7 @@ function rm_sales_menu() {
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
-    $items['admin/sales/removeprospect/%'] = array(
+    $items['manage/sales/removeprospect/%'] = array(
         'title' => 'Sales',
         'page callback' => 'rm_sales_removeprospect',
         'page arguments' => array(3),
@@ -106,7 +113,7 @@ function rm_sales_menu() {
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
-  $items['admin/sales/changeprofiletype/%/%'] = array(
+  $items['manage/sales/changeprofiletype/%/%'] = array(
     'title' => 'Sales',
     'page callback' => 'rm_sales_changeprofiletype',
 		'page arguments' => array(3,4),
@@ -114,7 +121,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/%/edit'] = array(
+  $items['manage/sales/%/edit'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_editprofile', 2),
@@ -123,7 +130,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/%/delete'] = array(
+  $items['manage/sales/%/delete'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
 		'page arguments' => array('rm_sales_deletenode', 2),
@@ -132,7 +139,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['admin/sales/%/publish'] = array(
+  $items['manage/sales/%/publish'] = array(
     'title' => 'Sales',
     'page callback' => 'rm_sales_publishprofile',
 		'page arguments' => array(2),
@@ -370,7 +377,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 		}
 	}
 	else {
-		drupal_set_message(t('Thank you very much! @name has been entered and assigned to your <a href="@url">sales</a> account.', array('@name' => $form_state['values']['title'], '@url' => 'user/register?destination=admin/sales/assigned')), 'status');
+		drupal_set_message(t('Thank you very much! @name has been entered and assigned to your <a href="@url">sales</a> account.', array('@name' => $form_state['values']['title'], '@url' => 'user/register?destination=manage/sales/assigned')), 'status');
 	}
 	
 	//Log activity
@@ -408,4 +415,18 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 		);	
 	}
 	
+}
+
+/**
+ * Implements hook_theme().
+ */
+function rm_sales_theme() {
+	return array(
+		'rm_sales_theme_press' => array(
+			'template' => 'rm_sales_press_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+	);
 }
