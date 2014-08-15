@@ -119,10 +119,9 @@ function rm_shop_filter_sellers_with_active_offers($uids) {
 }
 
 function rm_shop_jobs() {
-
     return	theme('rm_shop_theme_jobs', array(
         'vars' => array(
-            'jobs' => 'jobs',
+            'jobs' => rm_api_get_nodes_by_properties(array('job'), 1, -1, -1, -1, -1, -1, 'DESC'),
         ),
     ));
 }

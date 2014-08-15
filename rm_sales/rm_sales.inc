@@ -1336,7 +1336,7 @@ function rm_sales_press() {
     return theme('rm_sales_theme_press', array(
         'vars' => array(
             'reports' => rm_api_get_nodes_by_properties(array('press_report'), 1, -1, -1, -1, -1, -1, 'DESC'),
-            'logo' => node_load(1392),
+            'logo' => node_load(1393),
         ),
     ));
 }
