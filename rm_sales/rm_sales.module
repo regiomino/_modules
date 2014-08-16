@@ -226,16 +226,16 @@ function rm_sales_suggest_form($form, &$form_state) {
 		'#required' => TRUE,
 	);
 
-	$form['suggest']['necessary']['thoroughfare'] = array(
-		'#type' => 'textfield',
-		'#title' => t('Street'),
-		'#required' => TRUE,
-	);
-
     $form['suggest']['nicetohave'] = array(
         '#type' => 'fieldset',
         '#title' => t('... and these infos are helpful'),
     );
+    
+    $form['suggest']['nicetohave']['thoroughfare'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Street'),
+		'#required' => FALSE,
+	);
 
     $form['suggest']['nicetohave']['postal_code'] = array(
         '#type' => 'textfield',
@@ -251,7 +251,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 
 	$form['suggest']['nicetohave']['suggester'] = array(
 		'#type' => 'textfield',
-		'#title' => t('Your E-Mail'),
+		'#title' => t('E-Mail of suggester'),
 		'#required' => FALSE,
 	);
 
