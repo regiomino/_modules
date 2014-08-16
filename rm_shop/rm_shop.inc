@@ -189,6 +189,7 @@ function rm_shop_contact_form_validate($form, &$form_state) {
 
 function rm_shop_contact_form_submit($form, &$form_state) {
     drupal_mail('rm_shop', 'contact_form', 'system@regiomino.de', NULL, array('email' => $form_state['values']['email'], 'body' => $form_state['values']['body'], 'name' => $form_state['values']['name']), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_set_message(t('Thank you very much. We have received your message and will get back to you as soon as possible.'), 'status');
 }
 
 function rm_shop_mail($key, &$message, $params) {
