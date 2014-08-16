@@ -127,13 +127,16 @@ function rm_shop_jobs() {
 }
 
 function rm_shop_sitemap() {
-    $nodes = rm_api_get_nodes_by_properties(-1, 1);
+    $nodes = rm_api_get_nodes_by_properties(array('simple_page', 'faq', 'customer_profile', 'job', 'seller_profile', 'media_object', 'press_report', 'labels'), 1);
     
-    $sitemap = $nodes;
+    $groupednodes = array();
+    foreach($nodes as $nid => $nodeobject) {
+        $groupednodes[$nodeobject->type][] = $nodeobject;
+    }
     
     return	theme('rm_shop_theme_sitemap', array(
         'vars' => array(
-            'sitemap' => $sitemap,
+            'sitemap' => $groupednodes,
         ),
     ));
 }
