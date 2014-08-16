@@ -846,17 +846,29 @@ function rm_sales_profileset_form() {
 				'column' => 'number',
 			),
 		),
-		'field_salesguy' => array(
+		'field_priority' => array(
+			'data' => t('Priority'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_priority',
+				'column' => 'value',
+			),
+		),
+    );
+    
+    if(rm_user_is_admin($user->uid)) {
+        $header['field_salesguy'] = array(
 			'data' => t('Salesguy'),
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'field_salesguy',
 				'column' => 'target_id',
 			),
-		),
-        'notes' => t('Notes'),
-		'actions' => t('Actions'),
-	);
+		);
+    }
+    
+    $header['notes'] = t('Notes');
+    $header['actions'] = t('Actions');
 	
 
 	$query = new EntityFieldQuery();
@@ -910,10 +922,9 @@ function rm_sales_profileset_form() {
 			if(isset($publishingpossible[0]['field_user_reference'])) unset($publishingpossible[0]);
 			if(empty($publishingpossible)) $publishingpossiblestring = ' ' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             
-            $salesguynid = format_username($user);
             
             if(rm_user_is_admin($user->uid)) {
-                $salesguynid = '<div id="salesguys"><select id="salesguy_' . $nid . '" class="form-control input-sm">';
+                $salesguynid = '<div class="salesguys"><select id="salesguy_' . $nid . '" class="form-control input-sm">';
                 $salesguys = entity_load('user', rm_user_get_users_by_role('salesguy'));
                 foreach($salesguys as $uid => $userobject) {
                     $salesguynid .= '<option value="' . $uid . '"';
@@ -954,6 +965,16 @@ function rm_sales_profileset_form() {
                     </div>';
 			}
             
+            $prio_field = field_info_field('field_priority');
+            $prio_allowed_values = list_allowed_values($prio_field);
+            $prionid = '<div class="priorities"><select id="priority_' . $nid . '" class="form-control input-sm" style="width: 70px;">';
+            foreach($prio_allowed_values as $value => $valdesc) {
+                $prionid .= '<option value="' . $value . '"';
+                if ($profileobject->field_priority[LANGUAGE_NONE][0]['value'] == $value) $prionid .= ' selected';
+                $prionid .= '>' . $valdesc . '</option>';
+            }
+            $prionid .= '</select></div>';
+            
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 //'suggester' => (!empty($profileobject->field_suggester[LANGUAGE_NONE])) ? count($profileobject->field_suggester[LANGUAGE_NONE]) : 0,
@@ -963,10 +984,14 @@ function rm_sales_profileset_form() {
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-				'field_salesguy' => $salesguynid,
+                'field_priority' => $prionid,
                 'notes' => $notes,
                 'actions' => l(t('Complete profile'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . ' ' . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))),
 			);
+            
+            if(rm_user_is_admin($user->uid)) {
+				$options[$nid]['field_salesguy'] = $salesguynid;
+            }
 		}
 		
 		$form['submit'] = array(
@@ -1333,6 +1358,21 @@ function rm_sales_assignprofile($nid, $uid) {
 		$uid
 	);
 	drupal_set_message(t('The profile @profilename has been assigned to you', array('@profilename' => $profileobject->title)), 'status');
+	drupal_goto();
+}
+
+function rm_sales_changepriority($nid, $priority) {
+	$profileobject = node_load($nid);
+	$profileobject->field_priority[LANGUAGE_NONE][0]['value'] = $priority;
+	node_save($profileobject);
+	global $user;
+	$userobject = user_load($uid);
+	rm_user_activity(
+		t('Changed priority on <a href="@url">@profile</a> to @prio', array('@url' => url('node/' . $nid), '@profile' => $profileobject->title, '@prio' => $priority)),
+		$nid,
+		'node',
+		$user->uid
+	);
 	drupal_goto();
 }
 

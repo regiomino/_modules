@@ -1,6 +1,20 @@
 <?php
 
 function rm_user_init() {
+
+    // $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
+    
+    // foreach($nodes as $nid => $node) {
+        // $node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
+        // node_save($node);
+    // }
+    
+    
+    
+    
+    
+    
+    
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
         global $user;
