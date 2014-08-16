@@ -290,7 +290,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 		$form['suggest']['suggester']['#default_value'] = $user->mail;
 	}
 
-    $form['suggest']['submit'] = array(
+    $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Suggest'),
     );

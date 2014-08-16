@@ -25,6 +25,25 @@ function rm_shop_node_access($node, $op, $account) {
 }
 
 /**
+* Implements hook_mollom_form_list().
+*/
+function rm_shop_mollom_form_list() {
+  $forms['rm_shop_contact_form'] = array(
+    'title' => t('Get in touch form'),
+  );
+  return $forms;
+}
+/**
+* Implements hook_mollom_form_info().
+*/
+function rm_shop_mollom_form_info() {
+  $form_info = array(
+    'mode' => MOLLOM_MODE_CAPTCHA,
+  );
+  return $form_info;
+}
+
+/**
  * Implements hook_menu().
  */
 function rm_shop_menu() {
