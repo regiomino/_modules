@@ -1,5 +1,29 @@
 <?php
 
+function rm_shop_node_access($node, $op, $account) {
+    if($op == 'view') {
+        if(!rm_user_is_admin()) {
+            switch($node->type) {
+                case 'payment_agreement':
+                case 'dispatch_agreement':
+                case 'pickup_agreement':
+                case 'commission_agreement':
+                case 'shipping_agreement':
+                case 'transactions_sales':
+                case 'transactions_purchase':
+                case 'note':
+                case 'trading_unit':
+                case 'fax':
+                case 'offer_variation':
+                case 'offer_description':
+                case 'offer_table':
+                case 'activity_log':
+                    return NODE_ACCESS_DENY;
+            }
+        }
+    }
+}
+
 /**
  * Implements hook_menu().
  */
