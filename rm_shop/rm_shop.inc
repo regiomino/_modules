@@ -12,7 +12,7 @@ function rm_shop_get_shops($city, $zipcode, $street) {
     global $user;
 
     drupal_add_js('https://maps.googleapis.com/maps/api/js?sensor=false', 'external');
-    drupal_add_js(drupal_get_path('module', 'rm_shop') . '/js/map.js');
+    drupal_add_js(drupal_get_path('module', 'rm_shop') . '/js/rm_shop.js');
 
     //Get all shipping agreements that match the given zipcode
     $query = new EntityFieldQuery();

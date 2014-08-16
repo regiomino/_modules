@@ -1,6 +1,7 @@
 <?php
 
 function rm_seller_offermanagement() {
+    drupal_add_js(drupal_get_path('module', 'rm_seller') . '/js/rm_seller.js');
     //pass to tpl
     return theme('rm_seller_theme_offermanagement', array(
         'vars' => array(

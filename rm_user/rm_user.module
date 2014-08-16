@@ -5,7 +5,7 @@ function rm_user_init() {
     // $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
     
     // foreach($nodes as $nid => $node) {
-        // $node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
+        // $node->field_next_action[LANGUAGE_NONE][0]['value'] = 0;
         // node_save($node);
     // }
     

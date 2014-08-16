@@ -113,6 +113,14 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
+  $items['manage/sales/updatenextaction/%'] = array(
+    'title' => 'Sales',
+    'page callback' => 'rm_sales_updatenextaction',
+		'page arguments' => array(3),
+        'access callback' => 'rm_sales_user_is_salesguy',
+    'file' => 'rm_sales.inc',
+    'file path' => drupal_get_path('module', 'rm_sales'),
+  );
     $items['manage/sales/makeprospect/%'] = array(
         'title' => 'Sales',
         'page callback' => 'rm_sales_makeprospect',
@@ -383,6 +391,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 	}
     
     $new_node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
+    $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 0;
 
 	node_save($new_node);
 	
