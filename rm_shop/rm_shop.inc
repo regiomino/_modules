@@ -145,7 +145,7 @@ function rm_shop_get_in_touch() {
     return	theme('rm_shop_theme_get_in_touch', array(
         'vars' => array(
             'contactform' => $form,
-            'faq' => 'faq',
+            'faq' => rm_api_get_nodes_by_properties(array('faq'), 1, -1, -1, -1, -1, -1, 'DESC'),
         ),
     ));
 }
