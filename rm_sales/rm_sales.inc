@@ -846,14 +846,22 @@ function rm_sales_profileset_form() {
 				'column' => 'number',
 			),
 		),
-		'field_priority' => array(
-			'data' => t('Priority'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_priority',
-				'column' => 'value',
-			),
-		),
+		// 'field_salescomment' => array(
+			// 'data' => t('Comment'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_salescomment',
+				// 'column' => 'value',
+			// ),
+		// ),
+		// 'field_priority' => array(
+			// 'data' => t('Priority'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_priority',
+				// 'column' => 'value',
+			// ),
+		// ),
     );
     
     if(rm_user_is_admin($user->uid)) {
@@ -975,6 +983,10 @@ function rm_sales_profileset_form() {
             }
             $prionid .= '</select></div>';
             
+            $salescomment = '<div class="comments"><textarea id="comment_' . $nid . '" class="form-control">';
+            if(isset($profileobject->field_salescomment[LANGUAGE_NONE][0]['value'])) $salescomment .= $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'];
+            $salescomment .= '</textarea></div>';
+            
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 //'suggester' => (!empty($profileobject->field_suggester[LANGUAGE_NONE])) ? count($profileobject->field_suggester[LANGUAGE_NONE]) : 0,
@@ -984,7 +996,8 @@ function rm_sales_profileset_form() {
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone,
-                'field_priority' => $prionid,
+                // 'field_salescomment' => $salescomment,
+                //'field_priority' => $prionid,
                 'notes' => $notes,
                 'actions' => l(t('Complete profile'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $publishingpossiblestring . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . ' ' . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))),
 			);
@@ -1369,6 +1382,22 @@ function rm_sales_changepriority($nid, $priority) {
 	$userobject = user_load($uid);
 	rm_user_activity(
 		t('Changed priority on <a href="@url">@profile</a> to @prio', array('@url' => url('node/' . $nid), '@profile' => $profileobject->title, '@prio' => $priority)),
+		$nid,
+		'node',
+		$user->uid
+	);
+	drupal_goto();
+}
+
+function rm_sales_updatecomment($nid) {
+    $text = $_POST['text'];
+    $profileobject = node_load($nid);
+	$profileobject->field_salescomment[LANGUAGE_NONE][0]['value'] = $text;
+	node_save($profileobject);
+	global $user;
+	$userobject = user_load($uid);
+	rm_user_activity(
+		t('Updated comment on <a href="@url">@profile</a>', array('@url' => url('node/' . $nid), '@profile' => $profileobject->title)),
 		$nid,
 		'node',
 		$user->uid

@@ -105,6 +105,14 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
+  $items['manage/sales/updatecomment/%'] = array(
+    'title' => 'Sales',
+    'page callback' => 'rm_sales_updatecomment',
+		'page arguments' => array(3),
+        'access callback' => 'rm_sales_user_is_salesguy',
+    'file' => 'rm_sales.inc',
+    'file path' => drupal_get_path('module', 'rm_sales'),
+  );
     $items['manage/sales/makeprospect/%'] = array(
         'title' => 'Sales',
         'page callback' => 'rm_sales_makeprospect',
