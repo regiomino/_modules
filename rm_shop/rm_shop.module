@@ -264,8 +264,11 @@ function rm_shop_get_participantxml() {
                 }
                 if(!empty($value->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['postal_code'];
                 $address .= ' ' . $value->field_address[LANGUAGE_NONE][0]['locality'];
-                if($value->status != 1) {
+                if($value->status != 1 && $value->prospect != 1) {
                    $index = 'inactive_profile';
+                }
+                elseif($value->status != 1 && $value->prospect == 1) {
+                   $index = 'prospect_profile';
                 }
                 else {
                    $index = $value->type;

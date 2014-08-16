@@ -10,13 +10,17 @@ jQuery(document).ready(function($) {
             icon: pathToTheme + '/images/markers/inactive_profile.png',
             zindex: 1
         },
+        prospect_profile: {
+            icon: pathToTheme + '/images/markers/prospect_profile.png',
+            zindex: 2
+        },
         customer_profile: {
             icon: pathToTheme + '/images/markers/customer_profile.png',
-            zindex: 2
+            zindex: 3
         },
         seller_profile: {
             icon: pathToTheme + '/images/markers/seller_profile.png',
-            zindex: 3
+            zindex: 4
         },
     };
 

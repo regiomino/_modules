@@ -4,6 +4,8 @@ function rm_sales_makeprospect($nid) {
     $nodeobject = node_load($nid);
     $nodeobject->prospect = 1;
     node_save($nodeobject);
+    global $user;
+    rm_user_activity(t('Marked @entry as prospect', array('@entry' => $nodeobject->title)), $nodeobject->nid, 'node', $user->uid);
     drupal_goto();
 }
 
@@ -11,6 +13,8 @@ function rm_sales_removeprospect($nid) {
     $nodeobject = node_load($nid);
     $nodeobject->prospect = 0;
     node_save($nodeobject);
+    global $user;
+    rm_user_activity(t('Removed prospect marker from @entry', array('@entry' => $nodeobject->title)), $nodeobject->nid, 'node', $user->uid);
     drupal_goto();
 }
 
@@ -80,6 +84,7 @@ function rm_sales_offertable_add_submit($form, &$form_state) {
 	if(!empty($form_state['values']['body'][LANGUAGE_NONE][0]['value'])) $new_node->body = $form_state['values']['body'];
 	$new_node->field_offer_table = $form_state['values']['field_offer_table'];
 	node_save($new_node);
+    rm_user_activity(t('Added offertable to @entry', array('@entry' => $new_node->title)), $new_node->nid, 'node', $user->uid);
 }
 
 function rm_sales_agreement_edit($form, &$form_state, $agreement_id) {
@@ -863,7 +868,7 @@ function rm_sales_profileset_form() {
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
     $query
 		->tableSort($header)
-		->pager(500);
+		->pager(100);
     $tmp = $query->execute();
 		
 	$form = array();
