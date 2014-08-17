@@ -42,7 +42,6 @@ jQuery(document).ready(function ($) {
         data['nid'] = res[1];
         data['text'] = $(this).val();
         callback_url = Drupal.settings.basePath + 'manage/sales/updatenextaction/' + data['nid'];
-            
         $.ajax({
             url: callback_url,
             type: 'POST',

@@ -9,12 +9,6 @@ function rm_user_init() {
         // node_save($node);
     // }
     
-    
-    
-    
-    
-    
-    
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
         global $user;
@@ -27,8 +21,10 @@ function rm_user_init() {
                 else {
                     $userobject = $account->mail;
                 }
-                drupal_goto('lieferanten/' . $userobject->field_address[LANGUAGE_NONE][0]['locality'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']);
                 drupal_set_message(t('Welcome back @username. Here are all the available vendors for your last location in @street, @zip @city. If you would like to enter a different address, please <a href="@url">click here</a>.', array('@street' => $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'], '@username' => $name, '@zip' => $userobject->field_address[LANGUAGE_NONE][0]['postal_code'], '@city' => $userobject->field_address[LANGUAGE_NONE][0]['locality'], '@url' => url())));
+                
+                drupal_goto('lieferanten/' . $userobject->field_address[LANGUAGE_NONE][0]['locality'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']);
+                
             }
         }
     }
