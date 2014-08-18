@@ -1,5 +1,10 @@
 jQuery(document).ready(function ($) {
 
+    $('.label-details').click(function(e) { e.preventDefault(); }).popover({
+      trigger: 'click hover',
+      html: true
+    })
+
     $('#filterShops').keyup(function () {
         var rex = new RegExp($(this).val(), 'i');
         $('.panel-default').hide();
