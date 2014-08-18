@@ -20,6 +20,8 @@ jQuery(document).ready(function ($) {
             url: callback_url,
             type: 'POST',
             data: data
+        }).done(function() {
+            alert('success');
         });
 	}
     
