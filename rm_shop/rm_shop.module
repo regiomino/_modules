@@ -18,6 +18,7 @@ function rm_shop_node_access($node, $op, $account) {
                 case 'offer_description':
                 case 'offer_table':
                 case 'activity_log':
+                case 'cart_item':
                     return NODE_ACCESS_DENY;
             }
         }
