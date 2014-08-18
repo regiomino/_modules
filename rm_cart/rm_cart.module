@@ -1,0 +1,139 @@
+<?php
+
+/**
+* Implements hook_menu().
+*/
+function rm_cart_menu() {
+	$items = array();
+
+    $items['addtocart/%/%/%/%'] = array(
+        'page callback' => 'rm_cart_add_to_cart',
+        'page arguments' => array(1,2,3,4),
+        'access arguments' => array('access content'),
+	);
+    
+	return $items;
+}
+
+function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL) {
+    
+    //If no uid is provided, use the one of the current user
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    
+    //admins may also post uids to the path that triggers this function.
+    //if this is the case, override any other uid that may have been provided or determined
+    if(rm_user_is_admin()) {
+        if(!empty($_POST['uid'])) $uid = $_POST['uid'];
+    }
+    
+    //check if combination of references is valid
+    $offer_description_object = node_load($offer_description);
+    $valid = FALSE;
+    foreach($offer_description_object->field_offer_variation_reference[LANGUAGE_NONE] as $variation) {
+        if($variation['target_id'] == $offer_variation) {
+            $offer_variation_object = node_load($offer_variation);
+            foreach($offer_variation_object->field_trading_unit_reference[LANGUAGE_NONE] as $tradingunit) {
+                if($tradingunit['target_id'] == $trading_unit) {
+                    $valid = TRUE;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    
+    if($valid) {
+        $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
+        $new_node->field_offer_description[LANGUAGE_NONE][0]['target_id'] = $offer_description;
+        $new_node->field_offer_variation[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
+        $new_node->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+        $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+        $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
+        node_save($new_node);
+        drupal_set_message(t('The offer was added to your cart'), 'status');
+    }
+    else {
+        drupal_set_message(t('There was an error when adding the offer to your cart. Please contact us if this problem persists.'), 'error');
+        $userobject = user_load($uid);
+        watchdog('rm_cart', t('Validation error: User @user (@session) tried to add the following cart element: description @offer_description -> variation @offer_variation -> tu @trading_unit -> qty @quantity', array('@user' => format_username($userobject), '@session' => session_id(), '@offer_description' => $offer_description, '@offer_variation' => $offer_variation, '@trading_unit' => $trading_unit, '@quantity' => $quantity)));
+    }
+    drupal_goto();
+}
+
+function rm_cart_get_cart($uid = NULL) {
+    
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    
+    if($uid > 0) {
+        $cart_items = rm_api_get_nodes_by_properties(array('cart_item'), 1, -1, -1, -1, -1, $uid, 'DESC');
+    }
+    else {
+        $session_id = session_id();
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('cart_item'))
+            ->propertyCondition('status', 1)
+            ->propertyCondition('uid', $uid)
+            ->fieldCondition('field_session_id', 'value', $session_id)
+            ->execute();
+        if(isset($tmp['node'])) {
+            $cart_items = entity_load('node', array_keys($tmp['node']));
+        }
+        else {
+            $cart_items = NULL;
+        }
+    }
+    
+    return $cart_items;
+}
+
+/**
+* Implementation of hook_block_info().
+*/
+function rm_cart_block_info() {
+    $blocks['rm_cart_block'] = array(
+        'info' => t('Cart'), //The name that will appear in the block list.
+        'cache' => DRUPAL_NO_CACHE, //Default
+    );
+    return $blocks;
+}
+
+/**
+* Implementation of hook_block_view().
+*/
+function rm_cart_block_view($delta = '') {
+    switch($delta){
+        
+        case 'rm_cart_block':
+
+			$block['subject'] = t('Your shopping cart');
+			if(user_access('access content')){
+
+				$block['content'] = theme('rm_cart_theme_cart_block', array(
+															'vars' => array(
+																'cart' => rm_cart_get_cart(),
+															),
+														));
+			}
+
+			return $block;
+    }
+}
+
+function rm_cart_theme() {
+	return array(
+		'rm_cart_theme_cart_block' => array(
+			'template' => 'rm_cart_cart_block_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+	);
+}
