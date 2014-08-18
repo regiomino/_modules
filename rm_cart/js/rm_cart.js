@@ -37,5 +37,10 @@ jQuery(document).ready(function ($) {
         
         //irgendeine methode zum refreshen der warenkorb darstellung rechts muss hier gecalled werden
     });
+    
+    $('.product-cart-variations').click(function(e) { e.preventDefault(); }).popover({
+      trigger: 'click',
+      html: true
+    })
 
 });
