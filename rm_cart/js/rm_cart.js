@@ -46,9 +46,14 @@ jQuery(document).ready(function ($) {
     $('.dropdown-variation li').click(function(e) {
         e.preventDefault();
         var selected = $(this).text();
+        var variationnid = $(this).data('variation-nid');
         $(this).parent().parent().find('.dropdown-toggle').html('<strong>' + selected + '</strong> <span class="caret"></span>');
         
         //Richtigen Produktbody und Warenkorb Link einblenden und andere ausblenden
+        $(this).parent().parent().parent().parent().parent().parent().find('.product-body').addClass('hidden');
+        $(this).parent().parent().parent().parent().parent().parent().find('.product-cart').addClass('hidden');
+        $(this).parent().parent().parent().parent().parent().parent().find('.product-body-' + variationnid).removeClass('hidden');
+        $(this).parent().parent().parent().parent().parent().parent().find('.product-cart-' + variationnid).removeClass('hidden');
     });
 
 });
