@@ -8,7 +8,7 @@ function rm_api_menu() {
         'type' => MENU_NORMAL_ITEM,
     );
     $items['invokeblock'] = array(
-        'page callback' => 'rm_api_simplefax_callback',
+        'page callback' => 'rm_api_invoke_block_view_ajax',
         'access arguments' => array('access content'),
         'type' => MENU_NORMAL_ITEM,
     );

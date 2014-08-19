@@ -21,9 +21,52 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             data: data
         }).done(function() {
-            alert('success');
+            //refresh cart display
+            $.fn.refreshCart();
         });
 	}
+    
+    $.fn.rmRemoveFromCart = function(cart_id, uid) {
+        //callback_url recognizes cart_id parameter in path.
+        callback_url = Drupal.settings.basePath + 'removefromcart/' + cart_id;
+        data = new Object;
+        //asynchronous removing of new cart items
+        $.ajax({
+            url: callback_url,
+            type: 'POST',
+            data: data
+        }).done(function() {
+            //refresh cart display
+            $.fn.refreshCart();
+        });
+	}
+    
+    $.fn.refreshCart = function() {
+        data = new Object;
+        data['module'] = 'rm_cart';
+        data['block'] = 'rm_cart_block';
+        var callback_url = Drupal.settings.basePath + 'invokeblock';
+        $.ajax({
+            url: callback_url,
+            type: 'POST',
+            data: data,
+            success: function(data) {
+                console.log(data);
+                $('.cart-display').html(data);
+            }
+        });
+    }
+    
+    $(document.body).on('click', '.cart-remove-link', function(e) {
+        //usually the cart item is added through a page reload. this must be prevented
+        e.preventDefault();
+        //collect necessary parameters through href-attribute of the clicked link
+        var a_href = $(this).attr('href');
+        //split href
+        var elements = a_href.split('/');
+        //call rmAddToCart
+        $.fn.rmRemoveFromCart(elements[2]);
+    });
     
     $('.product-cart').on('click', function(e) {
         //usually the cart item is added through a page reload. this must be prevented
@@ -34,8 +77,6 @@ jQuery(document).ready(function ($) {
         var elements = a_href.split('/');
         //call rmAddToCart
         $.fn.rmAddToCart(elements[2], elements[3], elements[4], elements[5]);
-        
-        //irgendeine methode zum refreshen der warenkorb darstellung rechts muss hier gecalled werden
     });
     
     $('.product-cart-variations').click(function(e) { e.preventDefault(); }).popover({

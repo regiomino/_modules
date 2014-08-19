@@ -11,8 +11,30 @@ function rm_cart_menu() {
         'page arguments' => array(1,2,3,4),
         'access arguments' => array('access content'),
 	);
+    $items['removefromcart/%'] = array(
+        'page callback' => 'rm_cart_remove_from_cart',
+        'page arguments' => array(1),
+        'access callback' => 'rm_cart_user_owns_cartitem',
+        'access arguments' => array(1),
+	);
     
 	return $items;
+}
+
+function rm_cart_user_owns_cartitem($cart_id) {
+    global $user;
+    $cartobject = node_load($cart_id);
+    if(!empty($cartobject) && $user->uid == $cartobject->uid) {
+        return TRUE;
+    }
+}
+
+function rm_cart_remove_from_cart($cart_id) {
+    $cartobject = node_load($cart_id);
+    $cartobject->status = 0;
+    node_save($cartobject);
+    drupal_set_message(t('The product was removed from your cart'), 'status');
+    drupal_goto();
 }
 
 function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL) {
