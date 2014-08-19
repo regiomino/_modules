@@ -55,5 +55,15 @@ jQuery(document).ready(function ($) {
         $(this).parent().parent().parent().parent().parent().parent().find('.product-body-' + variationnid).removeClass('hidden');
         $(this).parent().parent().parent().parent().parent().parent().find('.product-cart-' + variationnid).removeClass('hidden');
     });
+    
+    $('.quantity-select').on('change', function() {
+        var option = $(this).val();
+        var a_href = $(this).parent().find('.product-cart').attr('href');
+        var elements = a_href.split('/');
+        var subelements = elements[5].split('?');
+        subelements[0] = option;
+        elements[5] = subelements.join('?');
+        $(this).parent().find('.product-cart').attr('href', elements.join('/'));
+    });
 
 });
