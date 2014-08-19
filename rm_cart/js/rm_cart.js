@@ -42,5 +42,13 @@ jQuery(document).ready(function ($) {
       trigger: 'click',
       html: true
     })
+    
+    $('.dropdown-variation li').click(function(e) {
+        e.preventDefault();
+        var selected = $(this).text();
+        $(this).parent().parent().find('.dropdown-toggle').html('<strong>' + selected + '</strong> <span class="caret"></span>');
+        
+        //Richtigen Produktbody und Warenkorb Link einblenden und andere ausblenden
+    });
 
 });
