@@ -29,9 +29,10 @@ function rm_api_menu() {
  * $.ajax({
  *     url: callback_url,
  *     type: 'POST',
- *     data: data
- * }).done(function() {
- *     alert('success');
+ *     data: data,
+ *     success: function(data) {
+ *         //replace old markup with data
+ *     }
  * });
  *
  */
