@@ -18,6 +18,59 @@ function rm_seller_menu() {
         'type' => MENU_DEFAULT_LOCAL_TASK,
         'weight' => 0,
     );
+    $items['addofferdescription/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_add_offer',
+        'page arguments' => array(1),
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['addoffervariation/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_add_offervariation',
+        'page arguments' => array(1),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(1),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['addtradingunit/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_add_tradingunit',
+        'page arguments' => array(1),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(1),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['pauseoffer/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_pause_offer',
+        'page arguments' => array(1),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(1),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['activateoffer/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_activate_offer',
+        'page arguments' => array(1),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(1),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['manage/seller/deleteoffer/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_delete_offer', 3),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(3),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
 	$items['manage/seller/assigned'] = array(
         'title' => 'Manage profile',
         'page callback' => 'drupal_get_form',
@@ -36,6 +89,13 @@ function rm_seller_user_is_seller() {
     global $user;
     $account = user_load($user->uid);
     if(in_array('seller', $account->roles)) return TRUE;
+}
+
+function rm_seller_user_owns_offer($nid) {
+    if(rm_user_is_admin()) return TRUE;
+    $nodeobject = node_load($nid);
+    global $user;
+    if($user->uid > 0 && $user->uid == $nodeobject->uid) return TRUE;
 }
 
 /**

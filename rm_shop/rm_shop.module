@@ -89,12 +89,12 @@ function rm_shop_menu() {
     return $items;
 }
 
-function rm_shop_get_structured_seller_offers($uid) {
+function rm_shop_get_structured_seller_offers($uid, $status = 1) {
     $query = new EntityFieldQuery();
     $tmp = $query
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', array('offer_description', 'offer_variation', 'trading_unit'))
-        ->propertyCondition('status', 1)
+        ->propertyCondition('status', $status)
         ->propertyCondition('uid', $uid)
         ->execute();
     $alloffers = array();
