@@ -467,9 +467,9 @@ function rm_sales_editprofile_submit($form, &$form_state) {
 
 function rm_sales_publishprofile($nid) {
     $validation = rm_api_node_validate_required($nid);
+    $nodeobject = node_load($nid);
+    
 	if(empty($validation)) {
-		$nodeobject = node_load($nid);
-		
 		$userexists = user_load_by_mail($nodeobject->field_email[LANGUAGE_NONE][0]['email']);
 		if(!$userexists) {
 			//create user for registree
@@ -524,6 +524,7 @@ function rm_sales_publishprofile($nid) {
     }
     else {
         drupal_set_message(t('Profile <a href="@url">@profile</a> has not been published due to a validation error', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'error');
+        drupal_set_message(print_r($validation, TRUE), 'error');
     }
 	drupal_goto();
 }
@@ -940,7 +941,6 @@ function rm_sales_profileset_form() {
 			
 			$publishingpossiblestring = '';
 			$publishingpossible = rm_api_node_validate_required($nid);
-			if(isset($publishingpossible[0]['field_user_reference'])) unset($publishingpossible[0]);
 			if(empty($publishingpossible)) $publishingpossiblestring = ' ' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             
             
