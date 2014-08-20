@@ -1,7 +1,15 @@
 /**
  * Created by Martin on 04.08.14.
  */
-jQuery(document).ready(function ($) {    
+jQuery(document).ready(function ($) {
+    
+    $.fn.addThrobber = function(element) {
+        element.append('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
+    }
+    
+    $.fn.removeThrobber = function(element) {
+        element.find('.ajax-progress-throbber').remove();
+    }
     
     $.fn.rmAddToCart = function(offer_description, offer_variation, trading_unit, quantity, uid) {
         //callback_url recognizes all parameters in path besides uid. uid is always the one of the current user.
@@ -51,7 +59,6 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             data: data,
             success: function(data) {
-                console.log(data);
                 $('.cart-display').html(data);
             }
         });
@@ -60,6 +67,7 @@ jQuery(document).ready(function ($) {
     $(document.body).on('click', '.cart-remove-link', function(e) {
         //usually the cart item is added through a page reload. this must be prevented
         e.preventDefault();
+        $.fn.addThrobber($(this));
         //collect necessary parameters through href-attribute of the clicked link
         var a_href = $(this).attr('href');
         //split href
