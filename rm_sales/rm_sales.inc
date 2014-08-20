@@ -1320,7 +1320,7 @@ function rm_sales_profilequeue_form_validate($form, &$form_state) {
 }
 
 function rm_sales_profilequeue_form_submit($form, &$form_state) {
-	$first = TRUE;
+	/* $first = TRUE;
 	foreach($form_state['values']['suggestions'] as $nid => $bool) {
 		if($first) {
 			$mainprofileobject = node_load($nid);
@@ -1365,7 +1365,7 @@ function rm_sales_profilequeue_form_submit($form, &$form_state) {
 		$mainprofileobject->nid,
 		'node'
 		//$uid
-	);
+	); */
 }
 
 function rm_sales_assignprofile($nid, $uid) {
