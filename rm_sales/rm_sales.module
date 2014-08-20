@@ -382,13 +382,14 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 	//if suggester is sales person, then store him in field_salesguy
 	$suggester = user_load_by_mail($form_state['values']['suggester']);
 	$enteredbysales = FALSE;
-
-	$new_node->field_salesguy[LANGUAGE_NONE][0]['target_id'] = $suggester->uid;
 	
-	if(in_array('salesguy', $suggester->roles)) {
-		$enteredbysales = TRUE;
-		$new_node->sticky = 1;
-	}
+    if(!empty($suggester)) {
+        if(in_array('salesguy', $suggester->roles)) {
+            $new_node->field_salesguy[LANGUAGE_NONE][0]['target_id'] = $suggester->uid;
+            $enteredbysales = TRUE;
+            $new_node->sticky = 1;
+        }
+    }
     
     $new_node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
     $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 0;
@@ -409,7 +410,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 	
 	//Log activity
 	global $user;
-	if($user->uid > 0 && $suggester->uid > 0 && $user->uid != $suggester->uid) {
+	if($user->uid > 0 && !empty($suggester) && $suggester->uid > 0 && $user->uid != $suggester->uid) {
 		rm_user_activity(
 			t('Suggested profile <a href="@url">@profile</a> but entered user @targetuser as the suggester', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title, '@targetuser' => $suggester->mail)),
 			$new_node->nid,
@@ -417,7 +418,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 			$user->uid
 		);
 	}
-	elseif($user->uid > 0 && $suggester->uid > 0 && $user->uid == $suggester->uid) {
+	elseif($user->uid > 0 && !empty($suggester) && $suggester->uid > 0 && $user->uid == $suggester->uid) {
 		rm_user_activity(
 			t('Suggested profile <a href="@url">@profile</a>', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
 			$new_node->nid,
@@ -425,7 +426,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 			$user->uid
 		);
 	}
-	elseif($user->uid > 0 && $suggester->uid == 0) {
+	elseif($user->uid > 0 && (empty($suggester) || $suggester->uid == 0)) {
 		rm_user_activity(
 			t('Suggested profile <a href="@url">@profile</a> but did not enter himself as suggester', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
 			$new_node->nid,
@@ -433,7 +434,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 			$user->uid
 		);	
 	}
-	elseif($user->uid == 0 && $suggester->uid > 0) {
+	elseif($user->uid == 0 && !empty($suggester) && $suggester->uid > 0) {
 		rm_user_activity(
 			t('An anonymous user suggested a profile <a href="@url">@profile</a> and set user @triggeruser as the suggester', array('@triggeruser' => $suggester->mail, '@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
 			$new_node->nid,
