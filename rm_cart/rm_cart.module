@@ -72,19 +72,14 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
     
         //check if a cart item for this variation and user already exists
         $query = new EntityFieldQuery();
-        $query
+        $tmp = $query
             ->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', array('cart_item'))
-            ->propertyCondition('status', 1);
-        if($uid > 0) {
-            $query->propertyCondition('uid', $uid);
-        }
-        else {
-            $query->fieldCondition('field_session_id', 'value', session_id());
-        }
-        $tmp = $query
-            ->fieldCondition('field_offer_description', 'target_id', $offer_description)
-            ->fieldCondition('field_offer_variation', 'target_id', $offer_variation)
+            ->propertyCondition('status', 1)
+            ->propertyCondition('uid', $uid)
+            ->fieldCondition('field_session_id', 'value', session_id())
+            ->fieldCondition('field_offer_desc_reference', 'target_id', $offer_description)
+            ->fieldCondition('field_offer_variation_reference', 'target_id', $offer_variation)
             ->execute();
         $existingitem = array();
         if(isset($tmp['node'])) {
@@ -96,16 +91,16 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
             //cart item already exists
             $cart_item = node_load($cart_item_keys[0]);
             //add new trading unit and new amount
-            $cart_item->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+            $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
             $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
             node_save($cart_item);
         }
         else {
             //cart item does not exist yet
             $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
-            $new_node->field_offer_description[LANGUAGE_NONE][0]['target_id'] = $offer_description;
-            $new_node->field_offer_variation[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
-            $new_node->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+            $new_node->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'] = $offer_description;
+            $new_node->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
+            $new_node->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
             $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
             $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
             node_save($new_node);
@@ -118,6 +113,72 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
         watchdog('rm_cart', t('Validation error: User @user (@session) tried to add the following cart element: description @offer_description -> variation @offer_variation -> tu @trading_unit -> qty @quantity', array('@user' => format_username($userobject), '@session' => session_id(), '@offer_description' => $offer_description, '@offer_variation' => $offer_variation, '@trading_unit' => $trading_unit, '@quantity' => $quantity)));
     }
     if(!rm_api_is_ajax()) drupal_goto();
+}
+
+function rm_cart_get_quantity_options($variationid) {
+    $variation = node_load($variationid);
+    if(!empty($variation->field_trading_unit_reference[LANGUAGE_NONE])) {
+        foreach($variation->field_trading_unit_reference[LANGUAGE_NONE] as $trading_unit) {
+            $tradingunits[] = node_load($trading_unit['target_id']);
+        }
+        $stock = 200;
+        if(!empty($variation->field_stock[LANGUAGE_NONE][0]['value'])) $stock = $variation->field_stock[LANGUAGE_NONE][0]['value'];
+        $options = array();
+        if(count($tradingunits) > 1) {
+        
+        }
+        else {
+            $steps = $tradingunits[0]->field_tu_amount[LANGUAGE_NONE][0]['value'];
+            for($i=$steps; $i<=$stock; $i += $steps) {
+                $options[] = $i;
+            }
+        }
+        return $options;
+    }
+    else {
+        return '';
+    }
+}
+
+function rm_cart_get_item_total($cart_item_id) {
+    $cart_item = node_load($cart_item_id);
+    $trading_unit = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
+    return $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] * $trading_unit->field_tu_price[LANGUAGE_NONE][0]['value'];
+}
+
+function rm_cart_get_item_vat($cart_item_id) {
+    $cart_item = node_load($cart_item_id);
+    $trading_unit = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
+    $item_total = rm_cart_get_item_total($cart_item_id);
+    return $item_total * $trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value'] / 100;
+}
+
+function rm_cart_get_cart_total($uid = NULL) {
+    //If no uid is provided, use the one of the current user
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $cart_items = rm_cart_get_cart($uid);
+    $total = 0;
+    foreach($cart_items as $cart_item) {
+        $total += rm_cart_get_item_total($cart_item->nid);
+    }
+    return $total;
+}
+
+function rm_cart_get_cart_vat($uid = NULL) {
+    //If no uid is provided, use the one of the current user
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $cart_items = rm_cart_get_cart($uid);
+    $vat = 0;
+    foreach($cart_items as $cart_item) {
+        $vat += rm_cart_get_item_vat($cart_item->nid);
+    }
+    return $vat;
 }
 
 function rm_cart_get_cart($uid = NULL) {
