@@ -33,8 +33,9 @@ function rm_cart_remove_from_cart($cart_id) {
     $cartobject = node_load($cart_id);
     $cartobject->status = 0;
     node_save($cartobject);
-    drupal_set_message(t('The product was removed from your cart'), 'status');
-    drupal_goto();
+    //Detect if request is ajax or not
+    if(!rm_api_is_ajax()) drupal_set_message(t('The product was removed from your cart'), 'status');
+    if(!rm_api_is_ajax()) drupal_goto();
 }
 
 function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL) {
@@ -68,21 +69,55 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
     }
     
     if($valid) {
-        $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
-        $new_node->field_offer_description[LANGUAGE_NONE][0]['target_id'] = $offer_description;
-        $new_node->field_offer_variation[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
-        $new_node->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
-        $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
-        $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
-        node_save($new_node);
-        drupal_set_message(t('The offer was added to your cart'), 'status');
+    
+        //check if a cart item for this variation and user already exists
+        $query = new EntityFieldQuery();
+        $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('cart_item'))
+            ->propertyCondition('status', 1);
+        if($uid > 0) {
+            $query->propertyCondition('uid', $uid);
+        }
+        else {
+            $query->fieldCondition('field_session_id', 'value', session_id());
+        }
+        $tmp = $query
+            ->fieldCondition('field_offer_description', 'target_id', $offer_description)
+            ->fieldCondition('field_offer_variation', 'target_id', $offer_variation)
+            ->execute();
+        $existingitem = array();
+        if(isset($tmp['node'])) {
+            $cart_item_keys = array_keys($tmp['node']);
+            $existingitem = entity_load('node', $cart_item_keys);
+        }
+        
+        if(!empty($existingitem)) {
+            //cart item already exists
+            $cart_item = node_load($cart_item_keys[0]);
+            //add new trading unit and new amount
+            $cart_item->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+            $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+            node_save($cart_item);
+        }
+        else {
+            //cart item does not exist yet
+            $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
+            $new_node->field_offer_description[LANGUAGE_NONE][0]['target_id'] = $offer_description;
+            $new_node->field_offer_variation[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
+            $new_node->field_trading_unit[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+            $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+            $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
+            node_save($new_node);
+        }
+        if(!rm_api_is_ajax()) drupal_set_message(t('The offer was added to your cart'), 'status');
     }
     else {
-        drupal_set_message(t('There was an error when adding the offer to your cart. Please contact us if this problem persists.'), 'error');
+        if(!rm_api_is_ajax()) drupal_set_message(t('There was an error when adding the offer to your cart. Please contact us if this problem persists.'), 'error');
         $userobject = user_load($uid);
         watchdog('rm_cart', t('Validation error: User @user (@session) tried to add the following cart element: description @offer_description -> variation @offer_variation -> tu @trading_unit -> qty @quantity', array('@user' => format_username($userobject), '@session' => session_id(), '@offer_description' => $offer_description, '@offer_variation' => $offer_variation, '@trading_unit' => $trading_unit, '@quantity' => $quantity)));
     }
-    drupal_goto();
+    if(!rm_api_is_ajax()) drupal_goto();
 }
 
 function rm_cart_get_cart($uid = NULL) {

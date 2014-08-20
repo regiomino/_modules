@@ -63,7 +63,7 @@ jQuery(document).ready(function ($) {
             }
         });
     }
-    
+ /*   
     $(document.body).on('click', '.cart-remove-link', function(e) {
         //usually the cart item is added through a page reload. this must be prevented
         e.preventDefault();
@@ -76,7 +76,7 @@ jQuery(document).ready(function ($) {
         $.fn.rmRemoveFromCart(elements[2]);
     });
     
-    $('.product-cart').on('click', function(e) {
+     $('.product-cart').on('click', function(e) {
         //usually the cart item is added through a page reload. this must be prevented
         e.preventDefault();
         //collect necessary parameters through href-attribute of the clicked link
@@ -85,7 +85,7 @@ jQuery(document).ready(function ($) {
         var elements = a_href.split('/');
         //call rmAddToCart
         $.fn.rmAddToCart(elements[2], elements[3], elements[4], elements[5]);
-    });
+    }); */
     
     $('.product-cart-variations').click(function(e) { e.preventDefault(); }).popover({
       trigger: 'click',

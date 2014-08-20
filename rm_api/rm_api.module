@@ -361,6 +361,20 @@ function rm_api_is_holiday($timestamp) {
 }
 
 /**
+ * Method for checking if a function was requested by ajax or page call
+ *
+ * @return boolean
+ */
+function rm_api_is_ajax() {
+    if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' ) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
+/**
  * Method for querying nodes by properties
  *
  * @param $type
