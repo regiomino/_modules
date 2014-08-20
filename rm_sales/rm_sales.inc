@@ -79,6 +79,7 @@ function rm_sales_offertable_add_validate($form, &$form_state) {
 }
 
 function rm_sales_offertable_add_submit($form, &$form_state) {
+    global $user;
 	$title = node_type_get_name('offer_table');
 	$new_node = rm_api_create_new_node('offer_table', $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
 	if(!empty($form_state['values']['body'][LANGUAGE_NONE][0]['value'])) $new_node->body = $form_state['values']['body'];
