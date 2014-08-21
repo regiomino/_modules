@@ -137,6 +137,7 @@ function rm_seller_delete_offer($form, &$form_state, $nid) {
 }
 
 function rm_seller_delete_trading_unit($nid) {
+    //Find out to which offer variation this trading unit is linked
     $query = new EntityFieldQuery();
     $tmp = $query
         ->entityCondition('entity_type', 'node')
@@ -144,6 +145,7 @@ function rm_seller_delete_trading_unit($nid) {
         ->fieldCondition('field_trading_unit_reference', 'target_id', $nid)
         ->execute();
     if(isset($tmp['node'])) {
+        //Remove link from offer variations
         $keys = array_keys($tmp['node']);
         $allvariations = entity_load('node', $keys);
         foreach($allvariations as $variation) {
@@ -155,15 +157,58 @@ function rm_seller_delete_trading_unit($nid) {
             node_save($variation);
         }
     }
+    //Delete trading unit
     node_delete($nid);
 }
 
 function rm_seller_delete_offer_variation($nid) {
-
+    //Find out to which offer descriptions this offer variation is linked
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('offer_description'))
+        ->fieldCondition('field_offer_variation_reference', 'target_id', $nid)
+        ->execute();
+    if(isset($tmp['node'])) {
+        //Remove link from offer descriptions
+        $keys = array_keys($tmp['node']);
+        $alldescriptions = entity_load('node', $keys);
+        foreach($alldescriptions as $description) {
+            foreach($description->field_offer_variation_reference[LANGUAGE_NONE] as $delta => $target_id) {
+                if($target_id['target_id'] == $nid) {
+                    unset($description->field_offer_variation_reference[LANGUAGE_NONE][$delta]);
+                }
+            }
+            node_save($description);
+        }
+    }
+    //Delete all trading units from offer_variation
+    $offer_variation = node_load($nid);
+    if(isset($offer_variation->field_trading_unit_reference[LANGUAGE_NONE])) {
+        foreach($offer_variation->field_trading_unit_reference[LANGUAGE_NONE] as $delta => $target) {
+            rm_seller_delete_trading_unit($target['target_id']);
+        }
+    }
+    //Delete offer variation
+    node_delete($nid);
 }
 
 function rm_seller_delete_offer_description($nid) {
-
+    //Delete all offer variations offer_description
+    $offer_description = node_load($nid);
+    if(isset($offer_description->field_offer_variation_reference[LANGUAGE_NONE])) {
+        foreach($offer_description->field_offer_variation_reference[LANGUAGE_NONE] as $vdelta => $vtarget) {
+            $offer_variation = node_load($vtarget['target_id']);
+            if(isset($offer_variation->field_trading_unit_reference[LANGUAGE_NONE])) {
+                foreach($offer_variation->field_trading_unit_reference[LANGUAGE_NONE] as $delta => $target) {
+                    rm_seller_delete_trading_unit($target['target_id']);
+                }
+            }            
+            rm_seller_delete_offer_variation($vtarget['target_id']);
+        }
+    }
+    //Delete offer description
+    node_delete($nid);
 }
 
 function rm_seller_delete_offer_submit($form, &$form_state) {

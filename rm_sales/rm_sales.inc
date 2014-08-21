@@ -238,7 +238,6 @@ function rm_sales_note_add_submit($form, &$form_state) {
 
 function rm_sales_useraccounts_form($form, &$form_state) {
 
-
     drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales.js');
     
     $form = array();
