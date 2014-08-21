@@ -1326,52 +1326,227 @@ function rm_sales_profilequeue_form_validate($form, &$form_state) {
 }
 
 function rm_sales_profilequeue_form_submit($form, &$form_state) {
-	/* $first = TRUE;
-	foreach($form_state['values']['suggestions'] as $nid => $bool) {
-		if($first) {
-			$mainprofileobject = node_load($nid);
-			$first = FALSE;
-		}
-		else {
-			$profileobject = node_load($nid);
-			if(
-				(empty($mainprofileobject->field_address[LANGUAGE_NONE][0]['locality'])) &&
-				(!empty($profileobject->field_address[LANGUAGE_NONE][0]['locality']))
-			) {
-				$mainprofileobject->field_address[LANGUAGE_NONE][0]['locality'] = $profileobject->field_address[LANGUAGE_NONE][0]['locality'];
-			}
-			if(
-				(empty($mainprofileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) &&
-				(!empty($profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare']))
-			) {
-				$mainprofileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
-			}
-			if(
-				(empty($mainprofileobject->field_address[LANGUAGE_NONE][0]['postal_code'])) &&
-				(!empty($profileobject->field_address[LANGUAGE_NONE][0]['postal_code']))
-			) {
-				$mainprofileobject->field_address[LANGUAGE_NONE][0]['postal_code'] = $profileobject->field_address[LANGUAGE_NONE][0]['postal_code'];
-			}
-			if(
-				(empty($mainprofileobject->field_publicphone[LANGUAGE_NONE][0]['number'])) &&
-				(!empty($profileobject->field_publicphone[LANGUAGE_NONE][0]['number']))
-			) {
-				$mainprofileobject->field_publicphone[LANGUAGE_NONE][0]['number'] = $profileobject->field_publicphone[LANGUAGE_NONE][0]['number'];
-				$mainprofileobject->field_publicphone[LANGUAGE_NONE][0]['country_codes'] = $profileobject->field_publicphone[LANGUAGE_NONE][0]['country_codes'];
-			}
-			if(!empty($profileobject->field_suggester[LANGUAGE_NONE][0]['number'])) {
-				$mainprofileobject->field_suggester[LANGUAGE_NONE][] = array('value' => $profileobject->field_suggester[LANGUAGE_NONE][0]['value']);
-			}
-			node_save($mainprofileobject);
-			node_delete($profileobject->nid);
-		}
-	}
+
+    $concat = $form_state['values']['suggestions'];
+    foreach($concat as $index => $bool) {
+        if(!$bool) unset($concat[$index]);
+    }
+    drupal_goto('manage/conflate/' . implode(',', $concat));
+	
+    /*
 	rm_user_activity(
 		t('Conflated @count suggestions to one: <a href="@url">@profile</a>', array('@count' => count($form_state['values']['suggestions']), '@url' => url('node/' . $mainprofileobject->nid), '@profile' => $mainprofileobject->title)),
 		$mainprofileobject->nid,
 		'node'
 		//$uid
 	); */
+}
+
+function rm_sales_conflate_profiles_form($form, &$form_state, $default) {
+    $nids = explode(',', $default);
+    
+    $nodeobjects = array();
+    foreach($nids as $nid) {
+        $nodeobjects[] = node_load($nid);
+    }
+    
+    $form = array();
+    
+    $form['suggest']['#prefix'] = '<div class="alert alert-danger" role="alert"><h3>Die sind im Begriff die folgenden Profilvorschläge zu <strong>einem einzelnen</strong> zusammenzuführen:</h3><ul>';
+    
+    foreach($nodeobjects as $nodeobject) {
+        $form['suggest']['#prefix'] .= '<li>' . $nodeobject->title . ' (' . $nodeobject->field_address[LANGUAGE_NONE][0]['locality'] . ')</li>';
+    }
+    
+    $form['suggest']['#prefix'] .= '</ul><h3><strong>Bitte beachten Sie, dass in diesem Prozess ein neuer Datensatz mit den Informationen erstellt wird, die Sie unten angeben. Die hier aufgelisteten Datensätze werden danach unwiderruflich gelöscht.</strong></h3></div>';
+    
+    $form['suggest']['necessary'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('These infos we need...'),
+    );
+	$form['suggest']['necessary']['type'] = array(
+		'#type' => 'radios',
+		'#title' => t('Vendor or gastronomy'),
+		'#options' => array(
+			'seller_profile' => t('Suggest vendor'),
+			'customer_profile' => t('Suggest gastronomy'),
+		),
+        '#default_value' => $nodeobjects[0]->type,
+		'#required' => TRUE,
+	);
+	
+	$form['suggest']['necessary']['title'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Name of the vendor or gastronomy'),
+		'#required' => TRUE,
+	);
+    
+    $first = TRUE;
+    
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->title)) {
+            if($first) {
+                $form['suggest']['necessary']['title']['#default_value'] = $nodeobject->title;
+                $first = FALSE;
+            }
+            else {
+                $form['suggest']['necessary']['title']['#default_value'] .= ', ' . $nodeobject->title;
+            }
+        }
+    }
+
+	$form['suggest']['necessary']['locality'] = array(
+		'#type' => 'textfield',
+		'#title' => t('City'),
+		'#required' => TRUE,
+	);
+    
+    $first = TRUE;
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->field_address[LANGUAGE_NONE][0]['locality'])) {
+            if($first) {
+                $form['suggest']['necessary']['locality']['#default_value'] = $nodeobject->field_address[LANGUAGE_NONE][0]['locality'];
+                $first = FALSE;
+            }
+            else {
+                $form['suggest']['necessary']['locality']['#default_value'] .= ', ' . $nodeobject->field_address[LANGUAGE_NONE][0]['locality'];
+            }
+        }
+    }
+
+    $form['suggest']['nicetohave'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('... and these infos are helpful'),
+    );
+    
+    $form['suggest']['nicetohave']['thoroughfare'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Street'),
+		'#required' => FALSE,
+	);
+    
+    $first = TRUE;
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) {
+            if($first) {
+                $form['suggest']['nicetohave']['thoroughfare']['#default_value'] = $nodeobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+                $first = FALSE;
+            }
+            else {
+                $form['suggest']['nicetohave']['thoroughfare']['#default_value'] .= ', ' . $nodeobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            }
+        }
+    }
+
+    $form['suggest']['nicetohave']['postal_code'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Postal code'),
+        '#required' => FALSE,
+    );
+    
+    $first = TRUE;
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->field_address[LANGUAGE_NONE][0]['postal_code'])) {
+            if($first) {
+                $form['suggest']['nicetohave']['postal_code']['#default_value'] = $nodeobject->field_address[LANGUAGE_NONE][0]['postal_code'];
+                $first = FALSE;
+            }
+            else {
+                $form['suggest']['nicetohave']['postal_code']['#default_value'] .= ', ' . $nodeobject->field_address[LANGUAGE_NONE][0]['postal_code'];
+            }
+        }
+    }
+
+	$form['suggest']['nicetohave']['phone'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Phone'),
+		'#required' => FALSE,
+	);
+    
+    $first = TRUE;
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->field_address[LANGUAGE_NONE][0]['phone'])) {
+            if($first) {
+                $form['suggest']['nicetohave']['phone']['#default_value'] = $nodeobject->field_address[LANGUAGE_NONE][0]['phone'];
+                $first = FALSE;
+            }
+            else {
+                $form['suggest']['nicetohave']['phone']['#default_value'] .= ', ' . $nodeobject->field_address[LANGUAGE_NONE][0]['phone'];
+            }
+        }
+    }
+    
+    $counter = 0;
+    foreach($nodeobjects as $nodeobject) {
+        if(!empty($nodeobject->field_suggester[LANGUAGE_NONE][0]['value'])) {
+            $form['suggest']['nicetohave']['suggester' . $counter] = array(
+                '#type' => 'hidden',
+                '#value' => $nodeobject->field_suggester[LANGUAGE_NONE][0]['value'],
+            );
+            $counter++;
+        }
+    }
+    
+    $form['suggest']['nicetohave']['tobeconflated'] = array(
+        '#type' => 'hidden',
+        '#value' => $default,
+    );
+
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Conflate'),
+    );
+	
+	return $form;
+}
+
+function rm_sales_conflate_profiles_form_validate($form, &$form_state) {
+	if(!empty($form_state['values']['postal_code'])) {
+		if(!is_numeric($form_state['values']['postal_code'])) form_set_error('postal_code', t('Please enter a numeric value as postal code'));
+	}
+	if(!empty($form_state['values']['phone'])) {
+		if(!is_numeric($form_state['values']['phone'])) form_set_error('phone', t('Please enter a numeric value as phone number'));
+	}
+}
+
+function rm_sales_conflate_profiles_form_submit($form, &$form_state) {
+    $nids = explode(',', $form_state['values']['tobeconflated']);
+    
+    $nodeobjects = array();
+    $first = TRUE;
+    foreach($nids as $nid) {
+        if($first) {
+            $mainprofileobject = node_load($nid);
+            $first = FALSE;
+        }
+        else {
+            $nodeobjects[] = node_load($nid);
+        }
+    }
+    
+    unset($mainprofileobject->field_suggester[LANGUAGE_NONE]);
+    foreach($form_state['values'] as $formvalues => $data) {
+        $tmp = explode('suggester', $formvalues);
+        if(!empty($tmp[1])) {
+            $mainprofileobject->field_suggester[LANGUAGE_NONE][0]['value'] = $data;
+        }
+    }
+    
+    $mainprofileobject->title = $form_state['values']['title'];
+    $mainprofileobject->type = $form_state['values']['type'];
+    if(!empty($form_state['values']['locality'])) $mainprofileobject->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
+    if(!empty($form_state['values']['thoroughfare'])) $mainprofileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['thoroughfare'];
+    if(!empty($form_state['values']['postal_code'])) $mainprofileobject->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['postal_code'];
+    if(!empty($form_state['values']['phone'])) {
+		$mainprofileobject->field_publicphone[LANGUAGE_NONE][0]['number'] = $form_state['values']['phone'];
+		$mainprofileobject->field_publicphone[LANGUAGE_NONE][0]['country_codes'] = 'de';
+	}
+    node_save($mainprofileobject);
+    foreach($nodeobjects as $nodeobject) {
+        node_delete($nodeobject->nid);
+    }
+    drupal_set_message('Profiles have been conflated');
+    drupal_goto();
 }
 
 function rm_sales_assignprofile($nid, $uid) {

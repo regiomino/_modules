@@ -12,6 +12,14 @@ function rm_sales_menu() {
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
+    $items['manage/conflate/%'] = array(
+        'title' => 'Sales',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_sales_conflate_profiles_form', 2),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
     $items['manage/sales'] = array(
         'title' => 'Sales',
         'page callback' => 'drupal_get_form',
@@ -287,7 +295,7 @@ function rm_sales_suggest_form($form, &$form_state) {
 
 	global $user;
 	if($user->uid > 0) {
-		$form['suggest']['suggester']['#default_value'] = $user->mail;
+		$form['suggest']['nicetohave']['suggester']['#default_value'] = $user->mail;
 	}
 
     $form['submit'] = array(
