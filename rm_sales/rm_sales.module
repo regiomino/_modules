@@ -392,7 +392,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
     }
     
     $new_node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
-    $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 0;
+    $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
 
 	node_save($new_node);
 	

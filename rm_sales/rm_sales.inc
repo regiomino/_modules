@@ -1002,7 +1002,7 @@ function rm_sales_profileset_form() {
             $salescomment .= '</textarea></div>';
             
             $nextaction = '';
-            if(!empty($profileobject->field_next_action[LANGUAGE_NONE][0]['value'])) $nextaction = date('Y-m-d', $profileobject->field_next_action[LANGUAGE_NONE][0]['value']);
+            if(!empty($profileobject->field_next_action[LANGUAGE_NONE][0]['value']) && $profileobject->field_next_action[LANGUAGE_NONE][0]['value'] < 1924988399) $nextaction = date('Y-m-d', $profileobject->field_next_action[LANGUAGE_NONE][0]['value']);
             
 			$options[$nid] = array(
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
