@@ -661,7 +661,8 @@ function rm_sales_profilecare_form() {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
@@ -678,7 +679,8 @@ function rm_sales_profilecare_form() {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
@@ -694,7 +696,8 @@ function rm_sales_profilecare_form() {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
@@ -710,7 +713,8 @@ function rm_sales_profilecare_form() {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
@@ -735,7 +739,8 @@ function rm_sales_profilecare_form() {
 				foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-						$agrtitle .= $userobject->mail;
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
 					}
 					else {
 						$agrtitle .= t('for all');
