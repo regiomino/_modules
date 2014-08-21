@@ -87,5 +87,13 @@ jQuery(document).ready(function ($) {
             $.fn.removeThrobber(throbberElement);
         });
     });
+    
+    $('#filterSuggestions').keyup(function () {
+        var rex = new RegExp($(this).val(), 'i');
+        $('form table tbody tr').hide();
+        $('form table tbody tr').filter(function () {
+            return rex.test($(this).text());
+        }).show();
+    });
 
 });

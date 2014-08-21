@@ -237,7 +237,13 @@ function rm_sales_note_add_submit($form, &$form_state) {
 }
 
 function rm_sales_useraccounts_form($form, &$form_state) {
+
+
+    drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales.js');
+    
     $form = array();
+    
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
     
     global $user;
     
@@ -611,6 +617,8 @@ function rm_sales_profilecare_form() {
 		->execute();
 		
 	$form = array();
+    
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -907,11 +915,13 @@ function rm_sales_profileset_form() {
 		->propertyCondition('sticky', 1);
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
     $query
-		->tableSort($header)
-		->pager(100);
+		->tableSort($header);
+		//->pager(100);
     $tmp = $query->execute();
 		
 	$form = array();
+    
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -1155,6 +1165,8 @@ function rm_sales_export_profiles($form, &$form_state) {
 
 function rm_sales_profilequeue_form() {
 
+    drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales.js');
+
 	global $user;
 	
 	$header = array(
@@ -1226,10 +1238,12 @@ function rm_sales_profilequeue_form() {
 		->propertyCondition('status', 0)
 		->propertyCondition('sticky', 0)
 		->tableSort($header)
-		->pager(100)
+		//->pager(100)
 		->execute();
 		
 	$form = array();
+    
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
