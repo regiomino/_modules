@@ -12,7 +12,7 @@ function rm_user_init() {
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
         global $user;
-        if($user->uid > 0) {
+        if($user->uid > 0 && rm_user_is_admin()) {
             $userobject = rm_user_address_complete($user->uid);
             if($userobject) {
                 if(isset($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && isset($userobject->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_last_name[LANGUAGE_NONE][0]['value'])) {
