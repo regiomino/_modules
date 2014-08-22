@@ -24,17 +24,24 @@ function rm_seller_offer_form($form, &$form_state) {
     if(isset($offers)) {
         foreach($offers as $offer) {
             $form['offers']['offer_' . $offer->nid]['these_fields'] = array();
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title'] = array(
+                '#type' => 'textfield',
+                '#title' => t('Offer description'),
+                '#required' => TRUE,
+            );
+            if(!empty($offer->title)) $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title']['#default_value'] = $offer->title;
             rm_api_attach_field_to_form('field_origin', 'node', 'offer_description', $offer, $form['offers']['offer_' . $offer->nid]['these_fields'], $form_state, LANGUAGE_NONE);
             rm_api_attach_field_to_form('field_label_reference', 'node', 'offer_description', $offer, $form['offers']['offer_' . $offer->nid]['these_fields'], $form_state, LANGUAGE_NONE);
             unset($form['offers']['offer_' . $offer->nid]['these_fields']['field_origin'][LANGUAGE_NONE][0]['street_block']);
             foreach($offer->offer_variations as $variation) {
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'] = array();
                 rm_api_attach_field_to_form('field_sku', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_title'] = array(
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title'] = array(
                     '#type' => 'textfield',
                     '#title' => t('Variation description'),
                     '#required' => TRUE,
                 );
+                if(!empty($variation->title)) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title']['#default_value'] = $variation->title;
                 rm_api_attach_field_to_form('body', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
                 rm_api_attach_field_to_form('field_productunit', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
                 rm_api_attach_field_to_form('field_image', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
@@ -54,7 +61,7 @@ function rm_seller_offer_form($form, &$form_state) {
     $form['offers']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save changes'),
-		'#suffix' => ' ' . l(t('Add another offer'), 'addofferdescription/' . $uid, array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info', 'btn-lg')))),
+		'#suffix' => ' ' . l(t('Add another offer'), 'addofferdescription/' . $uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info', 'btn-lg')))),
     );
     return $form;
 }
@@ -75,16 +82,18 @@ function rm_seller_add_offervariation($nid) {
     node_save($new_offer_variation);
     $offerdescription->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
     node_save($offerdescription);
+    drupal_goto();
 }
 
 function rm_seller_add_offerdescription($uid) {
-	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $offerdescription->uid, 0, 0, 0, 0);
-	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $offerdescription->uid, 0, 0, 0, 0);
-	$new_offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $offerdescription->uid, 0, 0, 0, 0);
+	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $uid, 0, 0, 0, 0);
+	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $uid, 0, 0, 0, 0);
+	$new_offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $uid, 0, 0, 0, 0);
     $new_offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
     node_save($new_offer_variation);
     $new_offer_description->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
     node_save($new_offer_description);
+    drupal_goto();
 }
 
 function rm_seller_editprofile($form, &$form_state) {
@@ -155,10 +164,12 @@ function rm_seller_delete_trading_unit($nid) {
                 }
             }
             node_save($variation);
+            watchdog('rm_seller', t('Unlinked trading unit @nid from offer variation @vnid', array('@nid' => $nid, '@vnid' => $variation->nid)));
         }
     }
     //Delete trading unit
     node_delete($nid);
+    watchdog('rm_seller', t('Deleted trading unit @nid', array('@nid' => $nid)));
 }
 
 function rm_seller_delete_offer_variation($nid) {
@@ -180,6 +191,7 @@ function rm_seller_delete_offer_variation($nid) {
                 }
             }
             node_save($description);
+            watchdog('rm_seller', t('Unlinked offer variation @nid from offer description @dnid', array('@nid' => $nid, '@vnid' => $description->nid)));
         }
     }
     //Delete all trading units from offer_variation
@@ -191,6 +203,7 @@ function rm_seller_delete_offer_variation($nid) {
     }
     //Delete offer variation
     node_delete($nid);
+    watchdog('rm_seller', t('Deleted offer variation @nid', array('@nid' => $nid)));
 }
 
 function rm_seller_delete_offer_description($nid) {
@@ -209,6 +222,7 @@ function rm_seller_delete_offer_description($nid) {
     }
     //Delete offer description
     node_delete($nid);
+    watchdog('rm_seller', t('Deleted offer description @nid', array('@nid' => $nid)));
 }
 
 function rm_seller_delete_offer_submit($form, &$form_state) {
@@ -222,13 +236,13 @@ function rm_seller_delete_offer_submit($form, &$form_state) {
             break;
         case 'offer_variation':
             rm_seller_delete_offer_variation($form_state['values']['nid']);
-            drupal_set_message(t('Deleted the trading unit @entry', array('@entry' => $title)), 'status');
-            rm_user_activity(t('Deleted the trading unit @entry', array('@entry' => $title)), NULL, NULL, $user->uid);
+            drupal_set_message(t('Deleted the offer variation @entry', array('@entry' => $title)), 'status');
+            rm_user_activity(t('Deleted the offer variation @entry', array('@entry' => $title)), NULL, NULL, $user->uid);
             break;
         case 'offer_description':
             rm_seller_delete_offer_description($form_state['values']['nid']);
-            drupal_set_message(t('Deleted the trading unit @entry', array('@entry' => $title)), 'status');
-            rm_user_activity(t('Deleted the trading unit @entry', array('@entry' => $title)), NULL, NULL, $user->uid);
+            drupal_set_message(t('Deleted the offer description @entry', array('@entry' => $title)), 'status');
+            rm_user_activity(t('Deleted the offer description @entry', array('@entry' => $title)), NULL, NULL, $user->uid);
             break;
     }
 	

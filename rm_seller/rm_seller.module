@@ -20,7 +20,7 @@ function rm_seller_menu() {
     );
     $items['addofferdescription/%'] = array(
         'title' => 'Seller',
-        'page callback' => 'rm_seller_add_offer',
+        'page callback' => 'rm_seller_add_offerdescription',
         'page arguments' => array(1),
         'access callback' => 'rm_seller_user_is_seller',
         'file' => 'rm_seller.inc',
