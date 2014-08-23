@@ -70,7 +70,8 @@ jQuery(document).ready(function ($) {
                     offerid : parseInt($el.data('offerid'),10),
                     variation : parseInt($el.data('variation'),10),
                     tradingunit : parseInt(tu,10),
-                    amount : _self.CART_ADD_STEP
+                    amount : _self.CART_ADD_STEP,
+                    add : 1
                 };
                 
             return item_data;
@@ -78,7 +79,7 @@ jQuery(document).ready(function ($) {
         
         addToCart : function(item_data, uid) {
             var _self = this,
-                callback_url = Drupal.settings.basePath + 'addtocart/' + item_data.offerid + '/' + item_data.variation + '/' + item_data.tradingunit + '/' + item_data.amount;
+                callback_url = Drupal.settings.basePath + 'addtocart/' + item_data.offerid + '/' + item_data.variation + '/' + item_data.tradingunit + '/' + item_data.amount + '/' + item_data.add;
             
             data = {};
             
