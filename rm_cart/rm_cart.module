@@ -6,9 +6,9 @@
 function rm_cart_menu() {
 	$items = array();
 
-    $items['addtocart/%/%/%/%'] = array(
+    $items['addtocart/%/%/%/%/%'] = array(
         'page callback' => 'rm_cart_add_to_cart',
-        'page arguments' => array(1,2,3,4),
+        'page arguments' => array(1,2,3,4,5),
         'access arguments' => array('access content'),
 	);
     $items['removefromcart/%'] = array(
@@ -51,7 +51,7 @@ function rm_cart_remove_from_cart($cart_id) {
     if(!rm_api_is_ajax()) drupal_goto();
 }
 
-function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL, $add = FALSE) {
+function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity = 1, $add = 0, $uid = NULL) {
     
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
