@@ -17,8 +17,21 @@ function rm_cart_menu() {
         'access callback' => 'rm_cart_user_owns_cartitem',
         'access arguments' => array(1),
 	);
+    $items['checkout'] = array(
+        'title' => 'Checkout',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_cart_checkout'),
+        'access callback' => 'rm_cart_is_filled',
+        'file' => 'rm_cart.inc',
+        'file path' => drupal_get_path('module', 'rm_cart'),
+    );
     
 	return $items;
+}
+
+function rm_cart_is_filled() {
+    $cart_items = rm_cart_get_cart();
+    if(!is_null($cart_items)) return TRUE;
 }
 
 function rm_cart_user_owns_cartitem($cart_id) {
@@ -38,7 +51,7 @@ function rm_cart_remove_from_cart($cart_id) {
     if(!rm_api_is_ajax()) drupal_goto();
 }
 
-function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL) {
+function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity, $uid = NULL, $add = FALSE) {
     
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
@@ -92,7 +105,12 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
             $cart_item = node_load($cart_item_keys[0]);
             //add new trading unit and new amount
             $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
-            $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+            if($add) {
+                $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] += $quantity;
+            }
+            else {
+                $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+            }
             node_save($cart_item);
         }
         else {
