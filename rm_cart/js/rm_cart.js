@@ -1,6 +1,151 @@
+jQuery(document).ready(function ($) {
+    
+    var rmCart = function() {
+        this.$cartContainer = $('.grid-l');
+        this.$add2CartButtons = $('.add2Cart');
+        this.CART_ADD_STEP = 1;
+        this.DELETE_ITEM_CLASS_NAME = '.delete-item';
+        this.STEPPER_CONTROLS_CLASS_NAME = '.stepper-control';
+    };
+    
+    rmCart.prototype = {
+        
+        init : function() {
+            var _self = this;
+            _self.setEventHandlers();
+        },
+        
+         
+        setEventHandlers : function() {
+            var _self = this;
+            
+            // Add2Cart
+            _self.$add2CartButtons.on('click.add2Cart', function(e) {
+                e.preventDefault();
+                var $el = $(this),
+                    data = _self.getItemData($el);
+                    
+                //_self.handleButtonDisplay(),
+                _self.addToCart(data);
+            });
+            
+            //Remove
+            _self.$cartContainer.on('click.removeFromCart', '' + _self.DELETE_ITEM_CLASS_NAME + '', function(e){
+                e.preventDefault();
+                var $el = $(this),
+                    pid = $el.attr('href');
+               
+                    _self.removeItemFromCart(pid);
+            });
+            
+            // Stepper
+            _self.$cartContainer.on('click.stepperChange', '' + _self.STEPPER_CONTROLS_CLASS_NAME + '', function(e){
+                e.preventDefault();
+                var $el = $(this),
+                    $qty = $el.closest('.stepper').find('input.stepper-qty');
+                    
+                    if($el.hasClass('stepper-plus')) {
+                        console.info('Plus');
+                        
+                    } else if ($el.hasClass('stepper-minus')) {
+                        console.info('Minus');
+                    }
+                    
+                    $qty.val( function(i, value) {
+                        if ($el.data('operation') == -1 && value == 0) {
+                            return 0;
+                        }
+                        
+                        else { 
+                             return +value + (1 * +$el.data('operation'));
+                        }
+                    });
+            });
+        },
+
+        getItemData : function($el){
+            var _self = this;
+                tu = $el.parent().siblings('.product-data').find('input[checked]').data('tradingunit'),
+                item_data = {
+                    offerid : parseInt($el.data('offerid'),10),
+                    variation : parseInt($el.data('variation'),10),
+                    tradingunit : parseInt(tu,10),
+                    amount : _self.CART_ADD_STEP
+                };
+                
+            return item_data;
+        },
+        
+        addToCart : function(item_data, uid) {
+            var _self = this,
+                callback_url = Drupal.settings.basePath + 'addtocart/' + item_data.offerid + '/' + item_data.variation + '/' + item_data.tradingunit + '/' + item_data.amount;
+            
+            data = {};
+            
+            if(typeof uid !== 'undefined') {
+                data['uid'] = uid;
+            }
+            
+            $.ajax({
+                url: callback_url,
+                type: 'POST',
+                data: data
+            }).done(function() {
+                _self.updateCart();
+            });
+        },
+        // aktualisierte Darstellung
+        updateCart : function(){
+            var data = {};
+            data['module'] = 'rm_cart';
+            data['block'] = 'rm_cart_block';
+            var callback_url = Drupal.settings.basePath + 'invokeblock';
+            
+            $.ajax({
+                url: callback_url,
+                type: 'POST',
+                data: data,
+                success: function(data) {
+                    $('#cart').html(data);
+                }
+            });
+        },
+    
+        removeItemFromCart : function(pid,uid) {
+            var _self = this,
+                callback_url = Drupal.settings.basePath + 'removefromcart/' + pid,
+                data = {};
+                
+            if(typeof uid !== 'undefined') {
+                data['uid'] = uid;
+            }
+                 
+            $.ajax({
+                url: callback_url,
+                type: 'POST',
+                data: data
+                
+            }).done(function() {
+             
+                _self.updateCart();
+            }); 
+        }
+    }
+    
+        var cart = new rmCart();
+            cart.init();
+ 
+});
+
+
+
+
 /**
  * Created by Martin on 04.08.14.
- */
+ 
+
+
+
 jQuery(document).ready(function ($) {
     
     $.fn.addThrobber = function(element) {
@@ -116,3 +261,4 @@ jQuery(document).ready(function ($) {
     });
 
 });
+*/
