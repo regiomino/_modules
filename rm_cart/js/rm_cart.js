@@ -2,10 +2,15 @@ jQuery(document).ready(function ($) {
     
     var rmCart = function() {
         this.$cartContainer = $('.grid-l');
+        this.$cart = $('#cart');
         this.$add2CartButtons = $('.add2Cart');
+        this.timeout;
         this.CART_ADD_STEP = 1;
         this.DELETE_ITEM_CLASS_NAME = '.delete-item';
         this.STEPPER_CONTROLS_CLASS_NAME = '.stepper-control';
+        this.STEPPER_DEBOUNCE_VALUE = 270;
+        this.STEPPER_CONTROLS_CLASS_NAME = '.stepper-control';
+        this.STEPPER_QTY_INPUT_CLASS_NAME ='.stepper-qty';
     };
     
     rmCart.prototype = {
@@ -15,10 +20,9 @@ jQuery(document).ready(function ($) {
             _self.setEventHandlers();
         },
         
-         
         setEventHandlers : function() {
             var _self = this;
-            
+          
             // Add2Cart
             _self.$add2CartButtons.on('click.add2Cart', function(e) {
                 e.preventDefault();
@@ -38,31 +42,88 @@ jQuery(document).ready(function ($) {
                     _self.removeItemFromCart(pid);
             });
             
-            // Stepper
+            // Stepper + und -
             _self.$cartContainer.on('click.stepperChange', '' + _self.STEPPER_CONTROLS_CLASS_NAME + '', function(e){
                 e.preventDefault();
                 var $el = $(this),
+                    keepOn = true,
+                    $cont  =  $el.parents('.cart-item'),
                     $qty = $el.closest('.stepper').find('input.stepper-qty');
                     
-                    if($el.hasClass('stepper-plus')) {
-                        console.info('Plus');
-                        
-                    } else if ($el.hasClass('stepper-minus')) {
-                        console.info('Minus');
-                    }
+                $qty.val( function(i, value) {
                     
-                    $qty.val( function(i, value) {
-                        if ($el.data('operation') == -1 && value == 0) {
-                            return 0;
-                        }
+                    if ($el.data('operation') == -1 && value == 1 ) {
+                        $el.attr('disabled',true);
+                        keepOn = false;
+                        _self.removeItemFromCart($cont.data('offerid'));
+                        clearTimeout(_self.timeout);
+                        return +value + (1 * +$el.data('operation'));
                         
-                        else { 
-                             return +value + (1 * +$el.data('operation'));
+                    } else { 
+                        return +value + (1 * +$el.data('operation'));
+                    }
+                });
+                if(keepOn) {
+                   
+                    var amount = $qty.val();
+                    
+                    // debounce things
+                    clearTimeout(_self.timeout);
+                                            
+                   _self.timeout = setTimeout(function(){
+                        _self.timeout = null;
+                        
+                        var data = {
+                            offerid :  parseInt($cont.data('offerid'),10),
+                            variation : parseInt($cont.data('variation'),10),
+                            tradingunit : parseInt($cont.data('tradingunit'),10),
+                            amount : parseInt($qty.val(),10),
+                            add : 0
                         }
-                    });
+                          
+                        _self.addToCart(data);
+                    },_self.STEPPER_DEBOUNCE_VALUE);
+                }
+            });
+
+             // Stepper Input Focus
+            _self.$cartContainer.on('focus.inputqty', '' + _self.STEPPER_QTY_INPUT_CLASS_NAME + '', function(e){
+                var $el = $(this);
+                $el.mouseup(function(e) { return false; });
+                $el.select();
+                
+                inputValCache = $el.val();
+            });
+            
+            // Stepper Input Change
+            _self.$cartContainer.on('change.inputqty', '' + _self.STEPPER_QTY_INPUT_CLASS_NAME + '', function(e){
+                var $el = $(this),
+                    inputVal = $el.val(),
+                    numeric = /^[0-9]+$/.test(inputVal);
+                  
+                if (numeric) {
+                   var $cont  =  $el.parents('.cart-item'),
+                        offerid =$cont.data('offerid');
+                    if(inputVal == 0) {
+                        _self.removeItemFromCart(offerid);
+                        return false;
+                    }
+                    var data = {
+                            offerid :  parseInt($cont.data('offerid'),10),
+                            variation : parseInt($cont.data('variation'),10),
+                            tradingunit : parseInt($cont.data('tradingunit'),10),
+                            amount : inputVal,
+                            add : 0
+                        }
+                    
+                    _self.addToCart(data);
+                    
+                } else {
+                    $el.val(inputValCache) ;
+                }
             });
         },
-
+        
         getItemData : function($el){
             var _self = this;
                 tu = $el.parent().siblings('.product-data').find('input[checked]').data('tradingunit'),
@@ -80,7 +141,6 @@ jQuery(document).ready(function ($) {
         addToCart : function(item_data, uid) {
             var _self = this,
                 callback_url = Drupal.settings.basePath + 'addtocart/' + item_data.offerid + '/' + item_data.variation + '/' + item_data.tradingunit + '/' + item_data.amount + '/' + item_data.add;
-            
             data = {};
             
             if(typeof uid !== 'undefined') {
@@ -93,11 +153,12 @@ jQuery(document).ready(function ($) {
                 data: data
             }).done(function() {
                 _self.updateCart();
-            });
+            }); 
         },
         // aktualisierte Darstellung
         updateCart : function(){
-            var data = {};
+            var _self = this,
+                data = {};
             data['module'] = 'rm_cart';
             data['block'] = 'rm_cart_block';
             var callback_url = Drupal.settings.basePath + 'invokeblock';
@@ -107,7 +168,7 @@ jQuery(document).ready(function ($) {
                 type: 'POST',
                 data: data,
                 success: function(data) {
-                    $('#cart').html(data);
+                    _self.$cart.html(data);
                 }
             });
         },
