@@ -121,13 +121,18 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
         }
         else {
             //cart item does not exist yet
-            $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
-            $new_node->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'] = $offer_description;
-            $new_node->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
-            $new_node->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
-            $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
-            $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
-            node_save($new_node);
+            if($quantity == 0) {
+                watchdog('rm_cart', 'cart items cannot have quantity 0');
+            }
+            else {
+                $new_node = rm_api_create_new_node('cart_item', 'Warenkorb-Element ' . date('d.m.Y H:i:s'), 'de', $uid, 1);
+                $new_node->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'] = $offer_description;
+                $new_node->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'] = $offer_variation;
+                $new_node->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+                $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+                $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
+                node_save($new_node);
+            }
         }
         if(!rm_api_is_ajax()) drupal_set_message(t('The offer was added to your cart'), 'status');
     }
