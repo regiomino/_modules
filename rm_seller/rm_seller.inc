@@ -1,61 +1,277 @@
 <?php
 
-function rm_seller_offermanagement() {
-    drupal_add_js(drupal_get_path('module', 'rm_seller') . '/js/rm_seller.js');
-    //pass to tpl
-    return theme('rm_seller_theme_offermanagement', array(
-        'vars' => array(
-            'form' => drupal_get_form('rm_seller_offer_form'),
-            'offers' => rm_shop_get_structured_seller_offers(29, array(0,1)),
-        ),
-    ));
-}
+// function rm_seller_offermanagement() {
+    // drupal_add_js(drupal_get_path('module', 'rm_seller') . '/js/rm_seller.js');
+    // //pass to tpl
+    // return theme('rm_seller_theme_offermanagement', array(
+        // 'vars' => array(
+            // 'form' => drupal_get_form('rm_seller_offer_form'),
+            // 'offers' => rm_shop_get_structured_seller_offers(29, array(0,1)),
+        // ),
+    // ));
+// }
 
 function rm_seller_offer_form($form, &$form_state) {
     global $user;
     $uid = $user->uid;
     
-    if(rm_user_is_admin()) $uid = 29;
+    if(rm_user_is_admin()) $uid = 44;
     
     $offers = rm_shop_get_structured_seller_offers($uid, array(0,1));
     
     $form = array();
     
+    
     if(isset($offers)) {
         foreach($offers as $offer) {
             $form['offers']['offer_' . $offer->nid]['these_fields'] = array();
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title'] = array(
+            
+            //Offer title
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title-' . $offer->nid] = array(
                 '#type' => 'textfield',
                 '#title' => t('Offer description'),
                 '#required' => TRUE,
+                '#title_display' => 'none',
+                '#attributes' => array(
+                    'placeholder' => t('Offer description'),
+                    'class' => array('form-control'),
+                    'required' => NULL,
+                ),
             );
-            if(!empty($offer->title)) $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title']['#default_value'] = $offer->title;
-            rm_api_attach_field_to_form('field_origin', 'node', 'offer_description', $offer, $form['offers']['offer_' . $offer->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-            rm_api_attach_field_to_form('field_label_reference', 'node', 'offer_description', $offer, $form['offers']['offer_' . $offer->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-            unset($form['offers']['offer_' . $offer->nid]['these_fields']['field_origin'][LANGUAGE_NONE][0]['street_block']);
+            if(!empty($offer->title)) $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title-' . $offer->nid]['#default_value'] = $offer->title;
+            
+            //Product origin
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid] = addressfield_generate($offer->field_origin[LANGUAGE_NONE][0], array('address' => 'address', 'organisation' => 'organisation'), array('mode' => 'form'));
+            unset($form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['street_block']);
+            
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['organisation_name'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['organisation_name'];
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#title_display'] = 'none';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#attributes']['placeholder'] = t('Organisation');
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#attributes']['class'][] ='form-control';
+            
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['country'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['country'];
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#value'] = 'AT';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#title_display'] = 'none';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#attributes']['placeholder'] = t('Country');
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#attributes']['class'][] ='form-control';
+            
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['locality'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['locality'];
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#title_display'] = 'none';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#attributes']['placeholder'] = t('Locality');
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#attributes']['class'][] ='form-control';
+            
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['postal_code'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['postal_code'];
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#title_display'] = 'none';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#attributes']['placeholder'] = t('Postal code');
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#attributes']['class'][] ='form-control';
+            
             foreach($offer->offer_variations as $variation) {
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'] = array();
-                rm_api_attach_field_to_form('field_sku', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title'] = array(
+                
+                //Variation SKU
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_sku-' . $variation->nid] = array(
                     '#type' => 'textfield',
-                    '#title' => t('Variation description'),
+                    '#title' => t('SKU'),
                     '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('SKU'),
+                        'class' => array('form-control'),
+                        'required' => NULL,
+                    ),
                 );
-                if(!empty($variation->title)) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title']['#default_value'] = $variation->title;
-                rm_api_attach_field_to_form('body', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                rm_api_attach_field_to_form('field_productunit', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                rm_api_attach_field_to_form('field_image', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                rm_api_attach_field_to_form('field_stock', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                rm_api_attach_field_to_form('field_gtin', 'node', 'offer_variation', $variation, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'], $form_state, LANGUAGE_NONE);
+                if(!empty($variation->field_sku[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_sku-' . $variation->nid]['#default_value'] = $variation->field_sku[LANGUAGE_NONE][0]['value'];
+                
+                
+                //Variation Title
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('Variation title'),
+                    '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Variation title'),
+                        'class' => array('form-control'),
+                        'required' => NULL,
+                    ),
+                );
+                if(!empty($variation->title)) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title-' . $variation->nid]['#default_value'] = $variation->title;
+                
+                //Body
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['body-' . $variation->nid] = array(
+                    '#type' => 'textarea',
+                    '#title' => t('Description'),
+                    '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Description'),
+                        'class' => array('form-control'),
+                        'required' => NULL,
+                    ),
+                );
+                if(!empty($variation->body[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['body-' . $variation->nid]['#default_value'] = strip_tags($variation->body[LANGUAGE_NONE][0]['value']);
+                
+                //Images
+                // $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_image-' . $variation->nid] = array(
+                    // '#type' => 'managed_file',
+                    // '#title' => t('Images'),
+                    // '#required' => TRUE,
+                    // '#title_display' => 'none',
+                    // '#attributes' => array(
+                        // 'placeholder' => t('Images'),
+                        // 'class' => array('form-control'),
+                    // ),
+                // );
+                
+                //Product unit
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_amount-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('Amount'),
+                    '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Amount'),
+                        'class' => array('form-control'),
+                        'required' => NULL,
+                    ),
+                );
+                if(!empty($variation->field_productunit[LANGUAGE_NONE][0]['first'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_amount-' . $variation->nid]['#default_value'] = $variation->field_productunit[LANGUAGE_NONE][0]['first'];
+                
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_unit-' . $variation->nid] = array(
+                    '#type' => 'select',
+                    '#options' => array(
+                        'pc' => t('pc'),
+                        'bd' => t('bd'),
+                        'kg' => t('kg'),
+                        'g' => t('g'),
+                        'l' => t('l'),
+                        'ml' => t('ml'),
+                    ),
+                    '#title' => t('Unit'),
+                    '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Unit'),
+                        'class' => array('form-control'),
+                        'required' => NULL,
+                    ),
+                );
+                if(!empty($variation->field_productunit[LANGUAGE_NONE][0]['second'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_unit-' . $variation->nid]['#default_value'] = $variation->field_productunit[LANGUAGE_NONE][0]['second'];
+                
+                //Stock
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_stock-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('Stock'),
+                    '#required' => FALSE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Stock'),
+                        'class' => array('form-control'),
+                    ),
+                );
+                if(!empty($variation->field_stock[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_stock-' . $variation->nid]['#default_value'] = $variation->field_stock[LANGUAGE_NONE][0]['value'];
+                
+                //GTIN
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_gtin-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('GTIN'),
+                    '#required' => FALSE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('GTIN'),
+                        'class' => array('form-control'),
+                    ),
+                );
+                if(!empty($variation->field_gtin[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_gtin-' . $variation->nid]['#default_value'] = $variation->field_gtin[LANGUAGE_NONE][0]['value'];
+                
                 foreach($variation->trading_units as $tradingunit) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'] = array();
-                    rm_api_attach_field_to_form('field_tu_amount', 'node', 'trading_unit', $tradingunit, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                    rm_api_attach_field_to_form('field_tu_price', 'node', 'trading_unit', $tradingunit, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                    rm_api_attach_field_to_form('field_tu_deposit', 'node', 'trading_unit', $tradingunit, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                    rm_api_attach_field_to_form('field_tu_vat', 'node', 'trading_unit', $tradingunit, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'], $form_state, LANGUAGE_NONE);
-                    rm_api_attach_field_to_form('field_tu_packaging', 'node', 'trading_unit', $tradingunit, $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'], $form_state, LANGUAGE_NONE);
+                    
+                    //TU Amount
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_amount-' . $tradingunit->nid] = array(
+                        '#type' => 'textfield',
+                        '#title' => t('Quantity'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('Quantity'),
+                            'class' => array('form-control'),
+                            'required' => NULL,
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_amount[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_amount-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_amount[LANGUAGE_NONE][0]['value'];
+                    
+                    //TU Price
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_price-' . $tradingunit->nid] = array(
+                        '#type' => 'textfield',
+                        '#title' => t('Price'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('Price'),
+                            'class' => array('form-control'),
+                            'required' => NULL,
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_price-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'];
+                    
+                    //TU VAT
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_vat-' . $tradingunit->nid] = array(
+                        '#type' => 'select',
+                        '#options' => array(
+                            '0' => '0%',
+                            '7' => '7%',
+                            '10.7' => '10.7%',
+                            '19' => '19%',
+                        ),
+                        '#title' => t('VAT'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('VAT'),
+                            'class' => array('form-control'),
+                            'required' => NULL,
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_vat[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_vat-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_vat[LANGUAGE_NONE][0]['value'];
+                    
+                    //TU Deposit
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_deposit-' . $tradingunit->nid] = array(
+                        '#type' => 'textfield',
+                        '#title' => t('Deposit'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('Deposit'),
+                            'class' => array('form-control'),
+                            'required' => NULL,
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_deposit-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value'];
+                    
+                    //TU Packaging
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_packaging-' . $tradingunit->nid] = array(
+                        '#type' => 'select',
+                        '#options' => array(
+                            'box' => t('Box'),
+                            'crate' => t('Crate'),
+                            'bundle' => t('Bundle'),
+                            'pallet' => t('Pallet'),
+                        ),
+                        '#title' => t('Trading unit type'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('Trading unit type'),
+                            'class' => array('form-control'),
+                            'required' => NULL,
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_packaging[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_packaging-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_packaging[LANGUAGE_NONE][0]['value'];
                 }
+            
             }
+            
         }
     }
     $form['offers']['submit'] = array(
@@ -64,6 +280,10 @@ function rm_seller_offer_form($form, &$form_state) {
 		'#suffix' => ' ' . l(t('Add another offer'), 'addofferdescription/' . $uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info', 'btn-lg')))),
     );
     return $form;
+}
+
+function rm_seller_offer_form_submit($form, &$form_state) {
+
 }
 
 function rm_seller_add_tradingunit($nid) {

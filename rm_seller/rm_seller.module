@@ -7,7 +7,8 @@ function rm_seller_menu() {
     $items = array();
     $items['manage/seller'] = array(
         'title' => 'Seller',
-        'page callback' => 'rm_seller_offermanagement',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_offer_form'),
         'access callback' => 'rm_seller_user_is_seller',
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -103,8 +104,9 @@ function rm_seller_user_owns_offer($nid) {
  */
 function rm_seller_theme() {
 	return array(
-		'rm_seller_theme_offermanagement' => array(
-			'template' => 'rm_seller_offermanagement_theme',
+		'rm_seller_offer_form' => array(
+			'template' => 'rm_seller_theme_offer_form',
+			'render element' => 'form',
 			'variables' => array(
 				'vars' => NULL,
 			)

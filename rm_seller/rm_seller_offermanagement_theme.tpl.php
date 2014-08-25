@@ -1,1 +1,0 @@
-theme this in [themefolder]/templates/rm_seller_theme_offermanagement.tpl.php
