@@ -102,16 +102,22 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
         
         if(!empty($existingitem)) {
             //cart item already exists
-            $cart_item = node_load($cart_item_keys[0]);
-            //add new trading unit and new amount
-            $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
-            if($add) {
-                $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] += $quantity;
+            if($quantity == 0) {
+                //quantity is set to zero, so remove cart item
+                rm_cart_remove_from_cart($cart_item_keys[0]);
             }
             else {
-                $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+                $cart_item = node_load($cart_item_keys[0]);
+                //add new trading unit and new amount
+                $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
+                if($add) {
+                    $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] += $quantity;
+                }
+                else {
+                    $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
+                }
+                node_save($cart_item);
             }
-            node_save($cart_item);
         }
         else {
             //cart item does not exist yet
