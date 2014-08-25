@@ -133,12 +133,26 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
     if(!rm_api_is_ajax()) drupal_goto();
 }
 
+function rm_cart_get_minimum_order_values($seller_uid, $zipcode) {
+    global $user;
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, $seller_uid);
+    $shop_ids = array_keys($shops);
+    $movs = array();
+    foreach($shops[$shop_ids[0]]->agreements as $agreement_type => $user_reference) {
+        foreach($user_reference as $user_id => $agreement_object) {
+            if(isset($agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'])) {
+                $movs[$agreement_type] = $agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'];
+            }
+        }
+    }
+    return $movs;
+}
 
 function rm_cart_item_get_max_amount($cart_item_id) {
     $cart_item = node_load($cart_item_id);
     $variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
     $trading_unit = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
-    $maxamount = floor($variation->field_stock[LANGUAGE_NONE][0]['value'] / $trading_unit->field_tu_amount[LANGUAGE_NONE][0]['value']);
+    $maxamount = floor((!empty($variation->field_stock[LANGUAGE_NONE][0]['value'])) ? $variation->field_stock[LANGUAGE_NONE][0]['value'] : 0 / $trading_unit->field_tu_amount[LANGUAGE_NONE][0]['value']);
     return ($maxamount > 0) ? $maxamount : 999;
 }
 

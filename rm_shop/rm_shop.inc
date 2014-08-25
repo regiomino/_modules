@@ -9,80 +9,18 @@
 
 function rm_shop_get_shops($city, $zipcode, $street) {
 
+    $_SESSION['regionselect'] = array(
+        'street' => $street,
+        'zip' => $zipcode,
+        'city' => $city,
+    );
+
     global $user;
 
     drupal_add_js('https://maps.googleapis.com/maps/api/js?sensor=false', 'external');
     drupal_add_js(drupal_get_path('module', 'rm_shop') . '/js/rm_shop.js');
 
-    //Get all shipping agreements that match the given zipcode
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('shipping_agreement'))
-        ->propertyCondition('status', 1)
-        ->fieldCondition('field_shipping_zipcodes', 'value', $zipcode)
-        ->fieldCondition('field_user_reference', 'target_id', ($user->uid > 0) ? array(0, $user->uid) : $user->uid)
-        ->execute();
-    $shippingagreements = array();
-    if(isset($tmp['node'])) $shippingagreements = entity_load('node', array_keys($tmp['node']));
-    
-    //Get all dispatch, pickup and payment agreements
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('dispatch_agreement', 'pickup_agreement', 'payment_agreement'))
-        ->propertyCondition('status', 1)
-        ->fieldCondition('field_user_reference', 'target_id', ($user->uid > 0) ? array(0, $user->uid) : $user->uid)
-        ->execute();
-
-    $otheragreements = entity_load('node', array_keys($tmp['node']));
-
-    //Merge all
-    $allagreements = array_merge($otheragreements, $shippingagreements);
-
-    //Extract all uids from agreements
-    $alluids = array();
-    foreach($allagreements as $agreementobject) {
-        //if an agreement from the same seller of the same type already exists, then check if the current one is more specific or more general
-        if(!empty($alluids[$agreementobject->uid][$agreementobject->type])) {
-            //step through the existing entries -> should be only one
-            foreach($alluids[$agreementobject->uid][$agreementobject->type] as $user_reference_key => $unimportant) {
-                //if the already written key is smaller than the current one, this means the current one is more specific
-                if($user_reference_key < $agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']) {
-                    //delete the more general one
-                    unset($alluids[$agreementobject->uid][$agreementobject->type][$user_reference_key]);
-                }
-            }
-        }
-        //write the current key
-        $alluids[$agreementobject->uid][$agreementobject->type][$agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']][] = $agreementobject;
-    }
-    
-    $shops = array();
-    
-    if(!empty($alluids)) {
-        //Filter out all uids that do not have active trading units
-        $alluidkeys = array_keys($alluids);
-        $relevantuids = rm_shop_filter_sellers_with_active_offers($alluidkeys);#
-        
-        //then select all seller profiles that match the relevant uids
-        if(!empty($relevantuids)) {
-            $query = new EntityFieldQuery();
-            $query->entityCondition('entity_type', 'node');
-            $query->entityCondition('bundle', array('seller_profile'));
-            $query->propertyCondition('status', 1);
-            $query->propertyCondition('uid', $relevantuids);
-            $query->pager(15);
-            $result = $query->execute();
-            if(isset($result['node'])) {
-                $shops = entity_load('node', array_keys($result['node']));
-            }
-        }
-    }
-    //add all agreement infos to the shop profile
-    foreach($shops as $nid => $shop) {
-        $shops[$nid]->agreements = $alluids[$shop->uid];
-    }
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL);
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(
@@ -92,30 +30,6 @@ function rm_shop_get_shops($city, $zipcode, $street) {
             'pager' => theme('pager'),
         ),
     ));
-}
-
-function rm_shop_filter_sellers_with_active_offers($uids) {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node');
-    $query->entityCondition('bundle', array('trading_unit'));
-    $query->propertyCondition('status', 1);
-    $query->propertyCondition('uid', $uids);
-    $result = $query->execute();
-
-    $intersecting_uids = array();
-    
-    if(isset($result['node'])) {
-        $tradingunitowners = array();
-        $alltradingunits = entity_load('node', array_keys($result['node']));
-        foreach($alltradingunits as $nid => $trading_unit_object) {
-            $tradingunitowners[$trading_unit_object->uid] = TRUE;
-        }
-        $tmp = array_intersect(array_keys($tradingunitowners), $uids);
-        
-        $intersecting_uids = array_values($tmp);
-    }
-    
-    return $intersecting_uids;
 }
 
 function rm_shop_jobs() {
