@@ -139,16 +139,16 @@ function rm_seller_offer_form($form, &$form_state) {
                 if(!empty($variation->body[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['body-' . $variation->nid]['#default_value'] = strip_tags($variation->body[LANGUAGE_NONE][0]['value']);
                 
                 //Images
-                // $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_image-' . $variation->nid] = array(
-                    // '#type' => 'managed_file',
-                    // '#title' => t('Images'),
-                    // '#required' => TRUE,
-                    // '#title_display' => 'none',
-                    // '#attributes' => array(
-                        // 'placeholder' => t('Images'),
-                        // 'class' => array('form-control'),
-                    // ),
-                // );
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_image-' . $variation->nid] = array(
+                    '#type' => 'managed_file',
+                    '#title' => t('Images'),
+                    '#required' => TRUE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Images'),
+                        'class' => array('form-control'),
+                    ),
+                );
                 
                 //Product unit
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_amount-' . $variation->nid] = array(
@@ -173,6 +173,7 @@ function rm_seller_offer_form($form, &$form_state) {
                         'g' => t('g'),
                         'l' => t('l'),
                         'ml' => t('ml'),
+                        'pair' => t('pair'),
                     ),
                     '#title' => t('Unit'),
                     '#required' => TRUE,
@@ -312,7 +313,7 @@ function rm_seller_offer_form($form, &$form_state) {
 function rm_seller_offer_form_submit($form, &$form_state) {
     if(!empty($form_state['values'])) {
         foreach($form_state['values'] as $field_name => $field_value) {
-            if(!empty($field_value)) {
+            if($field_value != '') {
                 $tmp = explode('-', $field_name);
                 if(!empty($tmp[1]) && is_numeric($tmp[1])) {
                     $nodeobject = node_load($tmp[1]);
