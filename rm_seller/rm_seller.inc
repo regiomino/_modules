@@ -285,6 +285,7 @@ function rm_seller_offer_form($form, &$form_state) {
                             'crate' => t('Crate'),
                             'bundle' => t('Bundle'),
                             'pallet' => t('Pallet'),
+                            'vacuum' => t('Vakuum-Pack'),
                         ),
                         '#title' => t('Trading unit type'),
                         '#required' => TRUE,
