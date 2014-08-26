@@ -866,7 +866,7 @@ function rm_sales_profileset_form() {
 			),
 		),
 		'field_next_action' => array(
-			'data' => t('Nächste Aktion'),
+			'data' => t('Next action'),
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'field_next_action',
