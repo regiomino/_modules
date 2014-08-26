@@ -52,9 +52,18 @@ function rm_user_get_navbar() {
         
         if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success')))) . ' ';
         
-        if(in_array('seller', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-folder-open', '@linktitle' => format_username($user))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
-        
-        if(in_array('salesguy', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+        //Verwaltungs-Link für Verkäufer
+        if(in_array('seller', $account->roles)) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+        }
+        //Verwaltungs-Link für Vertriebler
+        else if(in_array('salesguy', $account->roles)) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+        }
+        //Verwaltungs-Link für Gastronomen/Kunden
+        else {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/customer', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+        }
         
         $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-user', '@linktitle' => t('Log out'))), 'user/logout', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-warning'))));
     }
@@ -62,6 +71,14 @@ function rm_user_get_navbar() {
         $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-user', '@linktitle' => t('Log in'))), 'user/register', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success'))));
     }
     return $html;
+}
+
+function rm_user_get_account_completeness($uid) {
+    return 1;
+}
+
+function rm_user_get_profile_completeness($profileid) {
+    return 0.65;
 }
 
 /**

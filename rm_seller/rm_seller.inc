@@ -1,15 +1,14 @@
 <?php
 
-// function rm_seller_offermanagement() {
-    // drupal_add_js(drupal_get_path('module', 'rm_seller') . '/js/rm_seller.js');
-    // //pass to tpl
-    // return theme('rm_seller_theme_offermanagement', array(
-        // 'vars' => array(
-            // 'form' => drupal_get_form('rm_seller_offer_form'),
-            // 'offers' => rm_shop_get_structured_seller_offers(29, array(0,1)),
-        // ),
-    // ));
-// }
+function rm_seller_dashboard() {
+
+    //pass to tpl
+    return theme('rm_seller_theme_dashboard', array(
+        'vars' => array(
+            'dashboard' => NULL,
+        ),
+    ));
+}
 
 function rm_seller_offer_form($form, &$form_state) {
     global $user;
