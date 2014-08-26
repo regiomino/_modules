@@ -15,7 +15,7 @@ function rm_seller_offer_form($form, &$form_state) {
     global $user;
     $uid = $user->uid;
     
-    if(rm_user_is_admin()) $uid = 44;
+    if(rm_user_is_admin()) $uid = 50;
     
     $offers = rm_shop_get_structured_seller_offers($uid, array(0,1));
     
@@ -40,30 +40,57 @@ function rm_seller_offer_form($form, &$form_state) {
             );
             if(!empty($offer->title)) $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title-' . $offer->nid]['#default_value'] = $offer->title;
             
-            //Product origin
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid] = addressfield_generate($offer->field_origin[LANGUAGE_NONE][0], array('address' => 'address', 'organisation' => 'organisation'), array('mode' => 'form'));
-            unset($form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['street_block']);
+            //Product origin company
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_company-' . $offer->nid] = array(
+                '#type' => 'textfield',
+                '#title' => t('Company'),
+                '#title_display' => 'none',
+                '#attributes' => array(
+                    'placeholder' => t('Company'),
+                    'class' => array('form-control'),
+                ),
+            );
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['organisation_name'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_company-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['organisation_name'];
             
-            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['organisation_name'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['organisation_name'];
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#title_display'] = 'none';
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#attributes']['placeholder'] = t('Organisation');
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['organisation_block']['organisation_name']['#attributes']['class'][] ='form-control';
+            //Product origin zip
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_zip-' . $offer->nid] = array(
+                '#type' => 'textfield',
+                '#title' => t('Postal code'),
+                '#title_display' => 'none',
+                '#attributes' => array(
+                    'placeholder' => t('Postal code'),
+                    'class' => array('form-control'),
+                ),
+            );
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['postal_code'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_zip-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['postal_code'];
             
-            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['country'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['country'];
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#value'] = 'AT';
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#title_display'] = 'none';
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#attributes']['placeholder'] = t('Country');
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['country']['#attributes']['class'][] ='form-control';
+            //Product origin zip
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_locality-' . $offer->nid] = array(
+                '#type' => 'textfield',
+                '#title' => t('Locality'),
+                '#title_display' => 'none',
+                '#attributes' => array(
+                    'placeholder' => t('Locality'),
+                    'class' => array('form-control'),
+                ),
+            );
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['locality'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_locality-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['locality'];
             
-            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['locality'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['locality'];
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#title_display'] = 'none';
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#attributes']['placeholder'] = t('Locality');
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['locality']['#attributes']['class'][] ='form-control';
+            //Product origin country
+            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_country-' . $offer->nid] = array(
+                '#type' => 'select',
+                '#title' => t('Country'),
+                '#options' => rm_api_get_iso_countries('de'),
+                '#required' => TRUE,
+                '#title_display' => 'none',
+                '#attributes' => array(
+                    'placeholder' => t('Country'),
+                    'class' => array('form-control'),
+                    'required' => NULL,
+                ),
+            );
+            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['country'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_country-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['country'];
             
-            if(!empty($offer->field_origin[LANGUAGE_NONE][0]['postal_code'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#value'] = $offer->field_origin[LANGUAGE_NONE][0]['postal_code'];
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#title_display'] = 'none';
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#attributes']['placeholder'] = t('Postal code');
-            $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin-' . $offer->nid]['locality_block']['postal_code']['#attributes']['class'][] ='form-control';
             
             foreach($offer->offer_variations as $variation) {
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields'] = array();
@@ -126,11 +153,11 @@ function rm_seller_offer_form($form, &$form_state) {
                 //Product unit
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_amount-' . $variation->nid] = array(
                     '#type' => 'textfield',
-                    '#title' => t('Amount'),
+                    '#title' => t('Quantity'),
                     '#required' => TRUE,
                     '#title_display' => 'none',
                     '#attributes' => array(
-                        'placeholder' => t('Amount'),
+                        'placeholder' => t('Quantity'),
                         'class' => array('form-control'),
                         'required' => NULL,
                     ),
@@ -283,7 +310,62 @@ function rm_seller_offer_form($form, &$form_state) {
 }
 
 function rm_seller_offer_form_submit($form, &$form_state) {
-
+    if(!empty($form_state['values'])) {
+        foreach($form_state['values'] as $field_name => $field_value) {
+            if(!empty($field_value)) {
+                $tmp = explode('-', $field_name);
+                if(!empty($tmp[1]) && is_numeric($tmp[1])) {
+                    $nodeobject = node_load($tmp[1]);
+                    switch($tmp[0]) {
+                        //Title fields
+                        case 'field_description_title':
+                        case 'field_variation_title':
+                            $nodeobject->title = $field_value;
+                            break;
+                            
+                        //Value fields with identical names
+                        case 'field_sku':
+                        case 'field_stock':
+                        case 'field_gtin':
+                        case 'field_tu_amount':
+                        case 'field_tu_price':
+                        case 'field_tu_vat':
+                        case 'field_tu_deposit':
+                        case 'field_tu_packaging':
+                        case 'field_tu_vat':
+                        case 'body':
+                            $nodeobject->{$tmp[0]}[LANGUAGE_NONE][0]['value'] = $field_value;
+                            break;
+                        
+                        //Origin fields
+                        case 'field_origin_company':
+                            $nodeobject->field_origin[LANGUAGE_NONE][0]['organisation_name'] = $field_value;
+                            break;
+                        case 'field_origin_zip':
+                            $nodeobject->field_origin[LANGUAGE_NONE][0]['postal_code'] = $field_value;
+                            break;
+                        case 'field_origin_locality':
+                            $nodeobject->field_origin[LANGUAGE_NONE][0]['locality'] = $field_value;
+                            break;
+                        case 'field_origin_country':
+                            $nodeobject->field_origin[LANGUAGE_NONE][0]['country'] = $field_value;
+                            break;
+                        
+                        //Product unit
+                        case 'field_productunit_amount':
+                            $nodeobject->field_productunit[LANGUAGE_NONE][0]['first'] = $field_value;
+                            break;
+                        case 'field_productunit_unit':
+                            $nodeobject->field_productunit[LANGUAGE_NONE][0]['second'] = $field_value;
+                            break;
+                            
+                    }
+                    node_save($nodeobject);
+                }
+            }
+        }
+    }
+    drupal_set_message(t('All offers have been updated with the given values'), 'status');
 }
 
 function rm_seller_add_tradingunit($nid) {

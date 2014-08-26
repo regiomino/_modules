@@ -106,10 +106,8 @@ function rm_seller_theme() {
 	return array(
 		'rm_seller_offer_form' => array(
 			'template' => 'rm_seller_theme_offer_form',
+            'arguments' => array('form' => 'form'),
 			'render element' => 'form',
-			'variables' => array(
-				'vars' => NULL,
-			)
 		),
 	);
 }
