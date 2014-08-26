@@ -52,7 +52,7 @@ function rm_user_get_navbar() {
         
         if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success')))) . ' ';
         
-        if(in_array('seller', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-folder-open', '@linktitle' => t('Management'))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success')))) . ' ';
+        if(in_array('seller', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-folder-open', '@linktitle' => format_username($user))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
         
         if(in_array('salesguy', $account->roles)) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
         
