@@ -141,8 +141,9 @@ function rm_seller_offer_form($form, &$form_state) {
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_image-' . $variation->nid] = array(
                     '#type' => 'managed_file',
                     '#title' => t('Images'),
-                    '#required' => TRUE,
+                    '#required' => FALSE,
                     '#title_display' => 'none',
+                    '#upload_location' => 'public://product_images/',
                 );
                 
                 //Product unit
@@ -357,6 +358,15 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                             break;
                         case 'field_productunit_unit':
                             $nodeobject->field_productunit[LANGUAGE_NONE][0]['second'] = $field_value;
+                            break;
+                        
+                        //Image
+                        case 'field_image':
+                            $file = file_load($field_value);
+                            $file->status = FILE_STATUS_PERMANENT;
+                            file_save($file);
+                            $filearray = (array) $file;
+                            $nodeobject->{$tmp[0]}[LANGUAGE_NONE][] = (array) $file;
                             break;
                             
                     }
