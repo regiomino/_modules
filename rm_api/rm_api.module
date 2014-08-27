@@ -44,6 +44,36 @@ function rm_api_invoke_block_view_ajax() {
 /**
  * Method for creating new node objects.
  *
+ * @param $nid
+ * 		The nid of the node that holds the file
+ *
+ * @param $fieldname
+ *		The name of the field that holds the file. Should be an image or file field.
+ *
+ * @param $delta
+ *		The delta in which the file resides within the field
+ *
+ * @param $lang
+ *		The language of the field entry. Defaults to LANGUAGE_NONE
+ *
+ */
+function rm_api_delete_file_from_node($nid, $fieldname, $delta, $lang = LANGUAGE_NONE) {
+    $nodeobject = node_load($nid); 
+    $file = file_load($nodeobject->{$fieldname}[$lang][$delta]['fid']);  
+    file_delete($file, TRUE);
+    unset($nodeobject->{$fieldname}[$lang][$delta]);
+    if(!empty($nodeobject->{$fieldname}[$lang])) {
+        $nodeobject->{$fieldname}[$lang] = array_values($nodeobject->{$fieldname}[$lang]);
+    }
+    else {
+        unset($nodeobject->{$fieldname}[$lang]);
+    }
+    node_save($nodeobject);
+}
+
+/**
+ * Method for creating new node objects.
+ *
  * @param $type
  * 		The content type of the node
  *

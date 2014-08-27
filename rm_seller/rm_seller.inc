@@ -143,10 +143,6 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#title' => t('Images'),
                     '#required' => TRUE,
                     '#title_display' => 'none',
-                    '#attributes' => array(
-                        'placeholder' => t('Images'),
-                        'class' => array('form-control'),
-                    ),
                 );
                 
                 //Product unit
@@ -552,4 +548,9 @@ function rm_seller_delete_offer_submit($form, &$form_state) {
             break;
     }
 	
+}
+
+function rm_seller_delete_image($nid, $delta) {
+    rm_api_delete_file_from_node($nid, 'field_image', $delta);
+    drupal_goto();
 }

@@ -101,6 +101,15 @@ function rm_seller_menu() {
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
     );
+    $items['deleteimage/%/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_seller_delete_image',
+        'page arguments' => array(1,2),
+        'access callback' => 'rm_seller_user_owns_offer',
+        'access arguments' => array(1),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
 	return $items;
 }
 
