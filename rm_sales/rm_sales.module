@@ -190,14 +190,6 @@ function rm_sales_publishprofile_access($nid) {
 	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
 }
 
-function rm_sales_editprofile_access($nid) {
-	$profileobject = node_load($nid);
-	global $user;
-    if(rm_user_is_admin()) return TRUE;
-	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
-	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
-}
-
 function rm_sales_deletenode_access($nid) {
 	$object = node_load($nid);
 	global $user;
@@ -465,4 +457,12 @@ function rm_sales_theme() {
 			)
 		),
 	);
+}
+
+function rm_sales_editprofile_access($nid) {
+	global $user;
+	$profileobject = node_load($nid);
+    if(rm_user_is_admin()) return TRUE;
+	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
+	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
 }

@@ -54,7 +54,7 @@ function rm_user_get_navbar() {
         
         //Verwaltungs-Link für Verkäufer
         if(in_array('seller', $account->roles)) {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller/' . $user->uid, array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
         }
         //Verwaltungs-Link für Vertriebler
         else if(in_array('salesguy', $account->roles)) {
@@ -74,11 +74,25 @@ function rm_user_get_navbar() {
 }
 
 function rm_user_get_account_completeness($uid) {
-    return 1;
+    $userfields = field_info_instances('user');
+    $allfields = count($userfields['user']);
+    $userobject = user_load($uid);
+    $filledfields = 0;
+    foreach($userfields['user'] as $field_name => $field_value) {
+        if(!empty($userobject->{$field_name})) $filledfields++;
+    }
+    return round($filledfields/$allfields, 2);
 }
 
-function rm_user_get_profile_completeness($profileid) {
-    return 0.65;
+function rm_user_get_profile_completeness($profileid, $bundle) {
+    $sellerfields = field_info_instances('node', $bundle);
+    $allfields = count($sellerfields);
+    $nodeobject = node_load($profileid);
+    $filledfields = 0;
+    foreach($sellerfields as $field_name => $field_value) {
+        if(!empty($nodeobject->{$field_name})) $filledfields++;
+    }
+    return round($filledfields/$allfields, 2);
 }
 
 /**
@@ -236,7 +250,7 @@ function rm_user_shadow($cuid, $tuid) {
  * @param $name
  * @param $account
  */
-function rm_sales_username_alter(&$name, $account) {
+function rm_user_username_alter(&$name, $account) {
 	if($account->uid > 0) {
         $account = user_load($account->uid);
         if(isset($account->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) && isset($account->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($account->field_last_name[LANGUAGE_NONE][0]['value'])) {
@@ -379,4 +393,14 @@ function rm_user_address_complete($uid) {
     else {
         return FALSE;
     }
+}
+
+function rm_user_editprofile_access($account) {
+	global $user;
+    $profilenodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'), -1, -1, -1, -1, -1, $user->uid);
+    $profilekeys = array_keys($profilenodes);
+	$profileobject = $profilenodes[$profilekeys[0]];
+    if(rm_user_is_admin()) return TRUE;
+	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
+	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
 }

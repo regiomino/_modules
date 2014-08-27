@@ -141,8 +141,9 @@ function rm_seller_offer_form($form, &$form_state) {
                 $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_image-' . $variation->nid] = array(
                     '#type' => 'managed_file',
                     '#title' => t('Images'),
-                    '#required' => TRUE,
+                    '#required' => FALSE,
                     '#title_display' => 'none',
+                    '#upload_location' => 'public://product_images/',
                 );
                 
                 //Product unit
@@ -358,6 +359,15 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_productunit_unit':
                             $nodeobject->field_productunit[LANGUAGE_NONE][0]['second'] = $field_value;
                             break;
+                        
+                        //Image
+                        case 'field_image':
+                            $file = file_load($field_value);
+                            $file->status = FILE_STATUS_PERMANENT;
+                            file_save($file);
+                            $filearray = (array) $file;
+                            $nodeobject->{$tmp[0]}[LANGUAGE_NONE][] = (array) $file;
+                            break;
                             
                     }
                     node_save($nodeobject);
@@ -553,4 +563,16 @@ function rm_seller_delete_offer_submit($form, &$form_state) {
 function rm_seller_delete_image($nid, $delta) {
     rm_api_delete_file_from_node($nid, 'field_image', $delta);
     drupal_goto();
+}
+
+function rm_seller_editaccount() {
+    //pass to tpl
+    module_load_include('inc', 'user', 'user.pages');
+    global $user;
+    $account = user_load($user->uid);
+    return theme('rm_seller_theme_editaccount', array(
+        'vars' => array(
+            'form' => drupal_get_form('user_profile_form', $account),
+        ),
+    ));
 }
