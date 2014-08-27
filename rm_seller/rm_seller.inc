@@ -564,3 +564,15 @@ function rm_seller_delete_image($nid, $delta) {
     rm_api_delete_file_from_node($nid, 'field_image', $delta);
     drupal_goto();
 }
+
+function rm_seller_editaccount() {
+    //pass to tpl
+    module_load_include('inc', 'user', 'user.pages');
+    global $user;
+    $account = user_load($user->uid);
+    return theme('rm_seller_theme_editaccount', array(
+        'vars' => array(
+            'form' => drupal_get_form('user_profile_form', $account),
+        ),
+    ));
+}

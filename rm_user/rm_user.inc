@@ -82,9 +82,3 @@ function rm_user_myaccount($form, &$form_state, $node_type) {
 	}
 	return $form;
 }
-
-function rm_user_editaccount($form, &$form_state) {
-    $form = array();
-    
-    return $form;
-}

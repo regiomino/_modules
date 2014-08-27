@@ -54,7 +54,7 @@ function rm_user_get_navbar() {
         
         //Verwaltungs-Link für Verkäufer
         if(in_array('seller', $account->roles)) {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller/' . $user->uid, array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
         }
         //Verwaltungs-Link für Vertriebler
         else if(in_array('salesguy', $account->roles)) {
@@ -74,7 +74,14 @@ function rm_user_get_navbar() {
 }
 
 function rm_user_get_account_completeness($uid) {
-    return 1;
+    $userfields = field_info_instances('user');
+    $allfields = count($userfields['user']);
+    $userobject = user_load($uid);
+    $filledfields = 0;
+    foreach($userfields['user'] as $field_name => $field_value) {
+        if(!empty($userobject->{$field_name}[LANGUAGE_NONE])) $filledfields++;
+    }
+    return round($filledfields/$allfields, 2);
 }
 
 function rm_user_get_profile_completeness($profileid) {
