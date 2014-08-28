@@ -1,5 +1,48 @@
 jQuery(document).ready(function ($) {
-
+    
+    var debounce = function(func, wait, immediate) {
+     
+        var timeout;
+        return function() {
+                var context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                        timeout = null;
+                        if (!immediate) func.apply(context, args);
+                }, wait);
+                if (immediate && !timeout) func.apply(context, args);
+        };
+    };
+    
+    var viewport = function () {
+        var e = window, a = 'inner';
+        if (!('innerWidth' in window )) {
+            a = 'client';
+            e = document.documentElement || document.body;
+        }
+        return { width : e[ a+'Width' ] , height : e[ a+'Height' ] };
+    };
+    
+    
+    var adjustWinH = debounce(function(){
+        var w = viewport(),
+            vpW = w.width;
+        
+        
+        var sH = (vpW >= 768 )?(w.height - 65): 300;
+        
+            $('.sidebar').css({
+                'height' : sH + 'px'
+            });
+            var center = map.getCenter();
+            google.maps.event.trigger(map, "resize");
+            map.setCenter(center);
+        
+        },200);
+    
+    
+    $(window).on('resize.wind', adjustWinH).resize();
+    
     $('.label-details').click(function(e) { e.preventDefault(); }).popover({
       trigger: 'click hover',
       html: true

@@ -12,6 +12,7 @@ jQuery(document).ready(function ($) {
         this.LOADER_CLASS_NAME ='loader';
         this.$win = $(window);
         this.pageOffsetY = 65;
+        this.adminbarOffset = 1;
     };
     
     rmCart.prototype = {
@@ -241,7 +242,7 @@ jQuery(document).ready(function ($) {
             var _self = this,
                 offset = _self.$cartContainer.offset().top - _self.pageOffsetY;
             _self.$cartContainer.affix({
-                    'offset' : 42
+                    'offset' : _self.adminbarOffset
             });
         },
         
