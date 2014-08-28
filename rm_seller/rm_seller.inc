@@ -1,7 +1,185 @@
 <?php
 
-function rm_seller_dashboard() {
+function rm_seller_agreement_delete($form, &$form_state, $nid) {
+	
+	$nodeobject = node_load($nid);
+	
+	$form['rm_deleteagreement']['nid'] = array(
+		'#type' => 'value',
+		'#value' => $nid,
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete'),
+		'#prefix' => '<p>' . t('Do you really want to delete the entry "@entry"?', array('@entry' => $nodeobject->title)) . '</p>',
+		'#suffix' => l(t('Cancel'), $_GET['destination']),
+	);
+	
+	return $form;
+}
 
+function rm_seller_agreement_delete_submit($form, &$form_state) {
+	$title = node_load($form_state['values']['nid'])->title;
+	node_delete($form_state['values']['nid']);
+	global $user;
+	drupal_set_message(t('Deleted the node @entry', array('@entry' => $title)), 'status');
+	rm_user_activity(t('Deleted the node @entry', array('@entry' => $title)), NULL, NULL, $user->uid);
+}
+
+function rm_seller_agreement_add($form, &$form_state, $agreement_type, $suid) {
+
+	$instances = field_info_instances('node', $agreement_type);
+
+	$form['rm_add_agreement'] = array();
+	
+	foreach($instances as $field_name => $field_description) {
+		rm_api_attach_field_to_form($field_name, 'node', $agreement_type, NULL, $form['rm_add_agreement'], $form_state, LANGUAGE_NONE);
+        if($field_name == 'field_user_reference') {
+            $form['rm_add_agreement']['field_user_reference'][LANGUAGE_NONE]['#options'][0] = t('for all');
+            ksort($form['rm_add_agreement']['field_user_reference'][LANGUAGE_NONE]['#options']);
+        }
+	}
+	
+	$form['rm_add_agreement']['agreement_type'] = array(
+		'#type' => 'value',
+		'#value' => $agreement_type,
+	);
+	
+	$form['rm_add_agreement']['field_names'] = array(
+		'#type' => 'value',
+		'#value' => $instances,
+	);
+	
+	$form['rm_add_agreement']['suid'] = array(
+		'#type' => 'value',
+		'#value' => $suid,
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+	);
+	
+	return $form;
+}
+
+function rm_seller_agreement_add_validate($form, &$form_state) {
+}
+
+function rm_seller_agreement_add_submit($form, &$form_state) {
+    $title = node_type_get_name($form_state['values']['agreement_type']);
+    $new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
+    foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
+        if($field_name == 'field_regular_times') {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+                if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+                if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+        else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $values) {
+                if(!is_array($values) || empty($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+        $form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+        $new_node->{$field_name} = $form_state['values'][$field_name];
+    }
+    node_save($new_node);
+}
+
+
+function rm_seller_agreement_edit($form, &$form_state, $agreement_id) {
+	
+	$agreement = node_load($agreement_id);
+	
+	$instances = field_info_instances('node', $agreement->type);
+
+	$form['rm_edit_agreement'] = array();
+	
+	foreach($instances as $field_name => $field_description) {
+		rm_api_attach_field_to_form($field_name, 'node', $agreement->type, $agreement, $form['rm_edit_agreement'], $form_state, LANGUAGE_NONE);
+        if($field_name == 'field_user_reference') {
+            $form['rm_edit_agreement']['field_user_reference'][LANGUAGE_NONE]['#options'][0] = t('for all');
+            ksort($form['rm_edit_agreement']['field_user_reference'][LANGUAGE_NONE]['#options']);
+        }
+	}
+	
+	$form['rm_edit_agreement']['field_names'] = array(
+		'#type' => 'value',
+		'#value' => $instances,
+	);
+	
+	$form['rm_edit_agreement']['nid'] = array(
+		'#type' => 'value',
+		'#value' => $agreement_id,
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+	);
+	
+	return $form;
+}
+
+function rm_seller_agreement_edit_validate($form, &$form_state) {
+}
+
+function rm_seller_agreement_edit_submit($form, &$form_state) {
+	$nodeobject = node_load($form_state['values']['nid']);
+
+	foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
+        if($field_name == 'field_regular_times') {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
+                if($dayvalues['starthours'] == '' || $dayvalues['endhours'] = '') unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+                if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+				else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
+            foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $values) {
+                if(!is_array($values) || empty($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+            }
+        }
+		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
+		$nodeobject->{$field_name} = $form_state['values'][$field_name];
+	}
+	node_save($nodeobject);
+}
+
+function rm_seller_paymentagreements() {
+    global $user;
+    //pass to tpl
+    return theme('rm_seller_theme_paymentagreements', array(
+        'vars' => array(
+            'agreements' => rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $user->uid),
+            'paymenttypes' => list_allowed_values(field_info_field('field_payment_types')),
+        ),
+    ));
+}
+
+function rm_seller_shippingagreements() {
+    global $user;
+    //pass to tpl
+    return theme('rm_seller_theme_shippingagreements', array(
+        'vars' => array(
+            'agreements' => rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $user->uid),
+        ),
+    ));
+
+}
+
+function rm_seller_pickupagreements() {
+    global $user;
+    //pass to tpl
+    return theme('rm_seller_theme_pickupagreements', array(
+        'vars' => array(
+            'agreements' => rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $user->uid),
+        ),
+    ));
+}
+
+function rm_seller_dashboard() {
     //pass to tpl
     return theme('rm_seller_theme_dashboard', array(
         'vars' => array(

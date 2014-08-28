@@ -72,14 +72,6 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['manage/sales/addagreement/%/%'] = array(
-    'title' => 'Sales',
-    'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_agreement_add', 3, 4),
-		'access callback' => 'rm_sales_user_is_salesguy',
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
-  );
   $items['manage/sales/addnote/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
@@ -88,14 +80,7 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
-  $items['manage/sales/editagreement/%'] = array(
-    'title' => 'Sales',
-    'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_agreement_edit', 3),
-		'access callback' => 'rm_sales_user_is_salesguy',
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
-  );
+
   $items['manage/sales/assignprofile/%/%'] = array(
     'title' => 'Sales',
     'page callback' => 'rm_sales_assignprofile',
