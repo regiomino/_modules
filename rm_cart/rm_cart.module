@@ -93,6 +93,7 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
             ->fieldCondition('field_session_id', 'value', session_id())
             ->fieldCondition('field_offer_desc_reference', 'target_id', $offer_description)
             ->fieldCondition('field_offer_variation_reference', 'target_id', $offer_variation)
+            ->fieldCondition('field_trading_unit_reference', 'target_id', $trading_unit)
             ->execute();
         $existingitem = array();
         if(isset($tmp['node'])) {
