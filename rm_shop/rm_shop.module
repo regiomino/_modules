@@ -20,7 +20,6 @@ function rm_shop_node_access($node, $op, $account) {
                 case 'activity_log':
                 case 'cart_item':
                 case 'one_click_settings':
-                case 'seller_profile':
                     return NODE_ACCESS_DENY;
             }
         }

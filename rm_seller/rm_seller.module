@@ -50,6 +50,33 @@ function rm_seller_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 3,
     );
+	$items['manage/seller/%user/paymentagreements'] = array(
+        'title' => 'Manage payment agreements',
+        'page callback' => 'rm_seller_paymentagreements',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 4,
+    );
+	$items['manage/seller/%user/shippingagreements'] = array(
+        'title' => 'Manage shipping agreements',
+        'page callback' => 'rm_seller_shippingagreements',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 5,
+    );
+	$items['manage/seller/%user/pickupagreements'] = array(
+        'title' => 'Manage pickup agreements',
+        'page callback' => 'rm_seller_pickupagreements',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 6,
+    );
     $items['addofferdescription/%'] = array(
         'title' => 'Seller',
         'page callback' => 'rm_seller_add_offerdescription',
@@ -62,7 +89,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'rm_seller_add_offervariation',
         'page arguments' => array(1),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -71,7 +98,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'rm_seller_add_tradingunit',
         'page arguments' => array(1),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -80,7 +107,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'rm_seller_pause_offer',
         'page arguments' => array(1),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -89,7 +116,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'rm_seller_activate_offer',
         'page arguments' => array(1),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -98,7 +125,34 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_seller_delete_offer', 3),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
+        'access arguments' => array(3),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['manage/seller/deleteagreement/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_agreement_delete', 3),
+        'access callback' => 'rm_seller_user_owns_node',
+        'access arguments' => array(3),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );
+    $items['manage/seller/addagreement/%/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_agreement_add', 3, 4),
+        'access callback' => 'rm_seller_provided_user_is_self',
+        'access arguments' => array(4),
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+    );  
+    $items['manage/seller/editagreement/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_seller_agreement_edit', 3),
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(3),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -107,12 +161,18 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'rm_seller_delete_image',
         'page arguments' => array(1,2),
-        'access callback' => 'rm_seller_user_owns_offer',
+        'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
     );
 	return $items;
+}
+
+function rm_seller_provided_user_is_self($uid) {
+    if(rm_user_is_admin()) return TRUE;
+    global $user;
+    if($user->uid == $uid) return TRUE;
 }
 
 function rm_seller_user_is_seller() {
@@ -122,7 +182,7 @@ function rm_seller_user_is_seller() {
     if(in_array('seller', $account->roles)) return TRUE;
 }
 
-function rm_seller_user_owns_offer($nid) {
+function rm_seller_user_owns_node($nid) {
     if(rm_user_is_admin()) return TRUE;
     $nodeobject = node_load($nid);
     global $user;
@@ -145,6 +205,24 @@ function rm_seller_theme() {
 				'vars' => NULL,
 			)
 		),
+		'rm_seller_theme_paymentagreements' => array(
+			'template' => 'rm_seller_paymentagreements_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),    
+		'rm_seller_theme_shippingagreements' => array(
+			'template' => 'rm_seller_shippingagreements_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),  
+		'rm_seller_theme_pickupagreements' => array(
+			'template' => 'rm_seller_pickupagreements_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),      
 		'user_profile_form' => array(
 			'template' => 'user_profile_form_theme',
             'arguments' => array('form' => 'form'),
