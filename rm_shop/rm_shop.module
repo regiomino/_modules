@@ -338,7 +338,7 @@ function rm_shop_theme() {
 function rm_shop_block_info() {
 	$blocks['regiomino_entry_header'] = array(
     'info' => t('Regiomino Entry Header'), //The name that will appear in the block list.
-    'cache' => DRUPAL_CACHE_GLOBAL, //Default
+    'cache' => DRUPAL_NO_CACHE, //Default
   );
   return $blocks;
 }
