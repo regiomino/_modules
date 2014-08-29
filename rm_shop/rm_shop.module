@@ -145,7 +145,7 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
     if(!empty($alluids)) {
         //Filter out all uids that do not have active trading units
         $alluidkeys = array_keys($alluids);
-        $relevantuids = rm_shop_filter_sellers_with_active_offers($alluidkeys);#
+        $relevantuids = rm_shop_filter_sellers_with_active_offers($alluidkeys);
         
         //then select all seller profiles that match the relevant uids
         if(!empty($relevantuids)) {
@@ -172,7 +172,7 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
 function rm_shop_filter_sellers_with_active_offers($uids) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node');
-    $query->entityCondition('bundle', array('trading_unit'));
+    $query->entityCondition('bundle', array('offer_description'));
     $query->propertyCondition('status', 1);
     $query->propertyCondition('uid', $uids);
     $result = $query->execute();
@@ -180,12 +180,12 @@ function rm_shop_filter_sellers_with_active_offers($uids) {
     $intersecting_uids = array();
     
     if(isset($result['node'])) {
-        $tradingunitowners = array();
-        $alltradingunits = entity_load('node', array_keys($result['node']));
-        foreach($alltradingunits as $nid => $trading_unit_object) {
-            $tradingunitowners[$trading_unit_object->uid] = TRUE;
+        $offer_description_owners = array();
+        $all_offer_descriptions = entity_load('node', array_keys($result['node']));
+        foreach($all_offer_descriptions as $nid => $offer_description_object) {
+            $offer_description_owners[$offer_description_object->uid] = TRUE;
         }
-        $tmp = array_intersect(array_keys($tradingunitowners), $uids);
+        $tmp = array_intersect(array_keys($offer_description_owners), $uids);
         
         $intersecting_uids = array_values($tmp);
     }
