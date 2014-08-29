@@ -238,8 +238,31 @@ function rm_shop_filter_sellers_ready_to_sell($uids) {
         $intersecting_uids_three = array_values($tmp);
     }
     
+    //then filter out sellers that have no commission agreement
+    if(!empty($intersecting_uids_three)) {      
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node');
+        $query->entityCondition('bundle', array('commission_agreement'));
+        $query->propertyCondition('status', 1);
+        $query->propertyCondition('uid', $intersecting_uids_three);
+        $result = $query->execute();
+    }
     
-    return $intersecting_uids_three;
+    $intersecting_uids_four = array();
+    
+    if(isset($result['node'])) {
+        $commission_agreement_owners = array();
+        $all_commission_agreements = entity_load('node', array_keys($result['node']));
+        foreach($all_commission_agreements as $nid => $commission_agreement_object) {
+            $commission_agreement_owners[$commission_agreement_object->uid] = TRUE;
+        }
+        $tmp = array_intersect(array_keys($commission_agreement_owners), $intersecting_uids_three);
+        
+        $intersecting_uids_four = array_values($tmp);
+    }
+    
+    
+    return $intersecting_uids_four;
 }
 
 function rm_shop_get_structured_seller_offers($uid, $status = 1) {
