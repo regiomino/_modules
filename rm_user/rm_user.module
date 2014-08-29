@@ -9,6 +9,20 @@ function rm_user_init() {
         // node_save($node);
     // }
     
+    // $query = new EntityFieldQuery();
+    // $tmp = $query
+        // ->entityCondition('entity_type', 'node')
+        // ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+        // ->propertyCondition('status', 0)
+        // ->fieldCondition('field_salesguy', 'target_id', 1)
+        // ->execute();
+    // $allnodes = entity_load('node', array_keys($tmp['node']));
+    // foreach($allnodes as $nid => $nodeobject) {
+        // unset($nodeobject->field_salesguy[LANGUAGE_NONE]);
+        // $nodeobject->sticky = 0;
+        // node_save($nodeobject);
+    // }
+    
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
         global $user;

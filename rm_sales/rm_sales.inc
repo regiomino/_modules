@@ -479,7 +479,7 @@ function rm_sales_profilecare_form() {
 			if(isset($agrtmp['node'])) {
                 $agrtmpkeys = array_keys($agrtmp['node']);
                 $offertable = node_load($agrtmpkeys[0]);
-                $offer_table = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . '<br>' . l(t('Download'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']));
+                $offer_table = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . '<br>' . l('<span class="glyphicon glyphicon-save"></span>' . t('Table'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']), array('html' => TRUE));
 			}
 			
 			
