@@ -150,10 +150,12 @@ function rm_cart_get_minimum_order_values($seller_uid, $zipcode) {
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, $seller_uid);
     $shop_ids = array_keys($shops);
     $movs = array();
-    foreach($shops[$shop_ids[0]]->agreements as $agreement_type => $user_reference) {
-        foreach($user_reference as $user_id => $agreement_object) {
-            if(isset($agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'])) {
-                $movs[$agreement_type] = $agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'];
+    if(!empty($shops)) {
+        foreach($shops[$shop_ids[0]]->agreements as $agreement_type => $user_reference) {
+            foreach($user_reference as $user_id => $agreement_object) {
+                if(isset($agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'])) {
+                    $movs[$agreement_type] = $agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'];
+                }
             }
         }
     }

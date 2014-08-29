@@ -145,7 +145,7 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
     if(!empty($alluids)) {
         //Filter out all uids that do not have active trading units
         $alluidkeys = array_keys($alluids);
-        $relevantuids = rm_shop_filter_sellers_with_active_offers($alluidkeys);
+        $relevantuids = rm_shop_filter_sellers_ready_to_sell($alluidkeys);
         
         //then select all seller profiles that match the relevant uids
         if(!empty($relevantuids)) {
@@ -169,7 +169,9 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
     return $shops;
 }
 
-function rm_shop_filter_sellers_with_active_offers($uids) {
+function rm_shop_filter_sellers_ready_to_sell($uids) {
+
+    //first filter out sellers that have no active offers
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node');
     $query->entityCondition('bundle', array('offer_description'));
@@ -190,7 +192,54 @@ function rm_shop_filter_sellers_with_active_offers($uids) {
         $intersecting_uids = array_values($tmp);
     }
     
-    return $intersecting_uids;
+    //then filter out sellers that have no payment agreement  
+    if(!empty($intersecting_uids)) {  
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node');
+        $query->entityCondition('bundle', array('payment_agreement'));
+        $query->propertyCondition('status', 1);
+        $query->propertyCondition('uid', $intersecting_uids);
+        $result = $query->execute();
+    }
+    
+    $intersecting_uids_two = array();
+    
+    if(isset($result['node'])) {
+        $payment_agreement_owners = array();
+        $all_payment_agreements = entity_load('node', array_keys($result['node']));
+        foreach($all_payment_agreements as $nid => $payment_agreement_object) {
+            $payment_agreement_owners[$payment_agreement_object->uid] = TRUE;
+        }
+        $tmp = array_intersect(array_keys($payment_agreement_owners), $intersecting_uids);
+        
+        $intersecting_uids_two = array_values($tmp);
+    }
+    
+    //then filter out sellers that have no delivery agreement
+    if(!empty($intersecting_uids_two)) {      
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node');
+        $query->entityCondition('bundle', array('shipping_agreement', 'dispatch_agreement', 'pickup_agreement'));
+        $query->propertyCondition('status', 1);
+        $query->propertyCondition('uid', $intersecting_uids_two);
+        $result = $query->execute();
+    }
+    
+    $intersecting_uids_three = array();
+    
+    if(isset($result['node'])) {
+        $delivery_agreement_owners = array();
+        $all_delivery_agreements = entity_load('node', array_keys($result['node']));
+        foreach($all_delivery_agreements as $nid => $delivery_agreement_object) {
+            $delivery_agreement_owners[$delivery_agreement_object->uid] = TRUE;
+        }
+        $tmp = array_intersect(array_keys($delivery_agreement_owners), $intersecting_uids_two);
+        
+        $intersecting_uids_three = array_values($tmp);
+    }
+    
+    
+    return $intersecting_uids_three;
 }
 
 function rm_shop_get_structured_seller_offers($uid, $status = 1) {
