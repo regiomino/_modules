@@ -389,6 +389,7 @@ function rm_sales_profilecare_form() {
 		'pickup_agreement' => node_type_get_name('pickup_agreement'),
 		'commission_agreement' => node_type_get_name('commission_agreement'),
 		'payment_agreement' => node_type_get_name('payment_agreement'),
+		'suggestions' => t('Suggestions'),
 		'offer_table' => node_type_get_name('offer_table'),
 	);
 	
@@ -437,93 +438,33 @@ function rm_sales_profilecare_form() {
 			$shipping_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
 			if(isset($agrnodes)) {
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'] > 0) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $shipping_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
-					//$shipping_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
-				}
+                $shipping_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
-			//$shipping_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/shipping_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$dispatch_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $dispatch_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
-					//$dispatch_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
-				}
+                $dispatch_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
-			//$dispatch_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/dispatch_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			
 			$pickup_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $pickup_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
-					//$pickup_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
-				}
+                $pickup_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
-			//$pickup_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/pickup_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$commission_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $commission_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
-					//$commission_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
-				}
+                $commission_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
-			//$commission_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/commission_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$payment_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $payment_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
-					//$payment_agreement .= l($agrtitle, 'manage/sales/editagreement/' . $agrnode->nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('list-group-item'))));
-				}
+                $payment_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
-			//$payment_agreement .= l('<span class="glyphicon glyphicon-plus"></span> ' . t('add new one'), 'manage/sales/addagreement/payment_agreement/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('list-group-item', 'active')))) . '</div>';
 			
 			$offer_table = l('<span class="glyphicon glyphicon-ban-circle"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
 			$agrqry = new EntityFieldQuery();
@@ -536,19 +477,31 @@ function rm_sales_profilecare_form() {
 				->range(0, 1)
 				->execute();
 			if(isset($agrtmp['node'])) {
-				$agrnodes = entity_load('node', array_keys($agrtmp['node']));
-				foreach($agrnodes as $agrnid => $agrnode) {
-					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
-					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
-                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
-					}
-					else {
-						$agrtitle .= t('for all');
-					}
-                    $offer_table = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary'))));
-				}
+                $agrtmpkeys = array_keys($agrtmp['node']);
+                $offertable = node_load($agrtmpkeys[0]);
+                $offer_table = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . '<br>' . l(t('Download'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']));
 			}
+			
+			
+            $sugqry = new EntityFieldQuery();
+            $profileowner = user_load($profileobject->uid);
+			$sugcount = $sugqry
+				->entityCondition('entity_type', 'node')
+				->entityCondition('bundle', array('commercial_profile', 'seller_profile'))
+				->fieldCondition('field_suggester', 'value', $profileowner->mail)
+				->count()
+				->execute();
+            
+            if($sugcount == 0) {
+                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-danger">' . $sugcount . '</span></p>';
+            }
+            else if($sugcount < 5) {
+                $suggestion_count = '<p class="text-center"><span class="label label-warning">' . $sugcount . '</span></p>';
+            }
+            else {
+                $suggestion_count = '<p class="text-center"><span class="label label-primary">' . $sugcount . '</span></p>';
+            }
+            
             
             $salesguynid = format_username($user);
             if(rm_user_is_admin($user->uid)) {
@@ -575,6 +528,7 @@ function rm_sales_profilecare_form() {
 				'pickup_agreement' => $pickup_agreement,
 				'commission_agreement' => $commission_agreement,
 				'payment_agreement' => $payment_agreement,
+                'suggestions' => $suggestion_count,
 				'offer_table' => $offer_table,
 			);
 		}
