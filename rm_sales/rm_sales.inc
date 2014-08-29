@@ -454,10 +454,21 @@ function rm_sales_profilecare_form() {
                 $pickup_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
 			}
 			
-			$commission_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
+			$commission_agreement = l('<span class="glyphicon glyphicon-ban-circle"></span> ' . t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $commission_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
+                $commission_agreement = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary'))));
+                foreach($agrnodes as $agrnid => $agrnode) {
+					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
+					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+                        $userobject = user_load($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+						$agrtitle .= t('for @user', array('@user' => format_username($userobject)));
+					}
+					else {
+						$agrtitle .= t('for all');
+					}
+					$commission_agreement .= '<br>' . l($agrtitle, 'manage/seller/editagreement/' . $agrnode->nid, array('html' => TRUE, 'query' => drupal_get_destination(), 'attributes' => array('class' => array(''))));
+				}
 			}
 			
 			$payment_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';

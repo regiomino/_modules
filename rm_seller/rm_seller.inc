@@ -118,6 +118,7 @@ function rm_seller_agreement_edit($form, &$form_state, $agreement_id) {
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Save'),
+        '#suffix' => l(t('Delete'), 'manage/seller/deleteagreement/' . $agreement_id, array('query' => array('destination' => $_GET['destination']))),
 	);
 	
 	return $form;
@@ -175,6 +176,16 @@ function rm_seller_pickupagreements() {
     return theme('rm_seller_theme_pickupagreements', array(
         'vars' => array(
             'agreements' => rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $user->uid),
+        ),
+    ));
+}
+
+function rm_seller_commissionagreements() {
+    global $user;
+    //pass to tpl
+    return theme('rm_seller_theme_commissionagreements', array(
+        'vars' => array(
+            'agreements' => rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $user->uid),
         ),
     ));
 }

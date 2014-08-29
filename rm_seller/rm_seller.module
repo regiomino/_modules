@@ -77,6 +77,15 @@ function rm_seller_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 6,
     );
+	$items['manage/seller/%user/commissionagreements'] = array(
+        'title' => 'View commission agreements',
+        'page callback' => 'rm_seller_commissionagreements',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 6,
+    );
     $items['addofferdescription/%'] = array(
         'title' => 'Seller',
         'page callback' => 'rm_seller_add_offerdescription',
@@ -134,7 +143,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_seller_agreement_delete', 3),
-        'access callback' => 'rm_seller_user_owns_node',
+        'access callback' => 'rm_seller_user_may_edit_agreement',
         'access arguments' => array(3),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -143,8 +152,8 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_seller_agreement_add', 3, 4),
-        'access callback' => 'rm_seller_provided_user_is_self',
-        'access arguments' => array(4),
+        'access callback' => 'rm_seller_user_may_add_agreement',
+        'access arguments' => array(3, 4),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
     );  
@@ -152,7 +161,7 @@ function rm_seller_menu() {
         'title' => 'Seller',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_seller_agreement_edit', 3),
-        'access callback' => 'rm_seller_user_owns_node',
+        'access callback' => 'rm_seller_user_may_edit_agreement',
         'access arguments' => array(3),
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
@@ -169,10 +178,17 @@ function rm_seller_menu() {
 	return $items;
 }
 
-function rm_seller_provided_user_is_self($uid) {
-    if(rm_user_is_admin()) return TRUE;
+function rm_seller_user_may_edit_agreement($agreement) {
+    if(rm_user_is_admin() || rm_sales_user_is_salesguy()) return TRUE;
+    $agreementobject = node_load($agreement);
     global $user;
-    if($user->uid == $uid) return TRUE;
+    if($user->uid == $agreementobject->uid && $agreementobject->type != 'commission_agreement') return TRUE;
+}
+
+function rm_seller_user_may_add_agreement($agreement_type, $suid) {
+    if(rm_user_is_admin() || rm_sales_user_is_salesguy()) return TRUE;
+    global $user;
+    if($user->uid == $suid && $agreement_type != 'commission_agreement') return TRUE;
 }
 
 function rm_seller_user_is_seller() {
@@ -217,6 +233,12 @@ function rm_seller_theme() {
 				'vars' => NULL,
 			)
 		),  
+		'rm_seller_theme_commissionagreements' => array(
+			'template' => 'rm_seller_commissionagreements_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_seller_theme_pickupagreements' => array(
 			'template' => 'rm_seller_pickupagreements_theme',
 			'variables' => array(
