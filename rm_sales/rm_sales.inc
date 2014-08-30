@@ -158,30 +158,30 @@ function rm_sales_useraccounts_form($form, &$form_state) {
 			'type' => 'property',
 			'specifier' => 'name',
 		),
-		'field_address_locality' => array(
-			'data' => t('City'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'locality',
-			),
-		),
-		'field_address_zip' => array(
-			'data' => t('Zip'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'postal_code',
-			),
-		),
-		'field_address_street' => array(
-			'data' => t('Street'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'thoroughfare',
-			),
-		),
+		// 'field_address_locality' => array(
+			// 'data' => t('City'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'locality',
+			// ),
+		// ),
+		// 'field_address_zip' => array(
+			// 'data' => t('Zip'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'postal_code',
+			// ),
+		// ),
+		// 'field_address_street' => array(
+			// 'data' => t('Street'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'thoroughfare',
+			// ),
+		// ),
         'actions' => t('Actions'),
 	);
     
@@ -227,15 +227,16 @@ function rm_sales_useraccounts_form($form, &$form_state) {
                 $statusswitch = l(t('unblock'), 'user/' . $user->uid . '/enable/' . $uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')), 'query' => drupal_get_destination()));
             }
             
+            $field_address_locality = (!empty($userobject->field_address[LANGUAGE_NONE][0]['locality'])) ? $userobject->field_address[LANGUAGE_NONE][0]['locality'] : '';
+            $field_address_zip = (!empty($userobject->field_address[LANGUAGE_NONE][0]['postal_code'])) ? $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] : '';
+            $field_address_street = (!empty($userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) ? $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] : '';
 
 			$options[$uid] = array(
 				'status' => ($userobject->status) ? t('Active') : t('Blocked'),
 				'uid' => $uid,
                 'field_gender' => (!empty($userobject->field_gender[LANGUAGE_NONE][0]['value'])) ? $userobject->field_gender[LANGUAGE_NONE][0]['value'] : '',
-				'name' => format_username($userobject),
-                'field_address_locality' => (!empty($userobject->field_address[LANGUAGE_NONE][0]['locality'])) ? $userobject->field_address[LANGUAGE_NONE][0]['locality'] : '',
-                'field_address_zip' => (!empty($userobject->field_address[LANGUAGE_NONE][0]['postal_code'])) ? $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] : '',
-                'field_address_street' => (!empty($userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) ? $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] : '',
+				'name' => format_username($userobject) . '<br>' . $field_address_street . '<br>' . $field_address_zip . ' ' . $field_address_locality,
+                
                 'actions' => l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . $statusswitch,
 			);
 		}
@@ -344,38 +345,38 @@ function rm_sales_profilecare_form() {
 			'specifier' => 'title',
 			'sort' => 'desc',
 		),
-		'field_address_locality' => array(
-			'data' => t('City'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'locality',
-			),
-		),
-		'field_address_zip' => array(
-			'data' => t('Zip'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'postal_code',
-			),
-		),
-		'field_address_street' => array(
-			'data' => t('Street'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'thoroughfare',
-			),
-		),
-		'field_publicphone' => array(
-			'data' => t('Phone'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_publicphone',
-				'column' => 'number',
-			),
-		),
+		// 'field_address_locality' => array(
+			// 'data' => t('City'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'locality',
+			// ),
+		// ),
+		// 'field_address_zip' => array(
+			// 'data' => t('Zip'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'postal_code',
+			// ),
+		// ),
+		// 'field_address_street' => array(
+			// 'data' => t('Street'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'thoroughfare',
+			// ),
+		// ),
+		// 'field_publicphone' => array(
+			// 'data' => t('Phone'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_publicphone',
+				// 'column' => 'number',
+			// ),
+		// ),
 		'field_salesguy' => array(
 			'data' => t('Salesguy'),
 			'type' => 'field',
@@ -528,11 +529,11 @@ function rm_sales_profilecare_form() {
 			
 			$options[$nid] = array(
 				'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title . '<br />' . l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
-				'field_address_locality' => $locality,
-				'field_address_zip' => $zip,
-				'field_address_street' => $street,
-				'field_publicphone' => $publicphone,
+				'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />' . l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+				// 'field_address_locality' => $locality,
+				// 'field_address_zip' => $zip,
+				// 'field_address_street' => $street,
+				// 'field_publicphone' => $publicphone,
                 'field_salesguy' => $salesguynid,
 				'shipping_agreement' => $shipping_agreement,
 				'dispatch_agreement' => $dispatch_agreement,
@@ -591,38 +592,38 @@ function rm_sales_profileset_form() {
 			'type' => 'property',
 			'specifier' => 'title',
 		),
-		'field_address_locality' => array(
-			'data' => t('City'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'locality',
-			),
-		),
-		'field_address_zip' => array(
-			'data' => t('Zip'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'postal_code',
-			),
-		),
-		'field_address_street' => array(
-			'data' => t('Street'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'thoroughfare',
-			),
-		),
-		'field_publicphone' => array(
-			'data' => t('Phone'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_publicphone',
-				'column' => 'number',
-			),
-		),
+		// 'field_address_locality' => array(
+			// 'data' => t('City'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'locality',
+			// ),
+		// ),
+		// 'field_address_zip' => array(
+			// 'data' => t('Zip'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'postal_code',
+			// ),
+		// ),
+		// 'field_address_street' => array(
+			// 'data' => t('Street'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'thoroughfare',
+			// ),
+		// ),
+		// 'field_publicphone' => array(
+			// 'data' => t('Phone'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_publicphone',
+				// 'column' => 'number',
+			// ),
+		// ),
 		'field_next_action' => array(
 			'data' => t('Next action'),
 			'type' => 'field',
@@ -780,11 +781,11 @@ function rm_sales_profileset_form() {
                 'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 //'suggester' => (!empty($profileobject->field_suggester[LANGUAGE_NONE])) ? count($profileobject->field_suggester[LANGUAGE_NONE]) : 0,
 				'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title,
-				'field_address_locality' => $locality,
-				'field_address_zip' => $zip,
-				'field_address_street' => $street,
-				'field_publicphone' => $publicphone,
+                'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
+				// 'field_address_locality' => $locality,
+				// 'field_address_zip' => $zip,
+				// 'field_address_street' => $street,
+				// 'field_publicphone' => $publicphone,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment,
                 'field_priority' => $prionid,
@@ -943,38 +944,38 @@ function rm_sales_profilequeue_form() {
 			'type' => 'property',
 			'specifier' => 'title',
 		),
-		'field_address_locality' => array(
-			'data' => t('City'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'locality',
-			),
-		),
-		'field_address_zip' => array(
-			'data' => t('Zip'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'postal_code',
-			),
-		),
-		'field_address_street' => array(
-			'data' => t('Street'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_address',
-				'column' => 'thoroughfare',
-			),
-		),
-		'field_publicphone' => array(
-			'data' => t('Phone'),
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_publicphone',
-				'column' => 'number',
-			),
-		),
+		// 'field_address_locality' => array(
+			// 'data' => t('City'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'locality',
+			// ),
+		// ),
+		// 'field_address_zip' => array(
+			// 'data' => t('Zip'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'postal_code',
+			// ),
+		// ),
+		// 'field_address_street' => array(
+			// 'data' => t('Street'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_address',
+				// 'column' => 'thoroughfare',
+			// ),
+		// ),
+		// 'field_publicphone' => array(
+			// 'data' => t('Phone'),
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_publicphone',
+				// 'column' => 'number',
+			// ),
+		// ),
 		'actions' => t('Actions'),
 	);
 	
@@ -1036,11 +1037,11 @@ function rm_sales_profilequeue_form() {
 			$options[$nid] = array(
 				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title,
-				'field_address_locality' => $locality,
+				'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
+				/* 'field_address_locality' => $locality,
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
-				'field_publicphone' => $publicphone,
+				'field_publicphone' => $publicphone, */
 				'actions' => l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
@@ -1316,7 +1317,7 @@ function rm_sales_conflate_profiles_form_submit($form, &$form_state) {
     foreach($nodeobjects as $nodeobject) {
         node_delete($nodeobject->nid);
     }
-    drupal_set_message('Profiles have been conflated');
+    drupal_set_message(t('Profiles have been conflated'));
     drupal_goto();
 }
 
