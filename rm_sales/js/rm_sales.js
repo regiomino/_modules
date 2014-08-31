@@ -1,7 +1,7 @@
 /**
  * Created by Martin on 04.08.14.
  */
-jQuery(document).ready(function ($) {  
+jQuery(document).ready(function ($) {
 
     $.fn.addThrobber = function(element) {
         element.append('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
