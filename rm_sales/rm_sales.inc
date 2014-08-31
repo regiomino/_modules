@@ -129,7 +129,7 @@ function rm_sales_useraccounts_form($form, &$form_state) {
     
     $form = array();
     
-    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
+    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
     
     global $user;
     
@@ -408,7 +408,7 @@ function rm_sales_profilecare_form() {
 		
 	$form = array();
     
-    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -508,10 +508,10 @@ function rm_sales_profilecare_form() {
                 $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-danger">' . $sugcount . '</span></p>';
             }
             else if($sugcount < 5) {
-                $suggestion_count = '<p class="text-center"><span class="label label-warning">' . $sugcount . '</span></p>';
+                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-warning">' . $sugcount . '</span></p>';
             }
             else {
-                $suggestion_count = '<p class="text-center"><span class="label label-primary">' . $sugcount . '</span></p>';
+                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-primary">' . $sugcount . '</span></p>';
             }
             
             
@@ -672,14 +672,14 @@ function rm_sales_profileset_form() {
 		->propertyCondition('status', 0)
 		->propertyCondition('sticky', 1);
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
-    $query
-		->tableSort($header);
-		//->pager(100);
+    // $query
+		// ->tableSort($header);
+		// ->pager(100);
     $tmp = $query->execute();
 		
 	$form = array();
     
-    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -944,38 +944,6 @@ function rm_sales_profilequeue_form() {
 			'type' => 'property',
 			'specifier' => 'title',
 		),
-		// 'field_address_locality' => array(
-			// 'data' => t('City'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'locality',
-			// ),
-		// ),
-		// 'field_address_zip' => array(
-			// 'data' => t('Zip'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'postal_code',
-			// ),
-		// ),
-		// 'field_address_street' => array(
-			// 'data' => t('Street'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'thoroughfare',
-			// ),
-		// ),
-		// 'field_publicphone' => array(
-			// 'data' => t('Phone'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_publicphone',
-				// 'column' => 'number',
-			// ),
-		// ),
 		'actions' => t('Actions'),
 	);
 	
@@ -995,13 +963,13 @@ function rm_sales_profilequeue_form() {
 		->entityCondition('bundle', array('customer_profile', 'seller_profile'))
 		->propertyCondition('status', 0)
 		->propertyCondition('sticky', 0)
-		->tableSort($header)
+		//->tableSort($header)
 		//->pager(100)
 		->execute();
 		
 	$form = array();
     
-    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
