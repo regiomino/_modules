@@ -5,24 +5,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
     
     $_SESSION['chosen_seller'] = $account->uid;
     
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('one_click_setting'))
-        ->propertyCondition('status', 1)
-        ->propertyCondition('uid', $user->uid)
-        ->fieldCondition('field_user_reference', 'target_id', $account->uid)
-        ->execute();
-    $one_click_settings = array();
-    if(isset($tmp['node'])) {
-        $tmpkeys = array_keys($tmp['node']);
-        $one_click_settings = entity_load('node', $tmpkeys);
-    }
-    $one_click_setting = array();
-    if(!empty($one_click_settings)) {
-        $one_click_setting = $one_click_settings[$tmpkeys[0]];
-    }
-    
+    $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
+
     $form = array();
     $form['checkout'] = array();
     $form['checkout']['oneclick'] = array(
