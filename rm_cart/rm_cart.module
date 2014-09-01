@@ -30,8 +30,8 @@ function rm_cart_menu() {
 	return $items;
 }
 
-function rm_cart_is_filled($suid) {
-    $cart_items = rm_cart_get_cart($suid);
+function rm_cart_is_filled($account) {
+    $cart_items = rm_cart_get_cart($account->uid);
     if(!is_null($cart_items)) return TRUE;
 }
 
@@ -293,6 +293,10 @@ function rm_cart_block_info() {
         'info' => t('Cart'), //The name that will appear in the block list.
         'cache' => DRUPAL_NO_CACHE, //Default
     );
+    $blocks['rm_checkout_block'] = array(
+        'info' => t('Checkout'), //The name that will appear in the block list.
+        'cache' => DRUPAL_NO_CACHE, //Default
+    );
     return $blocks;
 }
 
@@ -300,19 +304,36 @@ function rm_cart_block_info() {
 * Implementation of hook_block_view().
 */
 function rm_cart_block_view($delta = '') {
+
+    $suid = 0;
+    if(!empty($_SESSION['chosen_seller'])) $suid = $_SESSION['chosen_seller'];
+                
     switch($delta){
         
         case 'rm_cart_block':
 
 			$block['subject'] = t('Your shopping cart');
 			if(user_access('access content')) {
-            
-                $suid = 0;
-                if(!empty($_SESSION['chosen_seller'])) $suid = $_SESSION['chosen_seller'];
                 
 				$block['content'] = theme('rm_cart_theme_cart_block', array(
 															'vars' => array(
 																'cart' => rm_cart_get_cart($suid),
+                                                                'suid' => $suid,
+															),
+														));
+			}
+
+			return $block;
+            
+        case 'rm_checkout_block':
+
+			$block['subject'] = t('Your checkout summary');
+			if(user_access('access content')) {
+            
+				$block['content'] = theme('rm_cart_theme_checkout_block', array(
+															'vars' => array(
+																'cart' => rm_cart_get_cart($suid),
+                                                                'suid' => $suid,
 															),
 														));
 			}
@@ -328,6 +349,17 @@ function rm_cart_theme() {
 			'variables' => array(
 				'vars' => NULL,
 			)
+		),
+		'rm_cart_theme_checkout_block' => array(
+			'template' => 'rm_cart_checkout_block_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+		'rm_cart_checkout' => array(
+			'template' => 'rm_cart_checkout_theme',
+            'arguments' => array('form' => 'form'),
+			'render element' => 'form',
 		),
 	);
 }

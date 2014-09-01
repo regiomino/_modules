@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_cart_theme_checkout_block.tpl.php
