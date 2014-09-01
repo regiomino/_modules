@@ -1,7 +1,7 @@
 jQuery(document).ready(function ($) {
     
     var rmCart = function() {
-        this.$cartContainer = $('.grid-l');
+        this.$cartContainer = $('.cart-container');
         this.$cart = $('#cart');
         this.cartH = this.$cart.height();
         this.$add2CartButtons = $('.add2Cart');
@@ -19,6 +19,7 @@ jQuery(document).ready(function ($) {
         
         init : function() {
             var _self = this;
+          
             if(!_self.cartTooHigh()) {
                 _self.addAffix();
             };
