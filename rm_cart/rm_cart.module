@@ -242,6 +242,12 @@ function rm_cart_get_item_vat($cart_item_id) {
     return $item_total * $trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value'] / 100;
 }
 
+function rm_cart_get_item_deposit($cart_item_id) {
+    $cart_item = node_load($cart_item_id);
+    $trading_unit = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
+    return $cart_item->field_quantity[LANGUAGE_NONE][0]['value'] * $trading_unit->field_tu_deposit[LANGUAGE_NONE][0]['value'];
+}
+
 function rm_cart_get_cart_total($suid, $uid = NULL) {
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
@@ -253,6 +259,22 @@ function rm_cart_get_cart_total($suid, $uid = NULL) {
     if(isset($cart_items)) {
         foreach($cart_items as $cart_item) {
             $total += rm_cart_get_item_total($cart_item->nid);
+        }
+    }
+    return $total;
+}
+
+function rm_cart_get_cart_deposit($suid, $uid = NULL) {
+    //If no uid is provided, use the one of the current user
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $cart_items = rm_cart_get_cart($suid, $uid);
+    $total = 0;
+    if(isset($cart_items)) {
+        foreach($cart_items as $cart_item) {
+            $total += rm_cart_get_item_deposit($cart_item->nid);
         }
     }
     return $total;
