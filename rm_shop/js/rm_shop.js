@@ -31,18 +31,29 @@ jQuery(document).ready(function ($) {
         
         var sH = (vpW >= 768 )?(w.height - 65): 300;
         
-            $('.sidebar').css({
+            $('#directoryGoogleMap').css({
                 'height' : sH + 'px'
             });
-            var center = map.getCenter();
+            
+            var map = L.map('directoryGoogleMap').setView([49.800855, 11.017640], 13);
+    
+    L.tileLayer('http://{s}.tiles.mapbox.com/v3/jusch.jcol8o3g/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        maxZoom: 18
+    }).addTo(map);
+           /* var center = map.getCenter();
             google.maps.event.trigger(map, "resize");
-            map.setCenter(center);
+            map.setCenter(center);*/
         
         },200);
     
+     $(window).on('resize.wind', adjustWinH).resize();
     
-    $(window).on('resize.wind', adjustWinH).resize();
     
+    
+   
+    
+    /*
     $('.label-details').click(function(e) { e.preventDefault(); }).popover({
       trigger: 'click hover',
       html: true
@@ -141,4 +152,5 @@ jQuery(document).ready(function ($) {
     }
 
     function doNothing() {}
+    */
 });

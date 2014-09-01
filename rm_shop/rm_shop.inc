@@ -17,7 +17,8 @@ function rm_shop_get_shops($city, $zipcode, $street) {
 
     global $user;
 
-    drupal_add_js('https://maps.googleapis.com/maps/api/js?sensor=false', 'external');
+    drupal_add_css('http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css', 'external');
+    drupal_add_js('http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js', 'external');
     drupal_add_js(drupal_get_path('module', 'rm_shop') . '/js/rm_shop.js');
 
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL);
