@@ -17,11 +17,12 @@ function rm_cart_menu() {
         'access callback' => 'rm_cart_user_owns_cartitem',
         'access arguments' => array(1),
 	);
-    $items['checkout'] = array(
+    $items['checkout/%user'] = array(
         'title' => 'Checkout',
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_cart_checkout'),
+        'page arguments' => array('rm_cart_checkout', 1),
         'access callback' => 'rm_cart_is_filled',
+        'access arguments' => array(1),
         'file' => 'rm_cart.inc',
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
@@ -29,8 +30,8 @@ function rm_cart_menu() {
 	return $items;
 }
 
-function rm_cart_is_filled() {
-    $cart_items = rm_cart_get_cart();
+function rm_cart_is_filled($suid) {
+    $cart_items = rm_cart_get_cart($suid);
     if(!is_null($cart_items)) return TRUE;
 }
 
@@ -42,16 +43,56 @@ function rm_cart_user_owns_cartitem($cart_id) {
     }
 }
 
-function rm_cart_remove_from_cart($cart_id) {
+function rm_cart_remove_from_cart($cart_id, $goto = TRUE) {
     $cartobject = node_load($cart_id);
     $cartobject->status = 0;
     node_save($cartobject);
     //Detect if request is ajax or not
-    if(!rm_api_is_ajax()) drupal_set_message(t('The product was removed from your cart'), 'status');
-    if(!rm_api_is_ajax()) drupal_goto();
+    if(!rm_api_is_ajax() && $goto) drupal_set_message(t('The product was removed from your cart'), 'status');
+    if(!rm_api_is_ajax() && $goto) drupal_goto();
+}
+
+function rm_cart_remove_from_cart_all($uid = NULL) {
+    $query = new EntityFieldQuery();
+    $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('cart_item'))
+        ->propertyCondition('status', 1);
+    if(!is_null($uid)) {
+        //Remove cart items of this user only
+        $query->propertyCondition('uid', $uid);
+    }
+    else {
+        //Don't limit to uids -> removes all cart items of all users
+        //only for admins
+        if(!rm_user_is_admin()) {
+            drupal_set_message(t('Sorry, this is only allowed for admins'), 'error');
+            drupal_access_denied();
+        }
+    }
+    $tmp = $query->execute();
+    $cartitems = array();
+    if(isset($tmp['node'])) $cartitems = entity_load('node', array_keys($tmp['node']));
+    if(!empty($cartitems)) {
+        foreach($cartitems as $cartitem) {
+            rm_cart_remove_from_cart($cartitem->nid, FALSE);
+        }
+    }
+    drupal_goto();
+}
+
+function rm_cart_remove_from_cart_unfit($suid) {
+
 }
 
 function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity = 1, $add = 0, $uid = NULL) {
+    
+    watchdog('rm_cart', print_r($offer_description, TRUE));
+    watchdog('rm_cart', print_r($offer_variation, TRUE));
+    watchdog('rm_cart', print_r($trading_unit, TRUE));
+    watchdog('rm_cart', print_r($quantity, TRUE));
+    watchdog('rm_cart', print_r($add, TRUE));
+    watchdog('rm_cart', print_r($uid, TRUE));
     
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
@@ -132,6 +173,7 @@ function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit
                 $new_node->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit;
                 $new_node->field_quantity[LANGUAGE_NONE][0]['value'] = $quantity;
                 $new_node->field_session_id[LANGUAGE_NONE][0]['value'] = session_id();
+                $new_node->field_user_reference[LANGUAGE_NONE][0]['target_id'] = node_load($trading_unit)->uid;
                 node_save($new_node);
             }
         }
@@ -183,13 +225,13 @@ function rm_cart_get_item_vat($cart_item_id) {
     return $item_total * $trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value'] / 100;
 }
 
-function rm_cart_get_cart_total($uid = NULL) {
+function rm_cart_get_cart_total($suid, $uid = NULL) {
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
         global $user;
         $uid = $user->uid;
     }
-    $cart_items = rm_cart_get_cart($uid);
+    $cart_items = rm_cart_get_cart($suid, $uid);
     $total = 0;
     if(isset($cart_items)) {
         foreach($cart_items as $cart_item) {
@@ -199,13 +241,13 @@ function rm_cart_get_cart_total($uid = NULL) {
     return $total;
 }
 
-function rm_cart_get_cart_vat($uid = NULL) {
+function rm_cart_get_cart_vat($suid, $uid = NULL) {
     //If no uid is provided, use the one of the current user
     if(is_null($uid)) {
         global $user;
         $uid = $user->uid;
     }
-    $cart_items = rm_cart_get_cart($uid);
+    $cart_items = rm_cart_get_cart($suid, $uid);
     $vat = 0;
     
     if(isset($cart_items)) {
@@ -216,32 +258,28 @@ function rm_cart_get_cart_vat($uid = NULL) {
     return $vat;
 }
 
-function rm_cart_get_cart($uid = NULL) {
+function rm_cart_get_cart($suid, $uid = NULL) {
     
     if(is_null($uid)) {
         global $user;
         $uid = $user->uid;
     }
     
-    if($uid > 0) {
-        $cart_items = rm_api_get_nodes_by_properties(array('cart_item'), 1, -1, -1, -1, -1, $uid, 'DESC');
+    $session_id = session_id();
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('cart_item'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid)
+        ->fieldCondition('field_session_id', 'value', $session_id)
+        ->fieldCondition('field_user_reference', 'target_id', $suid)
+        ->execute();
+    if(isset($tmp['node'])) {
+        $cart_items = entity_load('node', array_keys($tmp['node']));
     }
     else {
-        $session_id = session_id();
-        $query = new EntityFieldQuery();
-        $tmp = $query
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('cart_item'))
-            ->propertyCondition('status', 1)
-            ->propertyCondition('uid', $uid)
-            ->fieldCondition('field_session_id', 'value', $session_id)
-            ->execute();
-        if(isset($tmp['node'])) {
-            $cart_items = entity_load('node', array_keys($tmp['node']));
-        }
-        else {
-            $cart_items = NULL;
-        }
+        $cart_items = NULL;
     }
     
     return $cart_items;
@@ -267,11 +305,14 @@ function rm_cart_block_view($delta = '') {
         case 'rm_cart_block':
 
 			$block['subject'] = t('Your shopping cart');
-			if(user_access('access content')){
-
+			if(user_access('access content')) {
+            
+                $suid = 0;
+                if(!empty($_SESSION['chosen_seller'])) $suid = $_SESSION['chosen_seller'];
+                
 				$block['content'] = theme('rm_cart_theme_cart_block', array(
 															'vars' => array(
-																'cart' => rm_cart_get_cart(),
+																'cart' => rm_cart_get_cart($suid),
 															),
 														));
 			}
