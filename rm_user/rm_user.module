@@ -163,6 +163,15 @@ function rm_user_get_users_by_role($role) {
 function rm_user_menu() {
 	$items = array();
 
+     $items['process-applications'] = array(
+    'title' => 'Transactions',
+    'page callback' => 'rm_user_process_applications',
+		'access arguments' => array('access content'),
+    'file' => 'rm_user.inc',
+    'file path' => drupal_get_path('module', 'rm_user'),
+    'type' => MENU_NORMAL_ITEM,
+  ); 
+  
   $items['manage/myaccount'] = array(
     'title' => 'Transactions',
     'page callback' => 'drupal_get_form',

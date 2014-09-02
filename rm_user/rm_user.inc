@@ -1,5 +1,11 @@
 <?php
 
+function rm_user_process_applications() {
+    watchdog('indeed', print_r($_POST, TRUE));
+    watchdog('indeed', print_r($_REQUEST, TRUE));
+    print "hello world";
+}
+
 function rm_user_myaccount($form, &$form_state, $node_type) {
 
 	global $user;
