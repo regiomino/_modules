@@ -17,12 +17,12 @@ function rm_cart_menu() {
         'access callback' => 'rm_cart_user_owns_cartitem',
         'access arguments' => array(1),
 	);
-    $items['checkout/%user'] = array(
+    $items['checkout/%user/%'] = array(
         'title' => 'Checkout',
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_cart_checkout', 1),
-        'access callback' => 'rm_cart_is_filled',
-        'access arguments' => array(1),
+        'page arguments' => array('rm_cart_checkout', 1, 2),
+        'access callback' => 'rm_cart_checkout_is_possible',
+        'access arguments' => array(1, 2),
         'file' => 'rm_cart.inc',
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
@@ -49,6 +49,17 @@ function rm_cart_get_one_click_setting($uid, $suid) {
         $one_click_setting = $one_click_settings[$tmpkeys[0]];
     }
     return $one_click_setting;
+}
+
+function rm_cart_checkout_is_possible($account, $deliverytype) {
+    if(rm_cart_is_filled($account)) {
+        //check if deliverytype is possible
+        $minimum_order_values = array();
+        if(isset($_SESSION['regionselect']['zip'])) $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $_SESSION['regionselect']['zip']);
+        $mov = $minimum_order_values[$deliverytype];
+        $carttotal = rm_cart_get_cart_total($account->uid);
+        if($carttotal >= $mov) return TRUE;
+    }
 }
 
 function rm_cart_is_filled($account) {

@@ -1,6 +1,6 @@
 <?php
 
-function rm_cart_checkout($form, &$form_state, $account) {
+function rm_cart_checkout($form, &$form_state, $account, $deliverytype) {
     global $user;
     
     $_SESSION['chosen_seller'] = $account->uid;
@@ -14,7 +14,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
     );
     $form['checkout']['delivery'] = array(
-        '#type' => 'select',
+        '#type' => 'radios',
         '#title' => t('Delivery option'),
         '#description' => t('Please select a delivery option'),
         '#options' => array(
@@ -22,6 +22,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             'pickup_agreement' => 'Selbstabholung',
             'dispatch_agreement' => 'Versand per DHL',
         ),
+        '#default_value' => $deliverytype,
     );
     $form['submit'] = array(
         '#type' => 'submit',
