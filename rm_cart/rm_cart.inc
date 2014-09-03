@@ -27,7 +27,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
     $form['checkout']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
-        '#description' => t('Please select a delivery option'),
         '#options' => $deliverytypes,
     );
     $form['submit'] = array(
