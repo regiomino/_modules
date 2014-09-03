@@ -1,11 +1,22 @@
 <?php
 
-function rm_cart_checkout($form, &$form_state, $account, $deliverytype) {
+function rm_cart_checkout($form, &$form_state, $account) {
     global $user;
     
     $_SESSION['chosen_seller'] = $account->uid;
     
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
+    
+    $minimum_order_values = array();
+    $deliverytypes = array();
+    if(isset($_SESSION['regionselect']['zip'])) $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $_SESSION['regionselect']['zip']);
+    $carttotal = rm_cart_get_cart_total($account->uid);
+    if(isset($minimum_order_values)) {
+        foreach($minimum_order_values as $type => $mov) {
+            if($carttotal >= $mov) $deliverytypes[$type] = node_type_get_name($type);
+        }
+    }
+    
 
     $form = array();
     $form['checkout'] = array();
@@ -17,12 +28,7 @@ function rm_cart_checkout($form, &$form_state, $account, $deliverytype) {
         '#type' => 'radios',
         '#title' => t('Delivery option'),
         '#description' => t('Please select a delivery option'),
-        '#options' => array(
-            'shipping_agreement' => 'Lieferung',
-            'pickup_agreement' => 'Selbstabholung',
-            'dispatch_agreement' => 'Versand per DHL',
-        ),
-        '#default_value' => $deliverytype,
+        '#options' => $deliverytypes,
     );
     $form['submit'] = array(
         '#type' => 'submit',
