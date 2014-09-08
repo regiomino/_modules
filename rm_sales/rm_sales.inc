@@ -853,6 +853,7 @@ function rm_sales_export_profiles($form, &$form_state) {
 		t('Commission agreement'),
 		t('Payment agreement'),
 		t('Offer table'),
+        t('Comments'),
         t('Notes'),
 	);
 	$rows = array();
@@ -914,6 +915,7 @@ function rm_sales_export_profiles($form, &$form_state) {
             (isset($commnodes)) ? t('Yes') : t('No'),
             (isset($paynodes)) ? t('Yes') : t('No'),
             (isset($ofrtbl)) ? t('Yes') : t('No'),
+            $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'],
             $notes,
 		);
 	}
