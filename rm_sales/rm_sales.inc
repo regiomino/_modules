@@ -362,7 +362,7 @@ function rm_sales_profilecare_form() {
 			),
 		),
 		'field_priority' => array(
-			'data' => t('Priority'),
+			'data' => 'Prio',
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'field_priority',
@@ -402,7 +402,7 @@ function rm_sales_profilecare_form() {
 			// ),
 		// ),
 		'field_salesguy' => array(
-			'data' => t('Salesguy'),
+			'data' => 'ZugewiesenerMA',
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'field_salesguy',
@@ -413,11 +413,11 @@ function rm_sales_profilecare_form() {
 		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
 		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
 		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
-		'delivery_agreement' => t('Delivery agreement'),
-		'commission_agreement' => node_type_get_name('commission_agreement'),
-		'payment_agreement' => node_type_get_name('payment_agreement'),
-		'suggestions' => t('Suggestions'),
-		'offer_table' => node_type_get_name('offer_table'),
+		'delivery_agreement' => '<i class="fa fa-truck"></i>',
+		'commission_agreement' => 'Prov.',
+		'payment_agreement' => '<i class="fa fa-money"></i>',
+		'suggestions' => 'Empfehlungen',
+		'offer_table' => 'Ang.',
         'action_buttons' => t('Actions'),
 	);
 	
@@ -465,29 +465,29 @@ function rm_sales_profilecare_form() {
 			}
 			
             $shipping_agreement = '';
-            if($profileobject->status) $shipping_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
+            if($profileobject->status) $shipping_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
 			if(isset($agrnodes)) {
-                $shipping_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
+                $shipping_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
 			}
 			
             $dispatch_agreement = '';
-            if($profileobject->status) $dispatch_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
+            if($profileobject->status) $dispatch_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $dispatch_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
+                $dispatch_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
 			}
 			
 			$pickup_agreement = '';
-            if($profileobject->status) $pickup_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
+            if($profileobject->status) $pickup_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $pickup_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
+                $pickup_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
 			}
             
             $delivery_agreement = '';
-            if($profileobject->status) $delivery_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
-            if((strpos($pickup_agreement, 'label-success') !== false) || (strpos($dispatch_agreement, 'label-success') !== false) || (strpos($shipping_agreement, 'label-success') !== false)) $delivery_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
+            if($profileobject->status) $delivery_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
+            if((strpos($pickup_agreement, 'label-success') !== false) || (strpos($dispatch_agreement, 'label-success') !== false) || (strpos($shipping_agreement, 'label-success') !== false)) $delivery_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
 			
             $commission_agreement = '';
             if($profileobject->status) $commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
@@ -508,10 +508,10 @@ function rm_sales_profilecare_form() {
 			}
 			
             $payment_agreement = '';
-            if($profileobject->status) $payment_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
+            if($profileobject->status) $payment_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $payment_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
+                $payment_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
 			}
 			
             $offer_table = '';
