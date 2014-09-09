@@ -333,17 +333,41 @@ function rm_sales_profilecare_form() {
 	global $user;
 	
 	$header = array(
-		'type' => array(
-			'data' => t('Profile type'),
-			'type' => 'property',
-			'specifier' => 'type',
-			'sort' => 'desc',
-		),
+		// 'type' => array(
+			// 'data' => t('Profile type'),
+			// 'type' => 'property',
+			// 'specifier' => 'type',
+			// 'sort' => 'desc',
+		// ),
 		'title' => array(
 			'data' => t('Name'),
 			'type' => 'property',
 			'specifier' => 'title',
-			'sort' => 'desc',
+			'sort' => 'asc',
+		),
+        'field_next_action' => array(
+			'data' => t('Next action'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_next_action',
+				'column' => 'value',
+			),
+		),
+		'field_salescomment' => array(
+			'data' => t('Comment'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_salescomment',
+				'column' => 'value',
+			),
+		),
+		'field_priority' => array(
+			'data' => t('Priority'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_priority',
+				'column' => 'value',
+			),
 		),
 		// 'field_address_locality' => array(
 			// 'data' => t('City'),
@@ -385,13 +409,16 @@ function rm_sales_profilecare_form() {
 				'column' => 'target_id',
 			),
 		),
-		'shipping_agreement' => node_type_get_name('shipping_agreement'),
-		'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
-		'pickup_agreement' => node_type_get_name('pickup_agreement'),
+        'notes' => t('Notes'),
+		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
+		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
+		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
+		'delivery_agreement' => t('Delivery agreement'),
 		'commission_agreement' => node_type_get_name('commission_agreement'),
 		'payment_agreement' => node_type_get_name('payment_agreement'),
 		'suggestions' => t('Suggestions'),
 		'offer_table' => node_type_get_name('offer_table'),
+        'action_buttons' => t('Actions'),
 	);
 	
 
@@ -399,7 +426,8 @@ function rm_sales_profilecare_form() {
 	$query
 		->entityCondition('entity_type', 'node')
 		->entityCondition('bundle', array('seller_profile'))
-		->propertyCondition('status', 1);
+		->propertyCondition('status', array(0,1))
+        ->propertyCondition('sticky', 1);
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
 	$tmp = $query
 		->tableSort($header)
@@ -408,7 +436,7 @@ function rm_sales_profilecare_form() {
 		
 	$form = array();
     
-    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -436,29 +464,36 @@ function rm_sales_profilecare_form() {
 				$publicphone = '+49 - ' . $profileobject->field_publicphone[LANGUAGE_NONE][0]['number'];
 			}
 			
-			$shipping_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
+            $shipping_agreement = '';
+            if($profileobject->status) $shipping_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
 			if(isset($agrnodes)) {
-                $shipping_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
+                $shipping_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
 			}
 			
-			$dispatch_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
+            $dispatch_agreement = '';
+            if($profileobject->status) $dispatch_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $dispatch_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
+                $dispatch_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
 			}
 			
-			
-			$pickup_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
+			$pickup_agreement = '';
+            if($profileobject->status) $pickup_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $pickup_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
+                $pickup_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
 			}
+            
+            $delivery_agreement = '';
+            if($profileobject->status) $delivery_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
+            if((strpos($pickup_agreement, 'label-success') !== false) || (strpos($dispatch_agreement, 'label-success') !== false) || (strpos($shipping_agreement, 'label-success') !== false)) $delivery_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
 			
-			$commission_agreement = l('<span class="glyphicon glyphicon-ban-circle"></span> ' . t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            $commission_agreement = '';
+            if($profileobject->status) $commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $commission_agreement = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary'))));
+                $commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
                 foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -472,13 +507,15 @@ function rm_sales_profilecare_form() {
 				}
 			}
 			
-			$payment_agreement = '<p class="text-center"><span class="label label-danger"><span class="glyphicon glyphicon-ban-circle"></span></span></p>';
+            $payment_agreement = '';
+            if($profileobject->status) $payment_agreement = '<p class="text-center"><span class="label label-danger">&#10006;</span></p>';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $payment_agreement = '<p class="text-center"><span class="label label-primary"><span class="glyphicon glyphicon-ok"></span></span></p>';
+                $payment_agreement = '<p class="text-center"><span class="label label-success">&#10004;</span></p>';
 			}
 			
-			$offer_table = l('<span class="glyphicon glyphicon-ban-circle"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            $offer_table = '';
+            if($profileobject->status) $offer_table = l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
 			$agrqry = new EntityFieldQuery();
 			$agrtmp = $agrqry
 				->entityCondition('entity_type', 'node')
@@ -491,33 +528,36 @@ function rm_sales_profilecare_form() {
 			if(isset($agrtmp['node'])) {
                 $agrtmpkeys = array_keys($agrtmp['node']);
                 $offertable = node_load($agrtmpkeys[0]);
-                $offer_table = l('<span class="glyphicon glyphicon-ok"></span> ' . t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . '<br>' . l('<span class="glyphicon glyphicon-save"></span>' . t('Table'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']), array('html' => TRUE));
+                $offer_table = l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . '<br>' . l('<span class="glyphicon glyphicon-save"></span>' . t('Table'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']), array('html' => TRUE));
 			}
 			
 			
-            $sugqry = new EntityFieldQuery();
-            $profileowner = user_load($profileobject->uid);
-			$sugcount = $sugqry
-				->entityCondition('entity_type', 'node')
-				->entityCondition('bundle', array('commercial_profile', 'seller_profile'))
-				->fieldCondition('field_suggester', 'value', $profileowner->mail)
-				->count()
-				->execute();
+            $suggestion_count = '';
+            if($profileobject->status == 1) {
             
-            if($sugcount == 0) {
-                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-danger">' . $sugcount . '</span></p>';
+                $sugqry = new EntityFieldQuery();
+                $profileowner = user_load($profileobject->uid);
+                $sugcount = $sugqry
+                    ->entityCondition('entity_type', 'node')
+                    ->entityCondition('bundle', array('commercial_profile', 'seller_profile'))
+                    ->fieldCondition('field_suggester', 'value', $profileowner->mail)
+                    ->count()
+                    ->execute();
+                
+                if($sugcount == 0) {
+                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-danger">' . $sugcount . '</span></p>';
+                }
+                else if($sugcount < 5) {
+                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-warning">' . $sugcount . '</span></p>';
+                }
+                else {
+                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-success">' . $sugcount . '</span></p>';
+                }
             }
-            else if($sugcount < 5) {
-                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-warning">' . $sugcount . '</span></p>';
-            }
-            else {
-                $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-primary">' . $sugcount . '</span></p>';
-            }
-            
             
             $salesguynid = format_username($user);
             if(rm_user_is_admin($user->uid)) {
-                $salesguynid = '<div id="salesguys"><select id="salesguy_' . $nid . '" class="form-control input-sm">';
+                $salesguynid = '<div class="salesguys"><select id="salesguy_' . $nid . '" class="form-control input-sm">';
                 $salesguys = entity_load('user', rm_user_get_users_by_role('salesguy'));
                 foreach($salesguys as $uid => $userobject) {
                     $salesguynid .= '<option value="' . $uid . '"';
@@ -526,22 +566,91 @@ function rm_sales_profilecare_form() {
                 }
                 $salesguynid .= '</select></div>';
             }
+            
+            $ntqry = new EntityFieldQuery();
+            $nttmp = $ntqry
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'note')
+                ->propertyCondition('status', 1)
+                ->fieldCondition('field_entity_reference', 'target_id', $nid)
+                ->propertyOrderBy('created', 'DESC')
+                ->execute();
+            $allnotes = array();
+            if(isset($nttmp['node'])) $allnotes = entity_load('node', array_keys($nttmp['node']));
+            $notes = '';
+            
+            if(!empty($allnotes)) {
+                $notes = l(t('Notes'), '#', array('external' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary'), 'data-toggle' => 'modal', 'data-target' => '#noteModal' . $nid))) . '
+                    
+                    <div class="modal fade" id="noteModal' . $nid . '">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-body"><ul class="list-group">';
+                foreach($allnotes as $notenid => $noteobject) {
+                    $notes .= '<li class="list-group-item"><span class="badge">' . date('d.m.Y', $noteobject->created) . ' - ' . format_username(user_load($noteobject->uid));
+                    if(rm_user_is_admin()) $notes .= ' - (' . l('X', 'manage/sales/' . $notenid . '/delete', array('query' => drupal_get_destination())) . ')';
+                    $notes .= '</span>' . $noteobject->title . '</li>';
+                }
+                $notes .= '
+                                </ul></div>
+                            </div>
+                        </div>
+                    </div>';
+			}
+            
+            $prio_field = field_info_field('field_priority');
+            $prio_allowed_values = list_allowed_values($prio_field);
+            $prionid = '<div class="priorities"><select id="priority_' . $nid . '" class="form-control input-sm" style="width: 70px;">';
+            foreach($prio_allowed_values as $value => $valdesc) {
+                $prionid .= '<option value="' . $value . '"';
+                if ($profileobject->field_priority[LANGUAGE_NONE][0]['value'] == $value) $prionid .= ' selected';
+                $prionid .= '>' . $valdesc . '</option>';
+            }
+            $prionid .= '</select></div>';
+            
+            $salescomment = '<div class="comments"><textarea id="comment_' . $nid . '" class="form-control">';
+            if(isset($profileobject->field_salescomment[LANGUAGE_NONE][0]['value'])) $salescomment .= $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'];
+            $salescomment .= '</textarea></div>';
+            
+            $nextaction = '';
+            if(!empty($profileobject->field_next_action[LANGUAGE_NONE][0]['value']) && $profileobject->field_next_action[LANGUAGE_NONE][0]['value'] < 1924988399) $nextaction = date('Y-m-d', $profileobject->field_next_action[LANGUAGE_NONE][0]['value']);
+            
+            $publishingpossiblestring = '';
+			$publishingpossible = rm_api_node_validate_required($profileobject->nid);
+			if(empty($publishingpossible) && $profileobject->status == 0) $publishingpossiblestring = ' ' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+            
+            $deletepossiblestring = '';
+            if($profileobject->status == 0) $deletepossiblestring = l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            
+            $shadowpossiblestring = '';
+            if($profileobject->uid > 0) $shadowpossiblestring = l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info'))));
+            
+            switch($profileobject->type) {
+				case "customer_profile": $nodetypename = 'seller_profile'; break;
+				case "seller_profile": $nodetypename = 'customer_profile'; break;
+			}
 			
 			$options[$nid] = array(
-				'type' => node_type_get_name($profileobject),
-				'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />' . l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))),
+				// 'type' => node_type_get_name($profileobject),
+				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />',
+                'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
+                'field_salescomment' => $salescomment,
+                'field_priority' => $prionid,
+                'notes' => $notes,
 				// 'field_address_locality' => $locality,
 				// 'field_address_zip' => $zip,
 				// 'field_address_street' => $street,
 				// 'field_publicphone' => $publicphone,
                 'field_salesguy' => $salesguynid,
-				'shipping_agreement' => $shipping_agreement,
-				'dispatch_agreement' => $dispatch_agreement,
-				'pickup_agreement' => $pickup_agreement,
+				// 'shipping_agreement' => $shipping_agreement,
+				// 'dispatch_agreement' => $dispatch_agreement,
+				// 'pickup_agreement' => $pickup_agreement,
+                'delivery_agreement' => $delivery_agreement,
 				'commission_agreement' => $commission_agreement,
 				'payment_agreement' => $payment_agreement,
                 'suggestions' => $suggestion_count,
 				'offer_table' => $offer_table,
+                'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $shadowpossiblestring . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $publishingpossiblestring . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
 		
@@ -569,7 +678,7 @@ function rm_sales_profilecare_form() {
 	return $form;
 }
 
-function rm_sales_profileset_form() {
+/* function rm_sales_profileset_form() {
 
 	global $user;
     
@@ -820,7 +929,7 @@ function rm_sales_profileset_form() {
 	}
 
 	return $form;
-}
+} */
 
 function rm_sales_export_profiles($form, &$form_state) {
 	$loadarray = array();

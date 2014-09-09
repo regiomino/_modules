@@ -34,18 +34,18 @@ function rm_sales_menu() {
         'type' => MENU_DEFAULT_LOCAL_TASK,
         'weight' => 0,
       );
-	$items['manage/sales/assigned'] = array(
-    'title' => '2. Complete profiles',
-    'page callback' => 'drupal_get_form',
-		'page arguments' => array('rm_sales_profileset_form'),
-		'access callback' => 'rm_sales_user_is_salesguy',
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
-  );
+	// $items['manage/sales/assigned'] = array(
+    // 'title' => '2. Complete profiles',
+    // 'page callback' => 'drupal_get_form',
+		// 'page arguments' => array('rm_sales_profileset_form'),
+		// 'access callback' => 'rm_sales_user_is_salesguy',
+    // 'file' => 'rm_sales.inc',
+    // 'file path' => drupal_get_path('module', 'rm_sales'),
+    // 'type' => MENU_LOCAL_TASK,
+    // 'weight' => 1,
+  // );
 	$items['manage/sales/manage'] = array(
-        'title' => '3. Supervise profiles',
+        'title' => '2. Supervise profiles',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_sales_profilecare_form'),
         'access callback' => 'rm_sales_user_is_salesguy',
