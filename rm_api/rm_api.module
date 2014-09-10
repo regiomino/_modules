@@ -275,6 +275,7 @@ function rm_api_attach_field_to_form($field_name, $entity_type, $bundle, $entity
 function rm_api_node_validate_required($nid, $lang = LANGUAGE_NONE) {
 	$nodeobject = node_load($nid);
 	$fields = field_info_instances('node', $nodeobject->type);
+    unset($fields['field_user_reference']);
 	$return = array();
 	foreach($fields as $field_name => $field_definition) {
 		if($field_definition['required']) {

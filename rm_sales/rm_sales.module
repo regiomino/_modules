@@ -53,6 +53,12 @@ function rm_sales_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 2,
     );
+	$items['manage/sales/manage/export'] = array(
+        'page callback' => 'rm_sales_export_profiles',
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
     $items['manage/sales/useraccounts'] = array(
         'title' => 'User accounts',
         'page callback' => 'drupal_get_form',
@@ -188,6 +194,8 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
 	$queryparams = drupal_get_query_parameters();
     
 	$form['#method'] = 'get';
+    
+    $form['#attributes'] = array('class' => array('form-inline'));
 	
 	$form['profilecarefilter']['sales_step'] = array(
 		'#type' => 'select',
@@ -196,13 +204,77 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
             'all' => 'Alle',
             'lead' => 'Lead',
 			'prospect' => 'Prospect',
+			'registered' => 'Registriert',
 			'suppressed' => 'Sleep',
 		),
 		'#multiple' => FALSE,
         '#default_value' => 'all',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
 	);
-    
     if(!empty($queryparams['sales_step'])) $form['profilecarefilter']['sales_step']['#default_value'] = $queryparams['sales_step'];
+    
+    $priovalues = list_allowed_values(field_info_field('field_priority'));
+    $priovalues[-1] = 'Alle';
+    
+    $form['profilecarefilter']['priority'] = array(
+		'#type' => 'select',
+        '#title' => '&nbsp;&nbsp;Prio',
+		'#options' => $priovalues,
+		'#multiple' => FALSE,
+        '#default_value' => -1,
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['priority'])) $form['profilecarefilter']['priority']['#default_value'] = $queryparams['priority'];
+    
+    $form['profilecarefilter']['profiletype'] = array(
+		'#type' => 'select',
+        '#title' => '&nbsp;&nbsp;Typ',
+		'#options' => array(
+            'all' => 'Alle',
+            'customer_profile' => 'Gastronom',
+			'seller_profile' => 'Lieferant',
+		),
+		'#multiple' => FALSE,
+        '#default_value' => 'all',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['profiletype'])) $form['profilecarefilter']['profiletype']['#default_value'] = $queryparams['profiletype'];
+    
+    $users = rm_user_get_users_by_role('salesguy');
+    $userobjects = entity_load('user', $users);
+    $useroptions = array('-1' => 'Alle');
+    if(isset($userobjects)) {
+        foreach($userobjects as $userobject) {
+            $useroptions[$userobject->uid] = format_username($userobject);
+        }
+    }
+    
+    $form['profilecarefilter']['salesguy'] = array(
+		'#type' => 'select',
+        '#title' => '&nbsp;&nbsp;Vertriebler',
+		'#options' => $useroptions,
+		'#multiple' => FALSE,
+        '#default_value' => -1,
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['salesguy'])) $form['profilecarefilter']['salesguy']['#default_value'] = $queryparams['salesguy'];
+
     
     // $form['profilecarefilter']['sales_step'] = array(
 		// '#type' => 'textfield',
@@ -231,6 +303,9 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
 	$form['profilecarefilter']['submit'] = array(
 		'#value' => t('Filter'),
 		'#type' => 'submit',
+        '#attributes' => array(
+            'class' => array('btn', 'btn-success'),
+        ),
 	);
 	return $form;
 }
