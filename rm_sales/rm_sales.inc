@@ -576,7 +576,7 @@ function rm_sales_profilecare_form() {
                 }
             }
             
-            $salesguynid = format_username($user);
+            $salesguynid = '';
             if(rm_user_is_admin($user->uid)) {
                 $salesguynid = '<div class="salesguys"><select id="salesguy_' . $nid . '" class="form-control input-sm">';
                 $salesguys = entity_load('user', rm_user_get_users_by_role('salesguy'));
