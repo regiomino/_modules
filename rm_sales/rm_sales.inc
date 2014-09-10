@@ -760,7 +760,7 @@ function rm_sales_profilecare_form() {
     
     $filter = '<div class="row"><div class="input-group"> <span class="input-group-addon">Einschränken</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Ergebnisse weiter einschränken"></div></div>';
     
-    $exportall = '<div class="row pull-right">' . l(t('Export all'), 'manage/sales/manage/export', array('attributes' => array('class' => array('btn', 'btn-success', 'btn-sm')))) . '</div>';
+    $exportall = '<div class="row pull-right">' . l(t('Export all filtered'), 'manage/sales/manage/export', array('attributes' => array('class' => array('btn', 'btn-success', 'btn-sm')), 'query' => drupal_get_query_parameters())) . '</div>';
     
     
 
@@ -1023,11 +1023,55 @@ function rm_sales_profilecare_form() {
 function rm_sales_export_profiles() {
 	$loadarray = array();
 	if(empty($loadarray)) {
-		$query = new EntityFieldQuery();
-		$tmp = $query
-			->entityCondition('entity_type', 'node')
-			->entityCondition('bundle', array('customer_profile', 'seller_profile'))
-			->execute();
+    
+        $queryparams = drupal_get_query_parameters();
+    
+    
+        $query = new EntityFieldQuery();
+        $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->propertyCondition('sticky', 1);
+        if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+        
+        //Filter injections
+        if(!empty($queryparams['sales_step'])) {
+            switch($queryparams['sales_step']) {
+                case 'prospect':
+                    $query->propertyCondition('prospect', 1);
+                    $query->propertyCondition('suppressed', 0);
+                    $query->propertyCondition('status', 0);
+                    break;
+                case 'registered':
+                    $query->propertyCondition('status', 1);
+                    break;
+                case 'lead':
+                    $query->propertyCondition('prospect', 0);
+                    $query->propertyCondition('suppressed', 0);
+                    $query->propertyCondition('status', 0);
+                    break;
+                case 'suppressed':
+                    $query->propertyCondition('suppressed', 1);
+                    break;
+            }
+            
+        }
+        
+        if(!empty($queryparams['priority']) && $queryparams['priority'] > 0) {
+            $query->fieldCondition('field_priority', 'value', $queryparams['priority']);
+        }
+        
+        if(!empty($queryparams['profiletype']) && $queryparams['profiletype'] != 'all') {
+            $query->propertyCondition('type', $queryparams['profiletype']);
+        }
+        
+        if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
+            $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+        }
+        
+        $tmp = $query
+            ->execute();
+    
 		$loadarray = array_keys($tmp['node']);
 	}
 	$allprofiles = entity_load('node', $loadarray);

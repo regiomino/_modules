@@ -299,6 +299,8 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
 		// '#default_value' => 0,
 	// );
 	// if(isset($queryparams['sale_status']) && !empty($queryparams['sale_status'])) $form['alloffersfilter']['sale_status']['#default_value'] = $queryparams['sale_status'];
+    
+    $destination = drupal_get_destination();
 	
 	$form['profilecarefilter']['submit'] = array(
 		'#value' => t('Filter'),
@@ -306,7 +308,10 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         '#attributes' => array(
             'class' => array('btn', 'btn-success'),
         ),
+        '#prefix' => ' ',
+        '#suffix' => ' ' . l(t('Reset'), current_path(), array('attributes' => array('class' => array('btn', 'btn-info')))),
 	);
+   
 	return $form;
 }
 
