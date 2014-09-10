@@ -413,11 +413,13 @@ function rm_sales_profilecare_form() {
 		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
 		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
 		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
-		'delivery_agreement' => '<i class="fa fa-truck"></i>',
-		'commission_agreement' => 'Prov.',
-		'payment_agreement' => '<i class="fa fa-money"></i>',
-		'suggestions' => 'Empfehlungen',
-		'offer_table' => 'Ang.',
+        'support_status' => t('Support'),
+        // 'all_offers' => '<i class="fa fa-shopping-cart"></i>',
+		// 'delivery_agreement' => '<i class="fa fa-truck"></i>',
+		// 'commission_agreement' => 'Prov.',
+		// 'payment_agreement' => '<i class="fa fa-money"></i>',
+		// 'suggestions' => 'Empfehlungen',
+		// 'offer_table' => 'Ang.',
         'action_buttons' => t('Actions'),
 	);
 	
@@ -486,14 +488,15 @@ function rm_sales_profilecare_form() {
 			}
             
             $delivery_agreement = '';
-            if($profileobject->status) $delivery_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
-            if((strpos($pickup_agreement, 'label-success') !== false) || (strpos($dispatch_agreement, 'label-success') !== false) || (strpos($shipping_agreement, 'label-success') !== false)) $delivery_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
+            if($profileobject->status) $delivery_agreement = '<span class="label label-danger"><i class="fa fa-truck"></i> </span>';
+            if((strpos($pickup_agreement, 'label-success') !== false) || (strpos($dispatch_agreement, 'label-success') !== false) || (strpos($shipping_agreement, 'label-success') !== false)) $delivery_agreement = '<span class="label label-success"><i class="fa fa-truck"></i> </span>';
 			
             $commission_agreement = '';
-            if($profileobject->status) $commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            if($profileobject->status) $commission_agreement = '<span class="label label-danger">% ' . l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';
             $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+                $commission_agreement = '';
+                //$commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
                 foreach($agrnodes as $agrnid => $agrnode) {
 					$agrtitle = date('d.m.Y', $agrnode->changed) . ' ';
 					if(!empty($agrnode->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
@@ -503,19 +506,20 @@ function rm_sales_profilecare_form() {
 					else {
 						$agrtitle .= t('for all');
 					}
-					$commission_agreement .= '<br>' . l($agrtitle, 'manage/seller/editagreement/' . $agrnode->nid, array('html' => TRUE, 'query' => drupal_get_destination(), 'attributes' => array('class' => array(''))));
+					$commission_agreement .= '<span class="label label-success">% ' . l($agrtitle, 'manage/seller/editagreement/' . $agrnode->nid, array('html' => TRUE, 'query' => drupal_get_destination(), 'attributes' => array('class' => array('')))) . '</span>';
 				}
+                $commission_agreement .= ' <span class="small">' . l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';
 			}
 			
             $payment_agreement = '';
-            if($profileobject->status) $payment_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
+            if($profileobject->status) $payment_agreement = '<span class="label label-danger"><i class="fa fa-money"></i></span>';
             $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             if(isset($agrnodes)) {
-                $payment_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
+                $payment_agreement = '<span class="label label-success"><i class="fa fa-money"></i></span>';
 			}
 			
             $offer_table = '';
-            if($profileobject->status) $offer_table = l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            if($profileobject->status) $offer_table = '<span class="label label-danger"><i class="fa fa-table"></i> ' . l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';;
 			$agrqry = new EntityFieldQuery();
 			$agrtmp = $agrqry
 				->entityCondition('entity_type', 'node')
@@ -528,7 +532,7 @@ function rm_sales_profilecare_form() {
 			if(isset($agrtmp['node'])) {
                 $agrtmpkeys = array_keys($agrtmp['node']);
                 $offertable = node_load($agrtmpkeys[0]);
-                $offer_table = l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . '<br>' . l('<span class="glyphicon glyphicon-save"></span>' . t('Table'), file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']), array('html' => TRUE));
+                $offer_table = '<span class="label label-success"><i class="fa fa-table"></i> ' . l('Angebotsdaten', file_create_url($offertable->field_offer_table[LANGUAGE_NONE][0]['uri']), array('html' => TRUE)) . '</span> <span class="small">' . l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';
 			}
 			
 			
@@ -545,7 +549,7 @@ function rm_sales_profilecare_form() {
                     ->execute();
                 
                 if($sugcount == 0) {
-                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-danger">' . $sugcount . '</span></p>';
+                    $suggestion_count = '<span class="label label-danger">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
                 }
                 else if($sugcount < 5) {
                     $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-warning">' . $sugcount . '</span></p>';
@@ -629,6 +633,25 @@ function rm_sales_profilecare_form() {
 				case "customer_profile": $nodetypename = 'seller_profile'; break;
 				case "seller_profile": $nodetypename = 'customer_profile'; break;
 			}
+            
+            $all_offers = '';
+            if($profileobject->status) $all_offers = '<span class="label label-danger"><i class="fa fa-shopping-cart"></i> 0/0</span>';
+            
+             // 'all_offers' => '<i class="fa fa-shopping-cart"></i>',
+		// 'delivery_agreement' => '<i class="fa fa-truck"></i>',
+		// 'commission_agreement' => 'Prov.',
+		// 'payment_agreement' => '<i class="fa fa-money"></i>',
+		// 'suggestions' => 'Empfehlungen',
+		// 'offer_table' => 'Ang.',
+            
+            $support_status = '<ul class="list-unstyled">';
+            if($all_offers) $support_status .= '<li>' . $all_offers . '</li>';
+            if($delivery_agreement) $support_status .= '<li>' . $delivery_agreement . '</li>';
+            if($payment_agreement) $support_status .= '<li>' . $payment_agreement . '</li>';
+            if($suggestion_count) $support_status .= '<li>' . $suggestion_count . '</li>';
+            if($commission_agreement) $support_status .= '<li>' . $commission_agreement . '</li>';
+            if($offer_table) $support_status .= '<li>' . $offer_table . '</li>';
+            $support_status .= '</ul>';
 			
 			$options[$nid] = array(
 				// 'type' => node_type_get_name($profileobject),
@@ -645,11 +668,13 @@ function rm_sales_profilecare_form() {
 				// 'shipping_agreement' => $shipping_agreement,
 				// 'dispatch_agreement' => $dispatch_agreement,
 				// 'pickup_agreement' => $pickup_agreement,
-                'delivery_agreement' => $delivery_agreement,
-				'commission_agreement' => $commission_agreement,
-				'payment_agreement' => $payment_agreement,
-                'suggestions' => $suggestion_count,
-				'offer_table' => $offer_table,
+                'support_status' => $support_status,
+                // 'all_offers' => $all_offers,
+                // 'delivery_agreement' => $delivery_agreement,
+				// 'commission_agreement' => $commission_agreement,
+				// 'payment_agreement' => $payment_agreement,
+                // 'suggestions' => $suggestion_count,
+				// 'offer_table' => $offer_table,
                 'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . $shadowpossiblestring . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $publishingpossiblestring . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
