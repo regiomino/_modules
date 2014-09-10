@@ -419,15 +419,14 @@ function rm_sales_profilecare_form() {
 				// 'column' => 'number',
 			// ),
 		// ),
-		'field_salesguy' => array(
-			'data' => 'ZugewiesenerMA',
-			'type' => 'field',
-			'specifier' => array(
-				'field' => 'field_salesguy',
-				'column' => 'target_id',
-			),
-		),
-        'notes' => t('Notes'),
+		// 'field_salesguy' => array(
+			// 'data' => 'ZugewiesenerMA',
+			// 'type' => 'field',
+			// 'specifier' => array(
+				// 'field' => 'field_salesguy',
+				// 'column' => 'target_id',
+			// ),
+		// ),
 		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
 		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
 		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
@@ -675,14 +674,13 @@ function rm_sales_profilecare_form() {
 				// 'type' => node_type_get_name($profileobject),
 				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
-                'field_salescomment' => $salescomment,
+                'field_salescomment' => $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
-                'notes' => $notes,
 				// 'field_address_locality' => $locality,
 				// 'field_address_zip' => $zip,
 				// 'field_address_street' => $street,
 				// 'field_publicphone' => $publicphone,
-                'field_salesguy' => $salesguynid,
+                // 'field_salesguy' => $salesguynid,
 				// 'shipping_agreement' => $shipping_agreement,
 				// 'dispatch_agreement' => $dispatch_agreement,
 				// 'pickup_agreement' => $pickup_agreement,
@@ -693,7 +691,7 @@ function rm_sales_profilecare_form() {
 				// 'payment_agreement' => $payment_agreement,
                 // 'suggestions' => $suggestion_count,
 				// 'offer_table' => $offer_table,
-                'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
+                'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid,
 			);
 		}
 		
