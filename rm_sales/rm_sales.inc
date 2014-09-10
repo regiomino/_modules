@@ -441,6 +441,9 @@ function rm_sales_profilecare_form() {
 	);
 	
 
+        
+    $queryparams = drupal_get_query_parameters();
+    
 	$query = new EntityFieldQuery();
 	$query
 		->entityCondition('entity_type', 'node')
@@ -448,14 +451,36 @@ function rm_sales_profilecare_form() {
 		->propertyCondition('status', array(0,1))
         ->propertyCondition('sticky', 1);
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+    
+    //Filter injections
+    if(!empty($queryparams['sales_step'])) {
+        switch($queryparams['sales_step']) {
+            case 'prospect':
+                $query->propertyCondition('prospect', 1);
+                $query->propertyCondition('suppressed', 0);
+                break;
+            case 'lead':
+                $query->propertyCondition('prospect', 0);
+                $query->propertyCondition('suppressed', 0);
+                break;
+            case 'suppressed':
+                $query->propertyCondition('suppressed', 1);
+                break;
+        }
+		
+	}
+    
+    
 	$tmp = $query
 		->tableSort($header)
 		->pager(100)
 		->execute();
+
+	$filterform = drupal_get_form('rm_sales_profilecare_filter_form');
 		
 	$form = array();
     
-    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
@@ -695,28 +720,31 @@ function rm_sales_profilecare_form() {
 			);
 		}
 		
-		$form['submit'] = array(
-			'#type' => 'submit',
-			'#value' => t('Export to XLS'),
-			'#submit' => array('rm_sales_export_profiles'),
-		);
+		// $form['submit'] = array(
+			// '#type' => 'submit',
+			// '#value' => t('Export to XLS'),
+			// '#submit' => array('rm_sales_export_profiles'),
+		// );
 		
-		$form['suggestions'] = array(
-			'#type' => 'tableselect',
-			'#header' => $header,
-			'#options' => $options,
-			'#attributes' => array(),
-		);
+		// $form['suggestions'] = array(
+			// '#type' => 'tableselect',
+			// '#header' => $header,
+			// '#options' => $options,
+			// '#attributes' => array(),
+		// );
 		
-		$form['#header'] = $header;
+		// $form['#header'] = $header;
 		
-		$form['pager'] = array('#markup' => theme('pager'));
+		// $form['pager'] = array('#markup' => theme('pager'));
+        
+        $output = theme('table', array('header' => $header, 'rows' => $options));
 	}
 	else {
+        $output = '';
 		drupal_set_message(t('Currently there are no active profiles under your supervision. You should change that...'), 'warning');
 	}
 
-	return $form;
+	return render($filterform) . $output . theme('pager');
 }
 
 /* function rm_sales_profileset_form() {

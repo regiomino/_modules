@@ -46,8 +46,7 @@ function rm_sales_menu() {
   // );
 	$items['manage/sales/manage'] = array(
         'title' => '2. Supervise profiles',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_sales_profilecare_form'),
+        'page callback' => 'rm_sales_profilecare_form',
         'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
@@ -182,6 +181,58 @@ function rm_sales_menu() {
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
 	return $items;
+}
+
+function rm_sales_profilecare_filter_form($form, &$form_state) {
+
+	$queryparams = drupal_get_query_parameters();
+    
+	$form['#method'] = 'get';
+	
+	$form['profilecarefilter']['sales_step'] = array(
+		'#type' => 'select',
+        '#title' => 'Status',
+		'#options' => array(
+            'all' => 'Alle',
+            'lead' => 'Lead',
+			'prospect' => 'Prospect',
+			'suppressed' => 'Sleep',
+		),
+		'#multiple' => FALSE,
+        '#default_value' => 'all',
+	);
+    
+    if(!empty($queryparams['sales_step'])) $form['profilecarefilter']['sales_step']['#default_value'] = $queryparams['sales_step'];
+    
+    // $form['profilecarefilter']['sales_step'] = array(
+		// '#type' => 'textfield',
+		// '#options' => array(
+			// '1' => 'Veröffentlicht',
+			// '0' => 'Unveröffentlicht',
+		// ),
+		// '#multiple' => TRUE,
+		// '#size' => 2,
+		// '#default_value' => 1,
+	// );
+	// if(isset($queryparams['publish_status']) && !empty($queryparams['publish_status'])) $form['alloffersfilter']['publish_status']['#default_value'] = $queryparams['publish_status'];
+	
+	// $form['alloffersfilter']['sale_status'] = array(
+		// '#type' => 'select',
+		// '#options' => array(
+			// '0' => 'Aktiv',
+			// '1' => 'Beendet',
+		// ),
+		// '#multiple' => TRUE,
+		// '#size' => 2,
+		// '#default_value' => 0,
+	// );
+	// if(isset($queryparams['sale_status']) && !empty($queryparams['sale_status'])) $form['alloffersfilter']['sale_status']['#default_value'] = $queryparams['sale_status'];
+	
+	$form['profilecarefilter']['submit'] = array(
+		'#value' => t('Filter'),
+		'#type' => 'submit',
+	);
+	return $form;
 }
 
 function rm_sales_publishprofile_access($nid) {
