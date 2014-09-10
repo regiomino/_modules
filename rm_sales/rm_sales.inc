@@ -1074,13 +1074,13 @@ function rm_sales_profilequeue_form() {
 		->entityCondition('bundle', array('customer_profile', 'seller_profile'))
 		->propertyCondition('status', 0)
 		->propertyCondition('sticky', 0)
-		//->tableSort($header)
+		->tableSort($header)
 		//->pager(100)
 		->execute();
 		
 	$form = array();
     
-    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Profile filtern"></div><br />';
 	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
