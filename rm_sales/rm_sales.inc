@@ -149,7 +149,7 @@ function rm_sales_useraccounts_form($form, &$form_state) {
     
     $form = array();
     
-    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
     
     global $user;
     
@@ -205,12 +205,13 @@ function rm_sales_useraccounts_form($form, &$form_state) {
         'actions' => t('Actions'),
 	);
     
-    if(!rm_user_is_admin()) {
+    
         $query = new EntityFieldQuery();
-        $tmp = $query
+        $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->fieldCondition('field_salesguy', 'target_id', $user->uid)
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
+        if(!rm_user_is_admin()) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+        $tmp = $query
             ->execute();
         $alluids = array();
         if(isset($tmp['node'])) {
@@ -221,7 +222,6 @@ function rm_sales_useraccounts_form($form, &$form_state) {
                 }
             }
         }
-    }
     
     if(!empty($alluids)) {
         $query = new EntityFieldQuery();
