@@ -112,7 +112,7 @@ function rm_sales_note_add($form, &$form_state, $nid) {
 	$form['rm_add_note'] = array();
 	
 	$form['title'] = array(
-        '#type' => 'textfield',
+        '#type' => 'textarea',
         '#title' => t('Add note to @title', array('@title' => node_load($nid)->title)),
     );
     
@@ -134,8 +134,10 @@ function rm_sales_note_add_validate($form, &$form_state) {
 
 function rm_sales_note_add_submit($form, &$form_state) {
     global $user;
-    $new_node = rm_api_create_new_node('note', $form_state['values']['title'], 'de', $user->uid, 1, 0, 0, 0);
+    $title = substr($form_state['values']['title'], 0, 120);
+    $new_node = rm_api_create_new_node('note', $title, 'de', $user->uid, 1, 0, 0, 0);
     $new_node->field_entity_reference[LANGUAGE_NONE][0]['target_id'] = $form_state['values']['nid'];
+    $new_node->body[LANGUAGE_NONE][0]['value'] = $form_state['values']['title'];
     node_save($new_node);
     drupal_set_message(t('Note was saved'), 'status');
     drupal_goto();
@@ -666,7 +668,7 @@ function rm_sales_profilecare_form() {
                 foreach($allnotes as $notenid => $noteobject) {
                     $notes .= '<li class="list-group-item"><span class="badge">' . date('d.m.Y', $noteobject->created) . ' - ' . format_username(user_load($noteobject->uid));
                     if(rm_user_is_admin()) $notes .= ' - (' . l('X', 'manage/sales/' . $notenid . '/delete', array('query' => drupal_get_destination())) . ')';
-                    $notes .= '</span>' . $noteobject->title . '</li>';
+                    $notes .= '</span>' . $noteobject->body[LANGUAGE_NONE][0]['value'] . '</li>';
                 }
                 $notes .= '
                                 </ul></div>
