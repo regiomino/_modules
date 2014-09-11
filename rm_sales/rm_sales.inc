@@ -221,18 +221,20 @@ function rm_sales_useraccounts_form($form, &$form_state) {
         }
     }
     
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'user');
-    if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
-    $tmp = $query
-		->tableSort($header)
-		->pager(100)
-		->execute();
+    if(!empty($alluids)) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'user');
+        if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
+        $tmp = $query
+            ->tableSort($header)
+            ->pager(100)
+            ->execute();
+            
+        $alluseraccounts = array();
         
-    $alluseraccounts = array();
-    
-    //Remove anonymous user
-    unset($tmp['user'][0]);
+        //Remove anonymous user
+        unset($tmp['user'][0]);
+    }
     if(!empty($tmp['user'])) {
         $alluseraccounts = entity_load('user', array_keys($tmp['user']));
         
