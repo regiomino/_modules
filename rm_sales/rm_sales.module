@@ -37,11 +37,11 @@ function rm_sales_menu() {
         'file path' => drupal_get_path('module', 'rm_sales'),
         'type' => MENU_NORMAL_ITEM,
     );
-	$items['manage/sales/suggested'] = array(
-        'title' => '1. Adopt profile suggestions',
-        'type' => MENU_DEFAULT_LOCAL_TASK,
-        'weight' => 0,
-      );
+	// $items['manage/sales/suggested'] = array(
+        // 'title' => '1. Adopt profile suggestions',
+        // 'type' => MENU_DEFAULT_LOCAL_TASK,
+        // 'weight' => 0,
+      // );
 	// $items['manage/sales/assigned'] = array(
     // 'title' => '2. Complete profiles',
     // 'page callback' => 'drupal_get_form',
@@ -53,7 +53,7 @@ function rm_sales_menu() {
     // 'weight' => 1,
   // );
 	$items['manage/sales/manage'] = array(
-        'title' => '2. Supervise profiles',
+        'title' => 'Supervise profiles',
         'page callback' => 'rm_sales_profilecare_form',
         'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
