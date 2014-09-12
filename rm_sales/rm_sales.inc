@@ -434,7 +434,7 @@ function rm_sales_profilecare_form() {
                 $query->propertyCondition('suppressed', 1);
                 break;
             default:
-                $query->propertyCondition('suppressed', 0);
+                //$query->propertyCondition('suppressed', 0);
                 break;
         }
 		
