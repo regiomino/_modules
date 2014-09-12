@@ -1096,7 +1096,6 @@ function rm_sales_export_profiles() {
         $query
             ->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
-        //if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', array($allbutme), 'NOT IN');
         
         //Filter injections
         if(!empty($queryparams['sales_step'])) {
@@ -1148,10 +1147,6 @@ function rm_sales_export_profiles() {
             }
         }
         
-        if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-            $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
-        }
-        
         if(!empty($queryparams['title'])) {
             $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
         }
@@ -1178,26 +1173,30 @@ function rm_sales_export_profiles() {
             $allkeys_1 = array_keys($tmp['node']);
         }
         
-        $query2 = new EntityFieldQuery();
-        $tmp = $query2
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
-            ->execute();
-        
         $allkeys_2 = array();
-        if(isset($tmp['node'])) {
-            $allkeys_2 = array_keys($tmp['node']);
+        if(!rm_user_is_admin()) {
+            $query2 = new EntityFieldQuery();
+            $tmp = $query2
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
+                ->execute();
+            if(isset($tmp['node'])) {
+                $allkeys_2 = array_keys($tmp['node']);
+            }
         }
         
         $resultingnids = array_diff($allkeys_1, $allkeys_2);
         
-        $query3 = new EntityFieldQuery();
-        $tmp = $query3
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->propertyCondition('nid', $resultingnids)
-            ->execute();
+        $tmp = array();
+        if(!empty($resultingnids)) {
+            $query3 = new EntityFieldQuery();
+            $tmp = $query3
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->propertyCondition('nid', $resultingnids)
+                ->execute();
+        }
     
 		$loadarray = array_keys($tmp['node']);
 	}
