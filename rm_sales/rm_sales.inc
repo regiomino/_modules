@@ -629,7 +629,7 @@ function rm_sales_profilecare_form() {
                 $profileowner = user_load($profileobject->uid);
                 $sugcount = $sugqry
                     ->entityCondition('entity_type', 'node')
-                    ->entityCondition('bundle', array('commercial_profile', 'seller_profile'))
+                    ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
                     ->fieldCondition('field_suggester', 'value', $profileowner->mail)
                     ->count()
                     ->execute();
