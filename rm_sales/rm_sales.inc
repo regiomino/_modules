@@ -112,7 +112,7 @@ function rm_sales_note_add($form, &$form_state, $nid) {
 	$form['rm_add_note'] = array();
 	
 	$form['title'] = array(
-        '#type' => 'textfield',
+        '#type' => 'textarea',
         '#title' => t('Add note to @title', array('@title' => node_load($nid)->title)),
     );
     
@@ -134,8 +134,10 @@ function rm_sales_note_add_validate($form, &$form_state) {
 
 function rm_sales_note_add_submit($form, &$form_state) {
     global $user;
-    $new_node = rm_api_create_new_node('note', $form_state['values']['title'], 'de', $user->uid, 1, 0, 0, 0);
+    $title = substr($form_state['values']['title'], 0, 120);
+    $new_node = rm_api_create_new_node('note', $title, 'de', $user->uid, 1, 0, 0, 0);
     $new_node->field_entity_reference[LANGUAGE_NONE][0]['target_id'] = $form_state['values']['nid'];
+    $new_node->body[LANGUAGE_NONE][0]['value'] = $form_state['values']['title'];
     node_save($new_node);
     drupal_set_message(t('Note was saved'), 'status');
     drupal_goto();
@@ -147,7 +149,7 @@ function rm_sales_useraccounts_form($form, &$form_state) {
     
     $form = array();
     
-    //$form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
+    $form['filter']['#prefix'] = '<br /><div class="input-group"> <span class="input-group-addon">Filter</span><input id="filterSuggestions" type="text" class="form-control" placeholder="Angezeigte Benutzerkonten filtern"></div><br />';
     
     global $user;
     
@@ -203,12 +205,13 @@ function rm_sales_useraccounts_form($form, &$form_state) {
         'actions' => t('Actions'),
 	);
     
-    if(!rm_user_is_admin()) {
+    
         $query = new EntityFieldQuery();
-        $tmp = $query
+        $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->fieldCondition('field_salesguy', 'target_id', $user->uid)
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
+        if(!rm_user_is_admin()) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+        $tmp = $query
             ->execute();
         $alluids = array();
         if(isset($tmp['node'])) {
@@ -219,20 +222,21 @@ function rm_sales_useraccounts_form($form, &$form_state) {
                 }
             }
         }
-    }
     
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'user');
-    if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
-    $tmp = $query
-		->tableSort($header)
-		->pager(100)
-		->execute();
+    if(!empty($alluids)) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'user');
+        if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
+        $tmp = $query
+            ->tableSort($header)
+            ->pager(100)
+            ->execute();
+            
+        $alluseraccounts = array();
         
-    $alluseraccounts = array();
-    
-    //Remove anonymous user
-    unset($tmp['user'][0]);
+        //Remove anonymous user
+        unset($tmp['user'][0]);
+    }
     if(!empty($tmp['user'])) {
         $alluseraccounts = entity_load('user', array_keys($tmp['user']));
         
@@ -486,6 +490,25 @@ function rm_sales_profilecare_form() {
         $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
 	}
     
+    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
+        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+	}
+    
+    if(!empty($queryparams['title'])) {
+        $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['street'])) {
+        $query->fieldCondition('field_address', 'thoroughfare', $queryparams['street'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['zip'])) {
+        $query->fieldCondition('field_address', 'postal_code', $queryparams['zip'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['locality'])) {
+        $query->fieldCondition('field_address', 'locality', $queryparams['locality'], 'CONTAINS');
+	}
     
 	$tmp = $query
 		->tableSort($header)
@@ -666,7 +689,7 @@ function rm_sales_profilecare_form() {
                 foreach($allnotes as $notenid => $noteobject) {
                     $notes .= '<li class="list-group-item"><span class="badge">' . date('d.m.Y', $noteobject->created) . ' - ' . format_username(user_load($noteobject->uid));
                     if(rm_user_is_admin()) $notes .= ' - (' . l('X', 'manage/sales/' . $notenid . '/delete', array('query' => drupal_get_destination())) . ')';
-                    $notes .= '</span>' . $noteobject->title . '</li>';
+                    $notes .= '</span>' . $noteobject->body[LANGUAGE_NONE][0]['value'] . '</li>';
                 }
                 $notes .= '
                                 </ul></div>
@@ -764,7 +787,7 @@ function rm_sales_profilecare_form() {
     
     
 
-	return $exportall . render($filterform) . $filter . '<br /><div class="row">' . $output . theme('pager') . '</div>';
+	return $exportall . render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
 }
 
 /* function rm_sales_profileset_form() {
@@ -1169,11 +1192,16 @@ function rm_sales_profilequeue_form() {
 	global $user;
 	
 	$header = array(
+        'created' => array(
+            'data' => t('Created'),
+            'type' => 'property',
+            'specifier' => 'created',
+            'sort' => 'desc',
+        ),
         'prospect' => array(
             'data' => t('Prospect'),
             'type' => 'property',
             'specifier' => 'prospect',
-            'sort' => 'desc',
         ),
 		'type' => array(
 			'data' => t('Profile type'),
@@ -1244,6 +1272,7 @@ function rm_sales_profilequeue_form() {
 			}
 			
 			$options[$nid] = array(
+                'created' => date('d.m.Y H:i', $profileobject->created),
 				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 'type' => node_type_get_name($profileobject),
 				'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
@@ -1460,11 +1489,13 @@ function rm_sales_conflate_profiles_form($form, &$form_state, $default) {
     $counter = 0;
     foreach($nodeobjects as $nodeobject) {
         if(!empty($nodeobject->field_suggester[LANGUAGE_NONE][0]['value'])) {
-            $form['suggest']['nicetohave']['suggester' . $counter] = array(
-                '#type' => 'hidden',
-                '#value' => $nodeobject->field_suggester[LANGUAGE_NONE][0]['value'],
-            );
-            $counter++;
+            foreach($nodeobject->field_suggester[LANGUAGE_NONE] as $sugkey => $sugval) {
+                $form['suggest']['nicetohave']['suggester' . $counter] = array(
+                    '#type' => 'textfield',
+                    '#value' => $sugval['value'],
+                );
+                $counter++;
+            }
         }
     }
     
@@ -1508,11 +1539,10 @@ function rm_sales_conflate_profiles_form_submit($form, &$form_state) {
     unset($mainprofileobject->field_suggester[LANGUAGE_NONE]);
     foreach($form_state['values'] as $formvalues => $data) {
         $tmp = explode('suggester', $formvalues);
-        if(!empty($tmp[1])) {
-            $mainprofileobject->field_suggester[LANGUAGE_NONE][0]['value'] = $data;
+        if(isset($tmp[1])) {
+            $mainprofileobject->field_suggester[LANGUAGE_NONE][] = array('value' => $data);
         }
     }
-    
     $mainprofileobject->title = $form_state['values']['title'];
     $mainprofileobject->type = $form_state['values']['type'];
     if(!empty($form_state['values']['locality'])) $mainprofileobject->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];

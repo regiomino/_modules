@@ -23,6 +23,23 @@ function rm_user_init() {
         // node_save($nodeobject);
     // }
     
+    
+    // $ntqry = new EntityFieldQuery();
+    // $nttmp = $ntqry
+        // ->entityCondition('entity_type', 'node')
+        // ->entityCondition('bundle', 'note')
+        // ->execute();
+    // $allnotes = array();
+    // if(isset($nttmp['node'])) $allnotes = entity_load('node', array_keys($nttmp['node']));
+    // $notes = '';
+    
+    // if(!empty($allnotes)) {
+        // foreach($allnotes as $noteobject) {
+            // $noteobject->body[LANGUAGE_NONE][0]['value'] = $noteobject->title;
+            // node_save($noteobject);
+        // }
+    // }
+    
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
         global $user;
