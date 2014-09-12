@@ -489,16 +489,17 @@ function rm_sales_profilecare_form() {
         $allkeys_1 = array_keys($tmp['node']);
     }
     
-    $query2 = new EntityFieldQuery();
-	$tmp = $query2
-		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
-        ->execute();
-    
     $allkeys_2 = array();
-    if(isset($tmp['node'])) {
-        $allkeys_2 = array_keys($tmp['node']);
+    if(!rm_user_is_admin()) {
+        $query2 = new EntityFieldQuery();
+        $tmp = $query2
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
+            ->execute();
+        if(isset($tmp['node'])) {
+            $allkeys_2 = array_keys($tmp['node']);
+        }
     }
     
     $resultingnids = array_diff($allkeys_1, $allkeys_2);
