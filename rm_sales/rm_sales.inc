@@ -1076,6 +1076,7 @@ function rm_sales_duplicate_profiles_form($form, &$form_state, $nid) {
 
 function rm_sales_export_profiles() {
 	$loadarray = array();
+    global $user;
 	if(empty($loadarray)) {
     
         $usergroup1 = rm_user_get_users_by_role('salesguy');
