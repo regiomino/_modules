@@ -20,20 +20,27 @@ function rm_sales_menu() {
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
-    $items['manage/sales'] = array(
+    $items['manage/duplicate/%'] = array(
         'title' => 'Sales',
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_sales_profilequeue_form'),
+        'page arguments' => array('rm_sales_duplicate_profiles_form', 2),
+        'access callback' => 'rm_sales_user_is_salesguy',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
+    $items['manage/sales'] = array(
+        'title' => 'Sales',
+        'page callback' => 'rm_sales_profilecare_form',
         'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
         'type' => MENU_NORMAL_ITEM,
     );
-	$items['manage/sales/suggested'] = array(
-        'title' => '1. Adopt profile suggestions',
-        'type' => MENU_DEFAULT_LOCAL_TASK,
-        'weight' => 0,
-      );
+	// $items['manage/sales/suggested'] = array(
+        // 'title' => '1. Adopt profile suggestions',
+        // 'type' => MENU_DEFAULT_LOCAL_TASK,
+        // 'weight' => 0,
+      // );
 	// $items['manage/sales/assigned'] = array(
     // 'title' => '2. Complete profiles',
     // 'page callback' => 'drupal_get_form',
@@ -45,13 +52,9 @@ function rm_sales_menu() {
     // 'weight' => 1,
   // );
 	$items['manage/sales/manage'] = array(
-        'title' => '2. Supervise profiles',
-        'page callback' => 'rm_sales_profilecare_form',
-        'access callback' => 'rm_sales_user_is_salesguy',
-        'file' => 'rm_sales.inc',
-        'file path' => drupal_get_path('module', 'rm_sales'),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 2,
+        'title' => 'Supervise profiles',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => 0,
     );
 	$items['manage/sales/manage/export'] = array(
         'page callback' => 'rm_sales_export_profiles',
@@ -205,7 +208,7 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
 		'#type' => 'select',
         '#title' => 'Status',
 		'#options' => array(
-            'all' => 'Alle',
+            'all' => 'Alle (ohne "Sleep")',
             'lead' => 'Lead',
 			'prospect' => 'Prospect',
 			'registered' => 'Registriert',
@@ -258,7 +261,7 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
     
     $users = rm_user_get_users_by_role('salesguy');
     $userobjects = entity_load('user', $users);
-    $useroptions = array('-1' => 'Alle');
+    $useroptions = array('-1' => 'Alle', '-2' => 'Nicht zugewiesen', '-3' => 'Zugewiesen');
     if(isset($userobjects)) {
         foreach($userobjects as $userobject) {
             $useroptions[$userobject->uid] = format_username($userobject);

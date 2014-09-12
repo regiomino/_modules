@@ -355,12 +355,12 @@ function rm_sales_profilecare_form() {
 	global $user;
 	
 	$header = array(
-		// 'type' => array(
-			// 'data' => t('Profile type'),
-			// 'type' => 'property',
-			// 'specifier' => 'type',
-			// 'sort' => 'desc',
-		// ),
+		'created' => array(
+			'data' => t('Created'),
+			'type' => 'property',
+			'specifier' => 'created',
+			'sort' => 'desc',
+		),
 		'title' => array(
 			'data' => t('Name'),
 			'type' => 'property',
@@ -391,69 +391,27 @@ function rm_sales_profilecare_form() {
 				'column' => 'value',
 			),
 		),
-		// 'field_address_locality' => array(
-			// 'data' => t('City'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'locality',
-			// ),
-		// ),
-		// 'field_address_zip' => array(
-			// 'data' => t('Zip'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'postal_code',
-			// ),
-		// ),
-		// 'field_address_street' => array(
-			// 'data' => t('Street'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'thoroughfare',
-			// ),
-		// ),
-		// 'field_publicphone' => array(
-			// 'data' => t('Phone'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_publicphone',
-				// 'column' => 'number',
-			// ),
-		// ),
-		// 'field_salesguy' => array(
-			// 'data' => 'ZugewiesenerMA',
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_salesguy',
-				// 'column' => 'target_id',
-			// ),
-		// ),
-		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
-		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
-		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
         'support_status' => t('Support'),
-        // 'all_offers' => '<i class="fa fa-shopping-cart"></i>',
-		// 'delivery_agreement' => '<i class="fa fa-truck"></i>',
-		// 'commission_agreement' => 'Prov.',
-		// 'payment_agreement' => '<i class="fa fa-money"></i>',
-		// 'suggestions' => 'Empfehlungen',
-		// 'offer_table' => 'Ang.',
         'action_buttons' => t('Actions'),
 	);
 	
-
+    $usergroup1 = rm_user_get_users_by_role('salesguy');
+    $usergroup2 = rm_user_get_users_by_role('admin');
+    $usergroup = array_merge($usergroup1, $usergroup2);
+    $usergrouploaded = entity_load('user', $usergroup);
+    $excludable = array();
+    $allbutme = array();
+    foreach($usergrouploaded as $usergroupobject) {
+        $excludable[] = $usergroupobject->mail;
+        if($usergroupobject->mail != $user->mail) $allbutme[] = $usergroupobject->uid;
+    }
         
     $queryparams = drupal_get_query_parameters();
     
 	$query = new EntityFieldQuery();
 	$query
 		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        ->propertyCondition('sticky', 1);
-    if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+		->entityCondition('bundle', array('seller_profile', 'customer_profile'));
     
     //Filter injections
     if(!empty($queryparams['sales_step'])) {
@@ -474,6 +432,9 @@ function rm_sales_profilecare_form() {
             case 'suppressed':
                 $query->propertyCondition('suppressed', 1);
                 break;
+            default:
+                $query->propertyCondition('suppressed', 0);
+                break;
         }
 		
 	}
@@ -486,13 +447,21 @@ function rm_sales_profilecare_form() {
         $query->propertyCondition('type', $queryparams['profiletype']);
 	}
     
-    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
-	}
-    
-    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
-	}
+    if(!empty($queryparams['salesguy'])) {
+        if($queryparams['salesguy'] > 0) {
+            $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+        }
+        else {
+            switch($queryparams['salesguy']) {
+                case '-3':
+                    $query->propertyCondition('sticky', 1);
+                    break;
+                case '-2':
+                    $query->propertyCondition('sticky', 0);
+                    break;
+            }
+        }
+    }
     
     if(!empty($queryparams['title'])) {
         $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
@@ -511,16 +480,45 @@ function rm_sales_profilecare_form() {
 	}
     
 	$tmp = $query
-		->tableSort($header)
-		->pager(100)
+		// ->tableSort($header)
+		// ->pager(100)
 		->execute();
-
+    
+    $allkeys_1 = array();
+    if(isset($tmp['node'])) {
+        $allkeys_1 = array_keys($tmp['node']);
+    }
+    
+    $allkeys_2 = array();
+    if(!rm_user_is_admin()) {
+        $query2 = new EntityFieldQuery();
+        $tmp = $query2
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
+            ->execute();
+        if(isset($tmp['node'])) {
+            $allkeys_2 = array_keys($tmp['node']);
+        }
+    }
+    
+    $resultingnids = array_diff($allkeys_1, $allkeys_2);
+    
+    $tmp = array();
+    if(!empty($resultingnids)) {
+        $query3 = new EntityFieldQuery();
+        $tmp = $query3
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->propertyCondition('nid', $resultingnids)
+            ->tableSort($header)
+            ->pager(100)
+            ->execute();
+    }
 	$filterform = drupal_get_form('rm_sales_profilecare_filter_form');
 		
 	$form = array();
     
-    
-	
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
 		
@@ -629,7 +627,7 @@ function rm_sales_profilecare_form() {
                 $profileowner = user_load($profileobject->uid);
                 $sugcount = $sugqry
                     ->entityCondition('entity_type', 'node')
-                    ->entityCondition('bundle', array('commercial_profile', 'seller_profile'))
+                    ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
                     ->fieldCondition('field_suggester', 'value', $profileowner->mail)
                     ->count()
                     ->execute();
@@ -730,11 +728,29 @@ function rm_sales_profilecare_form() {
 				case "seller_profile": $nodetypename = 'customer_profile'; break;
 			}
             
+            $suggestedcount = 0;
+            $suggestedby = '';
+            foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                if(!in_array($suggestermail['value'], $excludable)) {
+                    $suggestedcount++;
+                    $suggestedby .= $suggestermail['value'] . ' ';
+                }
+            }
             
+            $suggestedcount = ($suggestedcount) ? '<span class="label label-success suggester-tooltip" data-toggle="tooltip" data-placement="top" title="' . $suggestedby . '">' . $suggestedcount . '</span>' : '<span class="label label-danger suggester-tooltip" data-toggle="tooltip" data-placement="top" title="von Regiomino vorgeschlagen">0</span>';
+            
+            $duplicatelink = ($profileobject->status) ? '' : ' (' . l(t('Duplicate') . '?', 'manage/duplicate/' . $profileobject->nid) . ')';
+            
+            if($profileobject->sticky) {
+                $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
+            }
+            else {
+                $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+            }
 			
 			$options[$nid] = array(
-				// 'type' => node_type_get_name($profileobject),
-				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
+				'created' => date('d.m.Y H:i', $profileobject->created) . $duplicatelink,
+				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
@@ -753,8 +769,10 @@ function rm_sales_profilecare_form() {
 				// 'payment_agreement' => $payment_agreement,
                 // 'suggestions' => $suggestion_count,
 				// 'offer_table' => $offer_table,
-                'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid,
+                'action_buttons' => $action_buttons,
 			);
+            
+            
 		}
 		
 		// $form['submit'] = array(
@@ -788,6 +806,19 @@ function rm_sales_profilecare_form() {
     
 
 	return $exportall . render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
+}
+
+function rm_sales_duplicate_profiles_form($form, &$form_state, $nid) {
+    $form = array();
+    
+    $query = new EntityFieldQuery();
+	$tmp = $query
+		->entityCondition('entity_type', 'node')
+		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+        ->propertyCondition('sticky', 1)
+        ->execute();
+        
+    
 }
 
 /* function rm_sales_profileset_form() {
@@ -1045,7 +1076,19 @@ function rm_sales_profilecare_form() {
 
 function rm_sales_export_profiles() {
 	$loadarray = array();
+    global $user;
 	if(empty($loadarray)) {
+    
+        $usergroup1 = rm_user_get_users_by_role('salesguy');
+        $usergroup2 = rm_user_get_users_by_role('admin');
+        $usergroup = array_merge($usergroup1, $usergroup2);
+        $usergrouploaded = entity_load('user', $usergroup);
+        $excludable = array();
+        $allbutme = array();
+        foreach($usergrouploaded as $usergroupobject) {
+            $excludable[] = $usergroupobject->mail;
+            if($usergroupobject->mail != $user->mail) $allbutme[] = $usergroupobject->uid;
+        }
     
         $queryparams = drupal_get_query_parameters();
     
@@ -1053,9 +1096,7 @@ function rm_sales_export_profiles() {
         $query = new EntityFieldQuery();
         $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->propertyCondition('sticky', 1);
-        if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
         
         //Filter injections
         if(!empty($queryparams['sales_step'])) {
@@ -1076,6 +1117,9 @@ function rm_sales_export_profiles() {
                 case 'suppressed':
                     $query->propertyCondition('suppressed', 1);
                     break;
+                default:
+                    $query->propertyCondition('suppressed', 0);
+                    break;
             }
             
         }
@@ -1088,20 +1132,79 @@ function rm_sales_export_profiles() {
             $query->propertyCondition('type', $queryparams['profiletype']);
         }
         
-        if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-            $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+        if(!empty($queryparams['salesguy'])) {
+            if($queryparams['salesguy'] > 0) {
+                $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+            }
+            else {
+                switch($queryparams['salesguy']) {
+                    case '-3':
+                        $query->propertyCondition('sticky', 1);
+                        break;
+                    case '-2':
+                        $query->propertyCondition('sticky', 0);
+                        break;
+                }
+            }
+        }
+        
+        if(!empty($queryparams['title'])) {
+            $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['street'])) {
+            $query->fieldCondition('field_address', 'thoroughfare', $queryparams['street'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['zip'])) {
+            $query->fieldCondition('field_address', 'postal_code', $queryparams['zip'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['locality'])) {
+            $query->fieldCondition('field_address', 'locality', $queryparams['locality'], 'CONTAINS');
         }
         
         $tmp = $query
+            // ->tableSort($header)
+            // ->pager(100)
             ->execute();
+        
+        $allkeys_1 = array();
+        if(isset($tmp['node'])) {
+            $allkeys_1 = array_keys($tmp['node']);
+        }
+        
+        $allkeys_2 = array();
+        if(!rm_user_is_admin()) {
+            $query2 = new EntityFieldQuery();
+            $tmp = $query2
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
+                ->execute();
+            if(isset($tmp['node'])) {
+                $allkeys_2 = array_keys($tmp['node']);
+            }
+        }
+        
+        $resultingnids = array_diff($allkeys_1, $allkeys_2);
+        
+        $tmp = array();
+        if(!empty($resultingnids)) {
+            $query3 = new EntityFieldQuery();
+            $tmp = $query3
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->propertyCondition('nid', $resultingnids)
+                ->execute();
+        }
     
 		$loadarray = array_keys($tmp['node']);
 	}
 	$allprofiles = entity_load('node', $loadarray);
 	$header = array(
 		t('Profiletype'),
-        t('Prospect'),
-        t('Step'),
+        t('Status'),
         t('Completed profile'),
 		t('Name'),
 		t('Street'),
@@ -1109,6 +1212,8 @@ function rm_sales_export_profiles() {
 		t('Locality'),
 		t('Phone'),
 		t('Salesguy'),
+        t('Vorgeschlagen von'),
+        t('Empfehlungen'),
 		t('Shipping agreement'),
 		t('Dispatch agreement'),
 		t('Pickup agreement'),
@@ -1129,6 +1234,31 @@ function rm_sales_export_profiles() {
         if($profileobject->status == 1) $step = 3;
         $valid = rm_api_node_validate_required($nid);
         
+        $shipnodes = '';
+        $disnodes = '';
+        $picknodes = '';
+        $commnodes = '';
+        $paynodes = '';
+        $ofrtbl = '';
+        $sugcount = 0;
+        if($profileobject->status == 1) {
+            $sugqry = new EntityFieldQuery();
+            $profileowner = user_load($profileobject->uid);
+            $sugcount = $sugqry
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
+                ->fieldCondition('field_suggester', 'value', $profileowner->mail)
+                ->count()
+                ->execute();
+        }
+        $suggestedby = '';
+        if(isset($profileobject->field_suggester[LANGUAGE_NONE])) {
+            foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                if(!in_array($suggestermail['value'], $excludable)) {
+                    $suggestedby .= $suggestermail['value'] . ' ';
+                }
+            }
+        }
         if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
             $shipnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             $disnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
@@ -1160,10 +1290,25 @@ function rm_sales_export_profiles() {
         
         
         $username = format_username(user_load($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']));
+        
+        
+        if($profileobject->suppressed) {
+            $currentstatus = 'Sleep';
+        }
+        else if($profileobject->status) {
+            $currentstatus = 'Registriert';
+        }
+        else if($profileobject->prospect) {
+            $currentstatus = 'Prospect';
+        }
+        else {
+            $currentstatus = 'Lead';
+        }
+        
+        
 		$rows[] = array(
 			node_type_get_name($profileobject->type),
-            $profileobject->prospect,
-            $step,
+            $currentstatus,
             (empty($valid)) ? t('Yes') : t('No'),
 			$profileobject->title,
 			$profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'],
@@ -1171,12 +1316,14 @@ function rm_sales_export_profiles() {
 			$profileobject->field_address[LANGUAGE_NONE][0]['locality'],
 			$phone,
             $username,
-            (isset($shipnodes)) ? t('Yes') : t('No'),
-            (isset($disnodes)) ? t('Yes') : t('No'),
-            (isset($picknodes)) ? t('Yes') : t('No'),
-            (isset($commnodes)) ? t('Yes') : t('No'),
-            (isset($paynodes)) ? t('Yes') : t('No'),
-            (isset($ofrtbl)) ? t('Yes') : t('No'),
+            $suggestedby,
+            $sugcount,
+            (isset($shipnodes) && !empty($shipnodes)) ? t('Yes') : t('No'),
+            (isset($disnodes) && !empty($disnodes)) ? t('Yes') : t('No'),
+            (isset($picknodes) && !empty($picknodes)) ? t('Yes') : t('No'),
+            (isset($commnodes) && !empty($commnodes)) ? t('Yes') : t('No'),
+            (isset($paynodes) && !empty($paynodes)) ? t('Yes') : t('No'),
+            (isset($ofrtbl) && !empty($ofrtbl)) ? t('Yes') : t('No'),
             $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'],
             $notes,
 		);
