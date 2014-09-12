@@ -524,6 +524,15 @@ function rm_sales_profilecare_form() {
 	if(isset($tmp['node'])) {
 		$queue = entity_load('node', array_keys($tmp['node']));
 		
+        $usergroup1 = rm_user_get_users_by_role('salesguy');
+        $usergroup2 = rm_user_get_users_by_role('admin');
+        $usergroup = array_merge($usergroup1, $usergroup2);
+        $usergrouploaded = entity_load('user', $usergroup);
+        $excludable = array();
+        foreach($usergrouploaded as $usergroupobject) {
+            $excludable[] = $usergroupobject->mail;
+        }
+        
 		$options = array();
 		foreach($queue as $nid => $profileobject) {
 		
@@ -731,22 +740,16 @@ function rm_sales_profilecare_form() {
 			}
             
             $suggestedcount = 0;
-            $usergroup1 = array_keys(rm_user_get_users_by_role('salesguy'));
-            $usergroup2 = array_keys(rm_user_get_users_by_role('admin'));
-            $usergroup = array_merge($usergroup1, $usergroup2);
-            $usergrouploaded = entity_load('user', $usergroup);
-            $excludable = array();
-            foreach($usergrouploaded as $usergroupobject) {
-                $excludable[] = $usergroupobject->mail;
-            }
+            $suggestedby = '';
             foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                $suggestedby .= $suggestermail['value'] . ' ';
                 if(!in_array($suggestermail['value'], $excludable)) {
                     $suggestedcount++;
+                    $suggestedby .= $suggestermail['value'] . ' ';
                 }
             }
             
-            
-            $suggestedcount = (count($profileobject->field_suggester[LANGUAGE_NONE])) ? '<span class="label label-success">' . count($profileobject->field_suggester[LANGUAGE_NONE]) . '</span>' : '<span class="label label-danger">0</span>';
+            $suggestedcount = ($suggestedcount) ? '<span class="label label-success suggester-tooltip" data-toggle="tooltip" data-placement="top" title="' . $suggestedby . '">' . $suggestedcount . '</span>' : '<span class="label label-danger suggester-tooltip" data-toggle="tooltip" data-placement="top" title="von Regiomino vorgeschlagen">0</span>';
 			
 			$options[$nid] = array(
 				// 'type' => node_type_get_name($profileobject),
