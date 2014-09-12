@@ -1204,8 +1204,7 @@ function rm_sales_export_profiles() {
 	$allprofiles = entity_load('node', $loadarray);
 	$header = array(
 		t('Profiletype'),
-        t('Prospect'),
-        t('Step'),
+        t('Status'),
         t('Completed profile'),
 		t('Name'),
 		t('Street'),
@@ -1213,6 +1212,8 @@ function rm_sales_export_profiles() {
 		t('Locality'),
 		t('Phone'),
 		t('Salesguy'),
+        t('Vorgeschlagen von'),
+        t('Empfehlungen'),
 		t('Shipping agreement'),
 		t('Dispatch agreement'),
 		t('Pickup agreement'),
@@ -1233,6 +1234,31 @@ function rm_sales_export_profiles() {
         if($profileobject->status == 1) $step = 3;
         $valid = rm_api_node_validate_required($nid);
         
+        $shipnodes = '';
+        $disnodes = '';
+        $picknodes = '';
+        $commnodes = '';
+        $paynodes = '';
+        $ofrtbl = '';
+        $sugcount = 0;
+        if($profileobject->status == 1) {
+            $sugqry = new EntityFieldQuery();
+            $profileowner = user_load($profileobject->uid);
+            $sugcount = $sugqry
+                ->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
+                ->fieldCondition('field_suggester', 'value', $profileowner->mail)
+                ->count()
+                ->execute();
+        }
+        $suggestedby = '';
+        if(isset($profileobject->field_suggester[LANGUAGE_NONE])) {
+            foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                if(!in_array($suggestermail['value'], $excludable)) {
+                    $suggestedby .= $suggestermail['value'] . ' ';
+                }
+            }
+        }
         if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
             $shipnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
             $disnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
@@ -1264,10 +1290,25 @@ function rm_sales_export_profiles() {
         
         
         $username = format_username(user_load($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']));
+        
+        
+        if($profileobject->suppressed) {
+            $currentstatus = 'Sleep';
+        }
+        else if($profileobject->status) {
+            $currentstatus = 'Registriert';
+        }
+        else if($profileobject->prospect) {
+            $currentstatus = 'Prospect';
+        }
+        else {
+            $currentstatus = 'Lead';
+        }
+        
+        
 		$rows[] = array(
 			node_type_get_name($profileobject->type),
-            $profileobject->prospect,
-            $step,
+            $currentstatus,
             (empty($valid)) ? t('Yes') : t('No'),
 			$profileobject->title,
 			$profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'],
@@ -1275,12 +1316,14 @@ function rm_sales_export_profiles() {
 			$profileobject->field_address[LANGUAGE_NONE][0]['locality'],
 			$phone,
             $username,
-            (isset($shipnodes)) ? t('Yes') : t('No'),
-            (isset($disnodes)) ? t('Yes') : t('No'),
-            (isset($picknodes)) ? t('Yes') : t('No'),
-            (isset($commnodes)) ? t('Yes') : t('No'),
-            (isset($paynodes)) ? t('Yes') : t('No'),
-            (isset($ofrtbl)) ? t('Yes') : t('No'),
+            $suggestedby,
+            $sugcount,
+            (isset($shipnodes) && !empty($shipnodes)) ? t('Yes') : t('No'),
+            (isset($disnodes) && !empty($disnodes)) ? t('Yes') : t('No'),
+            (isset($picknodes) && !empty($picknodes)) ? t('Yes') : t('No'),
+            (isset($commnodes) && !empty($commnodes)) ? t('Yes') : t('No'),
+            (isset($paynodes) && !empty($paynodes)) ? t('Yes') : t('No'),
+            (isset($ofrtbl) && !empty($ofrtbl)) ? t('Yes') : t('No'),
             $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'],
             $notes,
 		);
