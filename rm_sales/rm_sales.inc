@@ -1086,9 +1086,8 @@ function rm_sales_export_profiles() {
         $query = new EntityFieldQuery();
         $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-            ->propertyCondition('sticky', 1);
-        if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
+        //if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', array($allbutme), 'NOT IN');
         
         //Filter injections
         if(!empty($queryparams['sales_step'])) {
@@ -1109,6 +1108,9 @@ function rm_sales_export_profiles() {
                 case 'suppressed':
                     $query->propertyCondition('suppressed', 1);
                     break;
+                default:
+                    $query->propertyCondition('suppressed', 0);
+                    break;
             }
             
         }
@@ -1121,11 +1123,71 @@ function rm_sales_export_profiles() {
             $query->propertyCondition('type', $queryparams['profiletype']);
         }
         
+        if(!empty($queryparams['salesguy'])) {
+            if($queryparams['salesguy'] > 0) {
+                $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+            }
+            else {
+                switch($queryparams['salesguy']) {
+                    case '-3':
+                        $query->propertyCondition('sticky', 1);
+                        break;
+                    case '-2':
+                        $query->propertyCondition('sticky', 0);
+                        break;
+                }
+            }
+        }
+        
         if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
             $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
         }
         
+        if(!empty($queryparams['title'])) {
+            $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['street'])) {
+            $query->fieldCondition('field_address', 'thoroughfare', $queryparams['street'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['zip'])) {
+            $query->fieldCondition('field_address', 'postal_code', $queryparams['zip'], 'CONTAINS');
+        }
+        
+        if(!empty($queryparams['locality'])) {
+            $query->fieldCondition('field_address', 'locality', $queryparams['locality'], 'CONTAINS');
+        }
+        
         $tmp = $query
+            // ->tableSort($header)
+            // ->pager(100)
+            ->execute();
+        
+        $allkeys_1 = array();
+        if(isset($tmp['node'])) {
+            $allkeys_1 = array_keys($tmp['node']);
+        }
+        
+        $query2 = new EntityFieldQuery();
+        $tmp = $query2
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
+            ->execute();
+        
+        $allkeys_2 = array();
+        if(isset($tmp['node'])) {
+            $allkeys_2 = array_keys($tmp['node']);
+        }
+        
+        $resultingnids = array_diff($allkeys_1, $allkeys_2);
+        
+        $query3 = new EntityFieldQuery();
+        $tmp = $query3
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->propertyCondition('nid', $resultingnids)
             ->execute();
     
 		$loadarray = array_keys($tmp['node']);
