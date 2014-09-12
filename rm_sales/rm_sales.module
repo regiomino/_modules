@@ -30,8 +30,7 @@ function rm_sales_menu() {
     );
     $items['manage/sales'] = array(
         'title' => 'Sales',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_sales_profilequeue_form'),
+        'page callback' => 'rm_sales_profilecare_form',
         'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
@@ -54,12 +53,8 @@ function rm_sales_menu() {
   // );
 	$items['manage/sales/manage'] = array(
         'title' => 'Supervise profiles',
-        'page callback' => 'rm_sales_profilecare_form',
-        'access callback' => 'rm_sales_user_is_salesguy',
-        'file' => 'rm_sales.inc',
-        'file path' => drupal_get_path('module', 'rm_sales'),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 2,
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => 0,
     );
 	$items['manage/sales/manage/export'] = array(
         'page callback' => 'rm_sales_export_profiles',
