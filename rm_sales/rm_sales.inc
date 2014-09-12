@@ -355,12 +355,12 @@ function rm_sales_profilecare_form() {
 	global $user;
 	
 	$header = array(
-		// 'type' => array(
-			// 'data' => t('Profile type'),
-			// 'type' => 'property',
-			// 'specifier' => 'type',
-			// 'sort' => 'desc',
-		// ),
+		'created' => array(
+			'data' => t('Created'),
+			'type' => 'property',
+			'specifier' => 'created',
+			'sort' => 'desc',
+		),
 		'title' => array(
 			'data' => t('Name'),
 			'type' => 'property',
@@ -391,56 +391,7 @@ function rm_sales_profilecare_form() {
 				'column' => 'value',
 			),
 		),
-		// 'field_address_locality' => array(
-			// 'data' => t('City'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'locality',
-			// ),
-		// ),
-		// 'field_address_zip' => array(
-			// 'data' => t('Zip'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'postal_code',
-			// ),
-		// ),
-		// 'field_address_street' => array(
-			// 'data' => t('Street'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_address',
-				// 'column' => 'thoroughfare',
-			// ),
-		// ),
-		// 'field_publicphone' => array(
-			// 'data' => t('Phone'),
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_publicphone',
-				// 'column' => 'number',
-			// ),
-		// ),
-		// 'field_salesguy' => array(
-			// 'data' => 'ZugewiesenerMA',
-			// 'type' => 'field',
-			// 'specifier' => array(
-				// 'field' => 'field_salesguy',
-				// 'column' => 'target_id',
-			// ),
-		// ),
-		// 'shipping_agreement' => node_type_get_name('shipping_agreement'),
-		// 'dispatch_agreement' => node_type_get_name('dispatch_agreement'),
-		// 'pickup_agreement' => node_type_get_name('pickup_agreement'),
         'support_status' => t('Support'),
-        // 'all_offers' => '<i class="fa fa-shopping-cart"></i>',
-		// 'delivery_agreement' => '<i class="fa fa-truck"></i>',
-		// 'commission_agreement' => 'Prov.',
-		// 'payment_agreement' => '<i class="fa fa-money"></i>',
-		// 'suggestions' => 'Empfehlungen',
-		// 'offer_table' => 'Ang.',
         'action_buttons' => t('Actions'),
 	);
 	
@@ -451,8 +402,7 @@ function rm_sales_profilecare_form() {
 	$query = new EntityFieldQuery();
 	$query
 		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        ->propertyCondition('sticky', 1);
+		->entityCondition('bundle', array('seller_profile', 'customer_profile'));
     if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
     
     //Filter injections
@@ -474,6 +424,9 @@ function rm_sales_profilecare_form() {
             case 'suppressed':
                 $query->propertyCondition('suppressed', 1);
                 break;
+            default:
+                $query->propertyCondition('suppressed', 0);
+                break;
         }
 		
 	}
@@ -486,9 +439,21 @@ function rm_sales_profilecare_form() {
         $query->propertyCondition('type', $queryparams['profiletype']);
 	}
     
-    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
-	}
+    if(!empty($queryparams['salesguy'])) {
+        if($queryparams['salesguy'] > 0) {
+            $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+        }
+        else {
+            switch($queryparams['salesguy']) {
+                case '-3':
+                    $query->propertyCondition('sticky', 1);
+                    break;
+                case '-2':
+                    $query->propertyCondition('sticky', 0);
+                    break;
+            }
+        }
+    }
     
     if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
         $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
@@ -742,7 +707,6 @@ function rm_sales_profilecare_form() {
             $suggestedcount = 0;
             $suggestedby = '';
             foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
-                $suggestedby .= $suggestermail['value'] . ' ';
                 if(!in_array($suggestermail['value'], $excludable)) {
                     $suggestedcount++;
                     $suggestedby .= $suggestermail['value'] . ' ';
@@ -750,9 +714,18 @@ function rm_sales_profilecare_form() {
             }
             
             $suggestedcount = ($suggestedcount) ? '<span class="label label-success suggester-tooltip" data-toggle="tooltip" data-placement="top" title="' . $suggestedby . '">' . $suggestedcount . '</span>' : '<span class="label label-danger suggester-tooltip" data-toggle="tooltip" data-placement="top" title="von Regiomino vorgeschlagen">0</span>';
+            
+            $duplicatelink = ($profileobject->status) ? '' : ' (' . l(t('Duplicate') . '?', 'manage/duplicate/' . $profileobject->nid) . ')';
+            
+            if($profileobject->sticky) {
+                $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
+            }
+            else {
+                $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+            }
 			
 			$options[$nid] = array(
-				// 'type' => node_type_get_name($profileobject),
+				'created' => date('d.m.Y H:i', $profileobject->created) . $duplicatelink,
 				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
@@ -772,8 +745,10 @@ function rm_sales_profilecare_form() {
 				// 'payment_agreement' => $payment_agreement,
                 // 'suggestions' => $suggestion_count,
 				// 'offer_table' => $offer_table,
-                'action_buttons' => l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid,
+                'action_buttons' => $action_buttons,
 			);
+            
+            
 		}
 		
 		// $form['submit'] = array(
@@ -807,6 +782,19 @@ function rm_sales_profilecare_form() {
     
 
 	return $exportall . render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
+}
+
+function rm_sales_duplicate_profiles_form($form, &$form_state, $nid) {
+    $form = array();
+    
+    $query = new EntityFieldQuery();
+	$tmp = $query
+		->entityCondition('entity_type', 'node')
+		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+        ->propertyCondition('sticky', 1)
+        ->execute();
+        
+    
 }
 
 /* function rm_sales_profileset_form() {
