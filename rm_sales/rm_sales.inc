@@ -730,11 +730,27 @@ function rm_sales_profilecare_form() {
 				case "seller_profile": $nodetypename = 'customer_profile'; break;
 			}
             
+            $suggestedcount = 0;
+            $usergroup1 = array_keys(rm_user_get_users_by_role('salesguy'));
+            $usergroup2 = array_keys(rm_user_get_users_by_role('admin'));
+            $usergroup = array_merge($usergroup1, $usergroup2);
+            $usergrouploaded = entity_load('user', $usergroup);
+            $excludable = array();
+            foreach($usergrouploaded as $usergroupobject) {
+                $excludable[] = $usergroupobject->mail;
+            }
+            foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                if(!in_array($suggestermail['value'], $excludable)) {
+                    $suggestedcount++;
+                }
+            }
             
+            
+            $suggestedcount = (count($profileobject->field_suggester[LANGUAGE_NONE])) ? '<span class="label label-success">' . count($profileobject->field_suggester[LANGUAGE_NONE]) . '</span>' : '<span class="label label-danger">0</span>';
 			
 			$options[$nid] = array(
 				// 'type' => node_type_get_name($profileobject),
-				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
+				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
