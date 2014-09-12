@@ -197,7 +197,11 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
     
     $form['#attributes'] = array('class' => array('form-inline'));
 	
-	$form['profilecarefilter']['sales_step'] = array(
+    $form['profilecarefilter']['properties'] = array(
+        '#type' => 'fieldset',
+    );
+    
+	$form['profilecarefilter']['properties']['sales_step'] = array(
 		'#type' => 'select',
         '#title' => 'Status',
 		'#options' => array(
@@ -215,12 +219,12 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         '#prefix' => '<div class="form-group">',
         '#suffix' => '</div>',
 	);
-    if(!empty($queryparams['sales_step'])) $form['profilecarefilter']['sales_step']['#default_value'] = $queryparams['sales_step'];
+    if(!empty($queryparams['sales_step'])) $form['profilecarefilter']['properties']['sales_step']['#default_value'] = $queryparams['sales_step'];
     
     $priovalues = list_allowed_values(field_info_field('field_priority'));
     $priovalues[-1] = 'Alle';
     
-    $form['profilecarefilter']['priority'] = array(
+    $form['profilecarefilter']['properties']['priority'] = array(
 		'#type' => 'select',
         '#title' => '&nbsp;&nbsp;Prio',
 		'#options' => $priovalues,
@@ -232,9 +236,9 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         '#prefix' => '<div class="form-group">',
         '#suffix' => '</div>',
 	);
-    if(!empty($queryparams['priority'])) $form['profilecarefilter']['priority']['#default_value'] = $queryparams['priority'];
+    if(!empty($queryparams['priority'])) $form['profilecarefilter']['properties']['priority']['#default_value'] = $queryparams['priority'];
     
-    $form['profilecarefilter']['profiletype'] = array(
+    $form['profilecarefilter']['properties']['profiletype'] = array(
 		'#type' => 'select',
         '#title' => '&nbsp;&nbsp;Typ',
 		'#options' => array(
@@ -250,7 +254,7 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         '#prefix' => '<div class="form-group">',
         '#suffix' => '</div>',
 	);
-    if(!empty($queryparams['profiletype'])) $form['profilecarefilter']['profiletype']['#default_value'] = $queryparams['profiletype'];
+    if(!empty($queryparams['profiletype'])) $form['profilecarefilter']['properties']['profiletype']['#default_value'] = $queryparams['profiletype'];
     
     $users = rm_user_get_users_by_role('salesguy');
     $userobjects = entity_load('user', $users);
@@ -261,7 +265,7 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         }
     }
     
-    $form['profilecarefilter']['salesguy'] = array(
+    $form['profilecarefilter']['properties']['salesguy'] = array(
 		'#type' => 'select',
         '#title' => '&nbsp;&nbsp;Vertriebler',
 		'#options' => $useroptions,
@@ -273,7 +277,60 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
         '#prefix' => '<div class="form-group">',
         '#suffix' => '</div>',
 	);
-    if(!empty($queryparams['salesguy'])) $form['profilecarefilter']['salesguy']['#default_value'] = $queryparams['salesguy'];
+    if(!empty($queryparams['salesguy'])) $form['profilecarefilter']['properties']['salesguy']['#default_value'] = $queryparams['salesguy'];
+
+    $form['profilecarefilter']['values'] = array(
+        '#type' => 'fieldset',
+    );
+    
+    $form['profilecarefilter']['values']['title'] = array(
+		'#type' => 'textfield',
+        '#title' => 'Name',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#size' => 15,
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['title'])) $form['profilecarefilter']['values']['title']['#default_value'] = $queryparams['title'];
+    
+    $form['profilecarefilter']['values']['street'] = array(
+		'#type' => 'textfield',
+        '#title' => '&nbsp;&nbsp;Straße',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#size' => 15,
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['street'])) $form['profilecarefilter']['values']['street']['#default_value'] = $queryparams['street'];
+    
+    $form['profilecarefilter']['values']['zip'] = array(
+		'#type' => 'textfield',
+        '#title' => '&nbsp;&nbsp;PLZ',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#size' => 5,
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['zip'])) $form['profilecarefilter']['values']['zip']['#default_value'] = $queryparams['zip'];
+    
+    
+    $form['profilecarefilter']['values']['locality'] = array(
+		'#type' => 'textfield',
+        '#title' => '&nbsp;&nbsp;Ort',
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#size' => 10,
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['locality'])) $form['profilecarefilter']['values']['locality']['#default_value'] = $queryparams['locality'];
 
     
     // $form['profilecarefilter']['sales_step'] = array(

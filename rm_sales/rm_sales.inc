@@ -490,6 +490,25 @@ function rm_sales_profilecare_form() {
         $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
 	}
     
+    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
+        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
+	}
+    
+    if(!empty($queryparams['title'])) {
+        $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['street'])) {
+        $query->fieldCondition('field_address', 'thoroughfare', $queryparams['street'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['zip'])) {
+        $query->fieldCondition('field_address', 'postal_code', $queryparams['zip'], 'CONTAINS');
+	}
+    
+    if(!empty($queryparams['locality'])) {
+        $query->fieldCondition('field_address', 'locality', $queryparams['locality'], 'CONTAINS');
+	}
     
 	$tmp = $query
 		->tableSort($header)
@@ -768,7 +787,7 @@ function rm_sales_profilecare_form() {
     
     
 
-	return $exportall . render($filterform) . $filter . '<br /><div class="row">' . $output . theme('pager') . '</div>';
+	return $exportall . render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
 }
 
 /* function rm_sales_profileset_form() {
