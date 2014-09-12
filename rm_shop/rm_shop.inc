@@ -6,6 +6,9 @@
  * Time: 09:34
  */
 
+function rm_shop_suggest() {
+    drupal_goto('kontakt', array('query' => array('suggest' => 1)));
+}
 
 function rm_shop_get_shops($city, $zipcode, $street) {
 
