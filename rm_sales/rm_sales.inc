@@ -403,7 +403,7 @@ function rm_sales_profilecare_form() {
 	$query
 		->entityCondition('entity_type', 'node')
 		->entityCondition('bundle', array('seller_profile', 'customer_profile'));
-    if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+    if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', array('NULL', $user->uid));
     
     //Filter injections
     if(!empty($queryparams['sales_step'])) {
