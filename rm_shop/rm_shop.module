@@ -104,6 +104,13 @@ function rm_shop_menu() {
         'file' => 'rm_shop.inc',
         'file path' => drupal_get_path('module', 'rm_shop'),
     );
+    $items['vorschlagen'] = array(
+        'title' => 'Vorschlagen',
+        'page callback' => 'rm_shop_suggest',
+        'access arguments' => array('access content'),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
     $items['sitemap'] = array(
         'title' => 'Sitemap',
         'page callback' => 'rm_shop_sitemap',
