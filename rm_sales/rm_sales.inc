@@ -412,7 +412,6 @@ function rm_sales_profilecare_form() {
 	$query
 		->entityCondition('entity_type', 'node')
 		->entityCondition('bundle', array('seller_profile', 'customer_profile'));
-    //if(!rm_user_is_admin($user->uid)) $query->fieldCondition('field_salesguy', 'target_id', array($allbutme), 'NOT IN');
     
     //Filter injections
     if(!empty($queryparams['sales_step'])) {
@@ -464,10 +463,6 @@ function rm_sales_profilecare_form() {
         }
     }
     
-    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
-        $query->fieldCondition('field_salesguy', 'target_id', $queryparams['salesguy']);
-	}
-    
     if(!empty($queryparams['title'])) {
         $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
 	}
@@ -508,15 +503,17 @@ function rm_sales_profilecare_form() {
     
     $resultingnids = array_diff($allkeys_1, $allkeys_2);
     
-    $query3 = new EntityFieldQuery();
-	$tmp = $query3
-		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        ->propertyCondition('nid', $resultingnids)
-		->tableSort($header)
-		->pager(100)
-        ->execute();
-
+    $tmp = array();
+    if(!empty($resultingnids)) {
+        $query3 = new EntityFieldQuery();
+        $tmp = $query3
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->propertyCondition('nid', $resultingnids)
+            ->tableSort($header)
+            ->pager(100)
+            ->execute();
+    }
 	$filterform = drupal_get_form('rm_sales_profilecare_filter_form');
 		
 	$form = array();
