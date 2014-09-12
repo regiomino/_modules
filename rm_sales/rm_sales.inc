@@ -1080,6 +1080,17 @@ function rm_sales_export_profiles() {
 	$loadarray = array();
 	if(empty($loadarray)) {
     
+        $usergroup1 = rm_user_get_users_by_role('salesguy');
+        $usergroup2 = rm_user_get_users_by_role('admin');
+        $usergroup = array_merge($usergroup1, $usergroup2);
+        $usergrouploaded = entity_load('user', $usergroup);
+        $excludable = array();
+        $allbutme = array();
+        foreach($usergrouploaded as $usergroupobject) {
+            $excludable[] = $usergroupobject->mail;
+            if($usergroupobject->mail != $user->mail) $allbutme[] = $usergroupobject->uid;
+        }
+    
         $queryparams = drupal_get_query_parameters();
     
     
