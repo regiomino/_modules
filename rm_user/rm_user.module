@@ -64,25 +64,25 @@ function rm_user_get_navbar() {
     if($user->uid > 0) {
         $account = user_load($user->uid);
         
-        if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success')))) . ' ';
+        if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
         
         //Verwaltungs-Link für Verkäufer
         if(in_array('seller', $account->roles)) {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/seller/' . $user->uid, array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/seller/' . $user->uid, array('html' => TRUE,'attributes' => array('class' => array('navi-link')))) . ' ';
         }
         //Verwaltungs-Link für Vertriebler
         else if(in_array('salesguy', $account->roles)) {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
         }
         //Verwaltungs-Link für Gastronomen/Kunden
         else {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-briefcase', '@linktitle' => format_username($user))), 'manage/customer', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/customer', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
         }
         
-        $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-user', '@linktitle' => t('Log out'))), 'user/logout', array('html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-warning'))));
+        $html .= l(t('@linktitle', array('@linktitle' => t('Log out'))), 'user/logout', array('html' => TRUE, 'attributes' => array('class' => array('navi-link'))));
     }
     else {
-        $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'glyphicon glyphicon-user', '@linktitle' => t('Log in'))), 'user/register', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-success'))));
+        $html .= l(t('@linktitle', array('@linktitle' => t('Log in'))), 'user/register', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('navi-link'))));
     }
     return $html;
 }
