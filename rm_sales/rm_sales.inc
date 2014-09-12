@@ -1192,11 +1192,16 @@ function rm_sales_profilequeue_form() {
 	global $user;
 	
 	$header = array(
+        'created' => array(
+            'data' => t('Created'),
+            'type' => 'property',
+            'specifier' => 'created',
+            'sort' => 'desc',
+        ),
         'prospect' => array(
             'data' => t('Prospect'),
             'type' => 'property',
             'specifier' => 'prospect',
-            'sort' => 'desc',
         ),
 		'type' => array(
 			'data' => t('Profile type'),
@@ -1267,6 +1272,7 @@ function rm_sales_profilequeue_form() {
 			}
 			
 			$options[$nid] = array(
+                'created' => date('d.m.Y H:i', $profileobject->created),
 				'prospect' => ($profileobject->prospect) ? t('Yes') : t('No'),
                 'type' => node_type_get_name($profileobject),
 				'title' => $profileobject->title . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone,
@@ -1483,11 +1489,13 @@ function rm_sales_conflate_profiles_form($form, &$form_state, $default) {
     $counter = 0;
     foreach($nodeobjects as $nodeobject) {
         if(!empty($nodeobject->field_suggester[LANGUAGE_NONE][0]['value'])) {
-            $form['suggest']['nicetohave']['suggester' . $counter] = array(
-                '#type' => 'hidden',
-                '#value' => $nodeobject->field_suggester[LANGUAGE_NONE][0]['value'],
-            );
-            $counter++;
+            foreach($nodeobject->field_suggester[LANGUAGE_NONE] as $sugkey => $sugval) {
+                $form['suggest']['nicetohave']['suggester' . $counter] = array(
+                    '#type' => 'textfield',
+                    '#value' => $sugval['value'],
+                );
+                $counter++;
+            }
         }
     }
     
@@ -1531,11 +1539,10 @@ function rm_sales_conflate_profiles_form_submit($form, &$form_state) {
     unset($mainprofileobject->field_suggester[LANGUAGE_NONE]);
     foreach($form_state['values'] as $formvalues => $data) {
         $tmp = explode('suggester', $formvalues);
-        if(!empty($tmp[1])) {
-            $mainprofileobject->field_suggester[LANGUAGE_NONE][0]['value'] = $data;
+        if(isset($tmp[1])) {
+            $mainprofileobject->field_suggester[LANGUAGE_NONE][] = array('value' => $data);
         }
     }
-    
     $mainprofileobject->title = $form_state['values']['title'];
     $mainprofileobject->type = $form_state['values']['type'];
     if(!empty($form_state['values']['locality'])) $mainprofileobject->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
