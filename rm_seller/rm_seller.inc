@@ -408,7 +408,35 @@ function rm_seller_offer_form($form, &$form_state) {
                         'class' => array('form-control'),
                     ),
                 );
-                if(!empty($variation->field_gtin[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_gtin-' . $variation->nid]['#default_value'] = $variation->field_gtin[LANGUAGE_NONE][0]['value'];
+                if(!empty($variation->field_leadtime[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_leadtime-' . $variation->nid]['#default_value'] = $variation->field_leadtime[LANGUAGE_NONE][0]['value'];
+                
+                //Use within
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_use_within-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('Use within'),
+                    '#required' => FALSE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Use within'),
+                        'class' => array('form-control'),
+                    ),
+                );
+                if(!empty($variation->field_use_within[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_use_within-' . $variation->nid]['#default_value'] = $variation->field_use_within[LANGUAGE_NONE][0]['value'];
+                
+                //Expiration date
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_expiration_date-' . $variation->nid] = array(
+                    '#type' => 'date',
+                    '#title' => t('Expiration date'),
+                    '#required' => FALSE,
+                    '#title_display' => 'none',
+                    // '#pre_render' => array('rm_seller_pre_render_date_empty'),
+                    // '#element_validate' => array('rm_seller_validate_date_empty'),
+                );
+                if(!empty($variation->field_expiration_date[LANGUAGE_NONE][0]['value'])) {
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_expiration_date-' . $variation->nid]['#default_value']['day'] = date('j', $variation->field_expiration_date[LANGUAGE_NONE][0]['value']);
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_expiration_date-' . $variation->nid]['#default_value']['month'] = date('n', $variation->field_expiration_date[LANGUAGE_NONE][0]['value']);
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_expiration_date-' . $variation->nid]['#default_value']['year'] = date('Y', $variation->field_expiration_date[LANGUAGE_NONE][0]['value']);
+                }
                 
                 foreach($variation->trading_units as $tradingunit) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'] = array();
@@ -512,6 +540,37 @@ function rm_seller_offer_form($form, &$form_state) {
     return $form;
 }
 
+function rm_seller_validate_date_empty($element, &$form_state, $form) {
+  $date = $element['#value'];
+  if (($date['year'] || $date['month'] || $date['day'])) {
+    date_validate($element, $form_state, $form);
+  }
+}
+
+function rm_seller_pre_render_date_empty(&$element) {
+
+    // Don't put empty values if a date has already been set
+    if (isset($element['#default_value'])) {  
+        return $element;
+    }
+
+    // Loop through each field, add empty option and unset value
+    foreach (array('year', 'month', 'day') as $field) {
+        if (!isset($element[$field])) {
+            continue;
+        }
+
+        unset($element[$field]['#value']);
+        $element[$field]['#attributes']['class'][] = 'form-control';
+        $element[$field]['#default_value'] = '0';
+        $element[$field]['#options'] = array(
+            '0' => '',
+        ) + $element[$field]['#options'];
+    }
+
+    return $element;
+}
+
 function rm_seller_offer_form_submit($form, &$form_state) {
     if(!empty($form_state['values'])) {
         foreach($form_state['values'] as $field_name => $field_value) {
@@ -531,6 +590,7 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_stock':
                         case 'field_gtin':
                         case 'field_leadtime':
+                        case 'field_use_within':
                         case 'field_tu_amount':
                         case 'field_tu_price':
                         case 'field_tu_vat':
@@ -571,7 +631,12 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                             $filearray = (array) $file;
                             $nodeobject->{$tmp[0]}[LANGUAGE_NONE][] = (array) $file;
                             break;
-                            
+                        
+                        //Expiration date
+                        case 'field_expiration_date':
+                            $timestamp = strtotime($field_value['year'] . '-' . $field_value['month'] . '-' . $field_value['day']);
+                            $nodeobject->{$tmp[0]}[LANGUAGE_NONE][0]['value'] = $timestamp;
+                            break;
                     }
                     node_save($nodeobject);
                 }
