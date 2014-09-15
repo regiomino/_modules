@@ -397,6 +397,19 @@ function rm_seller_offer_form($form, &$form_state) {
                 );
                 if(!empty($variation->field_gtin[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_gtin-' . $variation->nid]['#default_value'] = $variation->field_gtin[LANGUAGE_NONE][0]['value'];
                 
+                //Lead time
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_leadtime-' . $variation->nid] = array(
+                    '#type' => 'textfield',
+                    '#title' => t('Lead time'),
+                    '#required' => FALSE,
+                    '#title_display' => 'none',
+                    '#attributes' => array(
+                        'placeholder' => t('Lead time'),
+                        'class' => array('form-control'),
+                    ),
+                );
+                if(!empty($variation->field_gtin[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_gtin-' . $variation->nid]['#default_value'] = $variation->field_gtin[LANGUAGE_NONE][0]['value'];
+                
                 foreach($variation->trading_units as $tradingunit) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'] = array();
                     
@@ -517,6 +530,7 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_sku':
                         case 'field_stock':
                         case 'field_gtin':
+                        case 'field_leadtime':
                         case 'field_tu_amount':
                         case 'field_tu_price':
                         case 'field_tu_vat':
