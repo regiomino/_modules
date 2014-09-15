@@ -72,6 +72,15 @@ function rm_sales_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 3,
     );
+    $items['manage/sales/salesguyactivity'] = array(
+        'title' => 'Salesguy Activity',
+        'page callback' => 'rm_sales_salesguyactivity',
+        'access callback' => 'rm_user_is_admin',
+        'file' => 'rm_sales.inc',
+        'file path' => drupal_get_path('module', 'rm_sales'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 4,
+    );
   $items['manage/sales/addoffertable/%'] = array(
     'title' => 'Sales',
     'page callback' => 'drupal_get_form',
@@ -361,6 +370,54 @@ function rm_sales_profilecare_filter_form($form, &$form_state) {
 	// if(isset($queryparams['sale_status']) && !empty($queryparams['sale_status'])) $form['alloffersfilter']['sale_status']['#default_value'] = $queryparams['sale_status'];
     
     $destination = drupal_get_destination();
+	
+	$form['profilecarefilter']['submit'] = array(
+		'#value' => t('Filter'),
+		'#type' => 'submit',
+        '#attributes' => array(
+            'class' => array('btn', 'btn-success'),
+        ),
+        '#prefix' => ' ',
+        '#suffix' => ' ' . l(t('Reset'), current_path(), array('attributes' => array('class' => array('btn', 'btn-info')))),
+	);
+   
+	return $form;
+}
+
+function rm_sales_salesguyactivity_filter_form($form, &$form_state) {
+
+	$queryparams = drupal_get_query_parameters();
+    
+	$form['#method'] = 'get';
+    
+    $form['#attributes'] = array('class' => array('form-inline'));
+	
+    $form['profilecarefilter']['properties'] = array(
+        '#type' => 'fieldset',
+    );
+    
+    $users = rm_user_get_users_by_role('salesguy');
+    $userobjects = entity_load('user', $users);
+    $useroptions = array('-1' => 'Alle');
+    if(isset($userobjects)) {
+        foreach($userobjects as $userobject) {
+            $useroptions[$userobject->uid] = format_username($userobject);
+        }
+    }
+    
+    $form['profilecarefilter']['properties']['salesguy'] = array(
+		'#type' => 'select',
+        '#title' => 'Vertriebler',
+		'#options' => $useroptions,
+		'#multiple' => FALSE,
+        '#default_value' => -1,
+        '#attributes' => array(
+            'class' => array('form-control'),
+        ),
+        '#prefix' => '<div class="form-group">',
+        '#suffix' => '</div>',
+	);
+    if(!empty($queryparams['salesguy'])) $form['profilecarefilter']['properties']['salesguy']['#default_value'] = $queryparams['salesguy'];
 	
 	$form['profilecarefilter']['submit'] = array(
 		'#value' => t('Filter'),

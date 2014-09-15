@@ -1,5 +1,95 @@
 <?php
 
+function rm_sales_salesguyactivity() {
+
+	global $user;
+	
+	$header = array(
+		'created' => array(
+			'data' => t('Created'),
+			'type' => 'property',
+			'specifier' => 'created',
+			'sort' => 'desc',
+		),
+		'uid' => array(
+			'data' => t('User'),
+			'type' => 'property',
+			'specifier' => 'uid',
+		),
+        'body' => array(
+			'data' => t('Aktivität'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'body',
+				'column' => 'value',
+			),
+		),
+		'field_entityid' => array(
+			'data' => t('Entity ID'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_entityid',
+				'column' => 'value',
+			),
+		),
+	);
+	
+    $usergroup1 = rm_user_get_users_by_role('salesguy');
+    
+        
+    $queryparams = drupal_get_query_parameters();
+    
+	$query = new EntityFieldQuery();
+	$query
+		->entityCondition('entity_type', 'node')
+		->entityCondition('bundle', array('activity_log'));
+    
+    //Filter injections
+    if(!empty($queryparams['salesguy']) && $queryparams['salesguy'] > 0) {
+        $query->propertyCondition('uid', $queryparams['salesguy']);
+    }
+    else {
+        $query->propertyCondition('uid', $usergroup1);
+    }
+    
+	$tmp = $query
+		->tableSort($header)
+		->pager(100)
+		->execute();
+    
+    
+	$filterform = drupal_get_form('rm_sales_salesguyactivity_filter_form');
+		
+	$form = array();
+    
+	if(isset($tmp['node'])) {
+		$queue = entity_load('node', array_keys($tmp['node']));
+		
+		$options = array();
+		foreach($queue as $nid => $activityobject) {
+		
+			
+			$options[$nid] = array(
+				'created' => date('d.m.Y H:i', $activityobject->created),
+                'uid' => format_username(user_load($activityobject->uid)),
+				'body' => $activityobject->body[LANGUAGE_NONE][0]['value'],
+                'field_entityid' => l(t('Go to entity'), $activityobject->field_entitytype[LANGUAGE_NONE][0]['value'] . '/' . $activityobject->field_entityid[LANGUAGE_NONE][0]['value']),
+			);
+            
+            
+		}
+		
+        
+        $output = theme('table', array('header' => $header, 'rows' => $options, 'attributes' => array('class' => array('table'))));
+	}
+	else {
+        $output = '';
+		drupal_set_message(t('Currently there are no activity logs'), 'warning');
+	}
+    
+	return render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
+}
+
 function rm_sales_makeprospect($nid) {
     $nodeobject = node_load($nid);
     $nodeobject->prospect = 1;
