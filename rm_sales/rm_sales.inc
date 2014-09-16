@@ -837,10 +837,10 @@ function rm_sales_profilecare_form() {
             else {
                 $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             }
-			
+			$profiletitle = ($profileobject->status) ? l($profileobject->title, 'node/' . $profileobject->nid) : $profileobject->title;
 			$options[$nid] = array(
 				'created' => date('d.m.Y H:i', $profileobject->created) . $duplicatelink,
-				'title' => l($profileobject->title, 'node/' . $profileobject->nid) . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
+				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
