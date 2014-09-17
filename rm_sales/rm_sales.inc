@@ -707,7 +707,26 @@ function rm_sales_profilecare_form() {
                 }
                 
                 $all_offers = '';
-                if($profileobject->status) $all_offers = '<span class="label label-danger"><i class="fa fa-shopping-cart"></i> 0/0</span>';
+                if($profileobject->status) {
+                    $offers = rm_shop_get_structured_seller_offers($profileobject->uid, array(0,1));
+                    $offercount = count($offers);
+                    $inactive = 0;
+                    foreach($offers as $offer) {
+                        if($offer->status == 0) $inactive++;
+                    }
+                    $active = $offercount - $inactive;
+                    if($offercount > 0 && $offercount == $active) {
+                        $color = 'success';
+                    }
+                    elseif($offercount > 0 && $offercount > $active && $active > 0) {
+                        $color = 'warning';
+                    }
+                    else {
+                        $color = 'danger';
+                    }
+                    $all_offers = '<span class="label label-' . $color . '"><i class="fa fa-shopping-cart"></i> ' . $active . '/' . $offercount . '</span>';
+                    
+                }
 			}
 			
             $suggestion_count = '';
