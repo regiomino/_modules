@@ -750,14 +750,15 @@ function rm_sales_profilecare_form() {
                     ->execute();
                 
                 if($sugcount == 0) {
-                    $suggestion_count = '<span class="label label-danger">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
+                    $color = 'danger';
                 }
                 else if($sugcount < 5) {
-                    $suggestion_count = '<span class="label label-warning">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
+                    $color = 'warning';
                 }
                 else {
-                    $suggestion_count = '<span class="label label-success">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
+                    $color = 'success';
                 }
+                $suggestion_count = '<span class="label label-' . $color . '">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
             }
             
               
@@ -1430,9 +1431,9 @@ function rm_sales_export_profiles() {
             $currentstatus,
             (empty($valid)) ? t('Yes') : t('No'),
 			$profileobject->title,
-			$profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'],
+			(isset($profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] : '',
 			$zip,
-			$profileobject->field_address[LANGUAGE_NONE][0]['locality'],
+			(isset($profileobject->field_address[LANGUAGE_NONE][0]['locality'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['locality'] : '',
 			$phone,
             $username,
             $suggestedby,
@@ -1443,7 +1444,7 @@ function rm_sales_export_profiles() {
             (isset($commnodes) && !empty($commnodes)) ? t('Yes') : t('No'),
             (isset($paynodes) && !empty($paynodes)) ? t('Yes') : t('No'),
             (isset($ofrtbl) && !empty($ofrtbl)) ? t('Yes') : t('No'),
-            $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'],
+            (isset($profileobject->field_salescomment[LANGUAGE_NONE][0]['value'])) ? $profileobject->field_salescomment[LANGUAGE_NONE][0]['value'] : '',
             $notes,
 		);
 	}
