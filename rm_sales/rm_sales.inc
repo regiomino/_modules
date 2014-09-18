@@ -638,6 +638,7 @@ function rm_sales_profilecare_form() {
             if($profileobject->type == 'seller_profile') {
                 $shipping_agreement = '';
                 if($profileobject->status) $shipping_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
+                $agrnodes = NULL;
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $shipping_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
@@ -645,6 +646,7 @@ function rm_sales_profilecare_form() {
                 
                 $dispatch_agreement = '';
                 if($profileobject->status) $dispatch_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
+                $agrnodes = NULL;
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $dispatch_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
@@ -652,6 +654,7 @@ function rm_sales_profilecare_form() {
                 
                 $pickup_agreement = '';
                 if($profileobject->status) $pickup_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
+                $agrnodes = NULL;
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $pickup_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
@@ -663,6 +666,7 @@ function rm_sales_profilecare_form() {
                 
                 $commission_agreement = '';
                 if($profileobject->status) $commission_agreement = '<span class="label label-danger">% ' . l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';
+                $agrnodes = NULL;
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $commission_agreement = '';
@@ -683,6 +687,7 @@ function rm_sales_profilecare_form() {
                 
                 $payment_agreement = '';
                 if($profileobject->status) $payment_agreement = '<span class="label label-danger"><i class="fa fa-money"></i></span>';
+                $agrnodes = NULL;
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $payment_agreement = '<span class="label label-success"><i class="fa fa-money"></i></span>';
@@ -691,6 +696,7 @@ function rm_sales_profilecare_form() {
                 $offer_table = '';
                 if($profileobject->status) $offer_table = '<span class="label label-danger"><i class="fa fa-table"></i> ' . l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';;
                 $agrqry = new EntityFieldQuery();
+                $agrtmp = array();
                 if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
                     $agrtmp = $agrqry
                         ->entityCondition('entity_type', 'node')
@@ -747,10 +753,10 @@ function rm_sales_profilecare_form() {
                     $suggestion_count = '<span class="label label-danger">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
                 }
                 else if($sugcount < 5) {
-                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-warning">' . $sugcount . '</span></p>';
+                    $suggestion_count = '<span class="label label-warning">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
                 }
                 else {
-                    $suggestion_count = '<p>' . $profileowner->mail . ' <span class="label label-success">' . $sugcount . '</span></p>';
+                    $suggestion_count = '<span class="label label-success">' . $sugcount . ' (' . $profileowner->mail . ')</span>';
                 }
             }
             
