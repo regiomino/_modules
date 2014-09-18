@@ -68,12 +68,11 @@ function rm_sales_salesguyactivity() {
 		$options = array();
 		foreach($queue as $nid => $activityobject) {
 		
-			
 			$options[$nid] = array(
 				'created' => date('d.m.Y H:i', $activityobject->created),
                 'uid' => format_username(user_load($activityobject->uid)),
 				'body' => $activityobject->body[LANGUAGE_NONE][0]['value'],
-                'field_entityid' => l(t('Go to entity'), $activityobject->field_entitytype[LANGUAGE_NONE][0]['value'] . '/' . $activityobject->field_entityid[LANGUAGE_NONE][0]['value']),
+                'field_entityid' => (isset($activityobject->field_entitytype[LANGUAGE_NONE][0]['value']) && isset($activityobject->field_entityid[LANGUAGE_NONE][0]['value'])) ? l(t('Go to entity'), $activityobject->field_entitytype[LANGUAGE_NONE][0]['value'] . '/' . $activityobject->field_entityid[LANGUAGE_NONE][0]['value']) : '',
 			);
             
             
@@ -639,21 +638,21 @@ function rm_sales_profilecare_form() {
             if($profileobject->type == 'seller_profile') {
                 $shipping_agreement = '';
                 if($profileobject->status) $shipping_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
-                $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $shipping_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
                 }
                 
                 $dispatch_agreement = '';
                 if($profileobject->status) $dispatch_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
-                $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('dispatch_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $dispatch_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
                 }
                 
                 $pickup_agreement = '';
                 if($profileobject->status) $pickup_agreement = '<p class="text-center"><span class="label label-danger"><i class="fa fa-ban"></i></span></p>';
-                $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $pickup_agreement = '<p class="text-center"><span class="label label-success"><i class="fa fa-check"></i></span></p>';
                 }
@@ -664,7 +663,7 @@ function rm_sales_profilecare_form() {
                 
                 $commission_agreement = '';
                 if($profileobject->status) $commission_agreement = '<span class="label label-danger">% ' . l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';
-                $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('commission_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $commission_agreement = '';
                     //$commission_agreement = l(t('add new one'), 'manage/seller/addagreement/commission_agreement/' . $profileobject->uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
@@ -684,7 +683,7 @@ function rm_sales_profilecare_form() {
                 
                 $payment_agreement = '';
                 if($profileobject->status) $payment_agreement = '<span class="label label-danger"><i class="fa fa-money"></i></span>';
-                $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) $agrnodes = rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id']);
                 if(isset($agrnodes)) {
                     $payment_agreement = '<span class="label label-success"><i class="fa fa-money"></i></span>';
                 }
@@ -692,14 +691,17 @@ function rm_sales_profilecare_form() {
                 $offer_table = '';
                 if($profileobject->status) $offer_table = '<span class="label label-danger"><i class="fa fa-table"></i> ' . l(t('add new one'), 'manage/sales/addoffertable/' . $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'], array('query' => drupal_get_destination(), 'html' => TRUE)) . '</span>';;
                 $agrqry = new EntityFieldQuery();
-                $agrtmp = $agrqry
-                    ->entityCondition('entity_type', 'node')
-                    ->entityCondition('bundle', 'offer_table')
-                    ->propertyCondition('status', 1)
-                    ->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
-                    ->propertyOrderBy('created', 'DESC')
-                    ->range(0, 1)
-                    ->execute();
+                if(isset($profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])) {
+                    $agrtmp = $agrqry
+                        ->entityCondition('entity_type', 'node')
+                        ->entityCondition('bundle', 'offer_table')
+                        ->propertyCondition('status', 1)
+                        ->propertyCondition('uid', $profileobject->field_user_reference[LANGUAGE_NONE][0]['target_id'])
+                        ->propertyOrderBy('created', 'DESC')
+                        ->range(0, 1)
+                        ->execute();
+                }
+                
                 if(isset($agrtmp['node'])) {
                     $agrtmpkeys = array_keys($agrtmp['node']);
                     $offertable = node_load($agrtmpkeys[0]);
@@ -754,12 +756,12 @@ function rm_sales_profilecare_form() {
             
               
             $support_status = '<ul class="list-unstyled">';
-            if($all_offers && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $all_offers . '</li>';
-            if($delivery_agreement && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $delivery_agreement . '</li>';
-            if($payment_agreement && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $payment_agreement . '</li>';
-            if($suggestion_count) $support_status .= '<li>' . $suggestion_count . '</li>';
-            if($commission_agreement && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $commission_agreement . '</li>';
-            if($offer_table && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $offer_table . '</li>';
+            if(!empty($all_offers) && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $all_offers . '</li>';
+            if(!empty($delivery_agreement) && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $delivery_agreement . '</li>';
+            if(!empty($payment_agreement) && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $payment_agreement . '</li>';
+            if(!empty($suggestion_count)) $support_status .= '<li>' . $suggestion_count . '</li>';
+            if(!empty($commission_agreement) && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $commission_agreement . '</li>';
+            if(!empty($offer_table) && $profileobject->type == 'seller_profile') $support_status .= '<li>' . $offer_table . '</li>';
             $support_status .= '</ul>';
             
             $salesguynid = '';
@@ -768,7 +770,7 @@ function rm_sales_profilecare_form() {
                 $salesguys = entity_load('user', rm_user_get_users_by_role('salesguy'));
                 foreach($salesguys as $uid => $userobject) {
                     $salesguynid .= '<option value="' . $uid . '"';
-                    if ($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $uid) $salesguynid .= ' selected';
+                    if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $uid) $salesguynid .= ' selected';
                     $salesguynid .= '>' . format_username($userobject) . '</option>';
                 }
                 $salesguynid .= '</select></div>';
@@ -839,10 +841,12 @@ function rm_sales_profilecare_form() {
             
             $suggestedcount = 0;
             $suggestedby = '';
-            foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
-                if(!in_array($suggestermail['value'], $excludable)) {
-                    $suggestedcount++;
-                    $suggestedby .= $suggestermail['value'] . ' ';
+            if(isset($profileobject->field_suggester[LANGUAGE_NONE])) {
+                foreach($profileobject->field_suggester[LANGUAGE_NONE] as $suggestermail) {
+                    if(!in_array($suggestermail['value'], $excludable)) {
+                        $suggestedcount++;
+                        $suggestedby .= $suggestermail['value'] . ' ';
+                    }
                 }
             }
             
