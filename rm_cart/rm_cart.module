@@ -225,9 +225,11 @@ function rm_cart_get_minimum_order_values($seller_uid, $zipcode) {
     $movs = array();
     if(!empty($shops)) {
         foreach($shops[$shop_ids[0]]->agreements as $agreement_type => $user_reference) {
-            foreach($user_reference as $user_id => $agreement_object) {
-                if(isset($agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'])) {
-                    $movs[$agreement_type] = $agreement_object[0]->field_minimum_order_value[LANGUAGE_NONE][0]['value'];
+            foreach($user_reference as $user_id => $agreement_objects) {
+                foreach($agreement_objects as $agreement_object) {
+                    if(isset($agreement_object->field_minimum_order_value[LANGUAGE_NONE][0]['value'])) {
+                        $movs[$agreement_type][$agreement_object->nid] = $agreement_object->field_minimum_order_value[LANGUAGE_NONE][0]['value'];
+                    }
                 }
             }
         }
@@ -361,7 +363,7 @@ function rm_cart_block_view($delta = '') {
     global $user;
     $suid = 0;
     if(!empty($_SESSION['chosen_seller'])) $suid = $_SESSION['chosen_seller'];
-                
+   
     switch($delta){
         
         case 'rm_cart_block':

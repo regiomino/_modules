@@ -39,6 +39,9 @@ function rm_seller_agreement_add($form, &$form_state, $agreement_type, $suid) {
             $form['rm_add_agreement']['field_user_reference'][LANGUAGE_NONE]['#options'][0] = t('for all');
             ksort($form['rm_add_agreement']['field_user_reference'][LANGUAGE_NONE]['#options']);
         }
+        else if($field_name == 'field_location') {
+            unset($instances[$field_name]);
+        }
 	}
 	
 	$form['rm_add_agreement']['agreement_type'] = array(
@@ -70,6 +73,7 @@ function rm_seller_agreement_add_validate($form, &$form_state) {
 function rm_seller_agreement_add_submit($form, &$form_state) {
     $title = node_type_get_name($form_state['values']['agreement_type']);
     $new_node = rm_api_create_new_node($form_state['values']['agreement_type'], $title, 'de', $form_state['values']['suid'], 1, 0, 0, 0);
+    
     foreach($form_state['values']['field_names'] as $field_name => $field_definitions) {
         if($field_name == 'field_regular_times') {
             foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $dayvalues) {
@@ -102,6 +106,9 @@ function rm_seller_agreement_edit($form, &$form_state, $agreement_id) {
         if($field_name == 'field_user_reference') {
             $form['rm_edit_agreement']['field_user_reference'][LANGUAGE_NONE]['#options'][0] = t('for all');
             ksort($form['rm_edit_agreement']['field_user_reference'][LANGUAGE_NONE]['#options']);
+        }
+        else if($field_name == 'field_location') {
+            unset($instances[$field_name]);
         }
 	}
 	

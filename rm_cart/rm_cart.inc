@@ -17,6 +17,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
     
+    var_dump($minimum_order_values); die();
 
     $form = array();
     $form['checkout'] = array();
