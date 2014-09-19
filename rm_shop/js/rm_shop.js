@@ -50,10 +50,11 @@ jQuery(document).ready(function ($) {
 
     $('#filterShops').keyup(function () {
         var rex = new RegExp($(this).val(), 'i');
-        $('.panel-default').hide();
-        $('.panel-default').filter(function () {
-            return rex.test($(this).text());
+        $('.seller-item').hide();
+        $('.seller-item').filter(function () {
+            return rex.test($(this).data('title'));
         }).show();
+        
     });
     
     var pathToTheme = Drupal.settings.basePath + "sites/all/themes/" + Drupal.settings.ajaxPageState.theme;
