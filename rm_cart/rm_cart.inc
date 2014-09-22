@@ -3,6 +3,8 @@
 function rm_cart_checkout($form, &$form_state, $account) {
     global $user;
     
+    rm_user_enforce_login(t('Please log in with your commercial account before you continue'), 'warning');
+    
     $_SESSION['chosen_seller'] = $account->uid;
     
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
