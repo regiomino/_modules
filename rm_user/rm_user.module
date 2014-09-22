@@ -104,6 +104,20 @@ function rm_user_get_navbar() {
     return $html;
 }
 
+function rm_user_may_checkout() {
+    global $user;
+    $commercial_profiles = array();
+    if($user->uid > 0) {
+        $commercial_profiles = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'), -1, -1, -1, -1, -1, $user->uid);
+    }
+    if(!rm_user_is_admin() && empty($commercial_profiles)) {
+        return FALSE;
+    }
+    else {
+        return TRUE;
+    }
+}
+
 function rm_user_get_account_completeness($uid) {
     $userfields = field_info_instances('user');
     $allfields = count($userfields['user']);
