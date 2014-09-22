@@ -61,6 +61,17 @@ function rm_user_init() {
     }
 }
 
+function rm_user_has_provided_address() {
+    if( !isset($_SESSION['regionselect']['zip']) || empty($_SESSION['regionselect']['zip']) ||
+        !isset($_SESSION['regionselect']['street']) || empty($_SESSION['regionselect']['street']) ||
+        !isset($_SESSION['regionselect']['city']) || empty($_SESSION['regionselect']['city'])) {
+        return FALSE;
+    }
+    else {
+        return TRUE;
+    }
+}
+
 function rm_user_get_footer_links() {
     return array(
         array(t('Imprint'), 'node/1', array()),
@@ -423,24 +434,6 @@ function rm_user_mail($key, &$message, $params) {
 	}
 }
 
-function rm_user_user_insert(&$edit, $account, $category) {
-    if( !empty($account->mail) &&
-        !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) &&
-        !empty($account->field_last_name[LANGUAGE_NONE][0]['value']) &&
-        !empty($account->field_gender[LANGUAGE_NONE][0]['value'])
-    ) {
-        $result = rm_api_mailchimp_subscribe(
-            $account->mail,
-            array(
-                'FNAME' => $account->field_first_name[LANGUAGE_NONE][0]['value'],
-                'LNAME' => $account->field_last_name[LANGUAGE_NONE][0]['value'],
-                'SALUTATION' => ($account->field_gender[LANGUAGE_NONE][0]['value'] == 'f') ? 'Frau' : 'Herr',
-                'ROLES' => 'authenticated user'
-            )
-        );
-    }
-}
-
 function rm_user_address_complete($uid) {
     $userobject = user_load($uid);
     if( !empty($userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
@@ -462,4 +455,121 @@ function rm_user_editprofile_access($account) {
     if(rm_user_is_admin()) return TRUE;
 	if(isset($profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id']) && $profileobject->field_salesguy[LANGUAGE_NONE][0]['target_id'] == $user->uid) return TRUE;
 	if(isset($profileobject->uid) && $profileobject->uid > 0 && $profileobject->uid == $user->uid) return TRUE;
+}
+
+/**
+ * Alter the login form to include cart data.
+ *
+ * This is necessary if an anonymous user fills a shopping cart
+ * and then decides to login with an already existing account. After logging in
+ * drupal starts a new session for the logged in user. The old session id,
+ * which is used to identify anonymous carts, gets replaced by a new one when the
+ * user login form is submitted.
+ * This means anonymous carts cannot be connected to the user anymore if
+ * he or she logs in with his or her account. With this alteration the old session id gets
+ * passed on through an additional invisible field in the user login form
+ * and can be read by any function that takes place after submitting the login data.
+ */
+function rm_user_form_user_login_alter(&$form, &$form_state) {
+	$sessionid = session_id();
+	$form['sessiondata'] = array(
+		'#type' => 'value',
+		'#value' => $sessionid,
+	);
+}
+
+/**
+ * Alter the login form to include cart data.
+ *
+ * This is necessary if an anonymous user fills a shopping cart
+ * and then decides to login with an already existing account. After logging in
+ * drupal starts a new session for the logged in user. The old session id,
+ * which is used to identify anonymous carts, gets replaced by a new one when the
+ * user login form is submitted.
+ * This means anonymous carts cannot be connected to the user anymore if
+ * he or she logs in with his or her account. With this alteration the old session id gets
+ * passed on through an additional invisible field in the user login form
+ * and can be read by any function that takes place after submitting the login data.
+ */
+function rm_user_form_user_login_block_alter(&$form, &$form_state) {
+	$sessionid = session_id();
+	$form['sessiondata'] = array(
+		'#type' => 'value',
+		'#value' => $sessionid,
+	);
+}
+
+/**
+ * Alter the registration form to include cart data.
+ *
+ * This is necessary if an anonymous user fills a shopping cart
+ * and then decides to register a new account. After registration
+ * drupal starts a new session for the registered user. The old session id,
+ * which is used to identify anonymous carts, gets replaced by a new one when the
+ * user registration form is submitted.
+ * This means anonymous carts cannot be connected to the user anymore if
+ * he or she registers an account. With this alteration the old session id gets
+ * passed on through an additional invisible field in the user registration form
+ * and can be read by any function that takes place after submitting the registration.
+ */
+function rm_user_form_user_register_form_alter(&$form, &$form_state) {
+	$sessionid = session_id();
+	$form['sessiondata'] = array(
+		'#type' => 'value',
+		'#value' => $sessionid,
+	);
+}
+
+/**
+ * Hook into user login process to transfer anonymous carts to a user id
+ *
+ * This is necessary if an anonymous user fills a shopping cart
+ * and then decides to login with an existing account.
+ * With this function the shopping cart id is correctly transferred from an
+ * anonymous session id to a unique user id.
+ */
+function rm_user_user_login(&$edit, $account) {
+	//Check if an old session id has been passed on by the user login form
+	if(isset($edit['values']['sessiondata'])) {
+		//Retrieve the old session id
+		$oldsession = $edit['values']['sessiondata'];
+		//Get the user id of the now logged in user
+		$uid = $account->uid;
+		rm_cart_change_session_to_uid($oldsession, $uid);
+	}
+}
+
+/**
+ * Hook into user insert process to transfer anonymous carts to a user id
+ *
+ * This is necessary if an anonymous user fills a shopping cart
+ * and then decides to register a new account.
+ * With this function the shopping cart id is correctly transferred from an
+ * anonymous session id to a unique user id.
+ */
+function rm_user_user_insert(&$edit, $account, $category) {
+    //Check if an old session id has been passed on by the user login form
+	if(isset($edit['values']['sessiondata'])) {
+		//Retrieve the old session id
+		$oldsession = $edit['values']['sessiondata'];
+		//Get the user id of the now logged in user
+		$uid = $account->uid;
+		rm_cart_change_session_to_uid($oldsession, $uid);
+	}
+    
+    if( !empty($account->mail) &&
+        !empty($account->field_first_name[LANGUAGE_NONE][0]['value']) &&
+        !empty($account->field_last_name[LANGUAGE_NONE][0]['value']) &&
+        !empty($account->field_gender[LANGUAGE_NONE][0]['value'])
+    ) {
+        $result = rm_api_mailchimp_subscribe(
+            $account->mail,
+            array(
+                'FNAME' => $account->field_first_name[LANGUAGE_NONE][0]['value'],
+                'LNAME' => $account->field_last_name[LANGUAGE_NONE][0]['value'],
+                'SALUTATION' => ($account->field_gender[LANGUAGE_NONE][0]['value'] == 'f') ? 'Frau' : 'Herr',
+                'ROLES' => 'authenticated user'
+            )
+        );
+    }
 }

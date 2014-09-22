@@ -9,15 +9,17 @@ function rm_cart_checkout($form, &$form_state, $account) {
     
     $minimum_order_values = array();
     $deliverytypes = array();
-    if(isset($_SESSION['regionselect']['zip'])) $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $_SESSION['regionselect']['zip']);
+    $zipcode = NULL;
+    if(isset($_SESSION['regionselect']['zip']) && !empty($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
+    $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $zipcode);
     $carttotal = rm_cart_get_cart_total($account->uid);
     if(isset($minimum_order_values)) {
-        foreach($minimum_order_values as $type => $mov) {
-            if($carttotal >= $mov) $deliverytypes[$type] = node_type_get_name($type);
+        foreach($minimum_order_values as $type => $value) {
+            foreach($value as $nid => $mov) {
+                if($carttotal >= $mov) $deliverytypes[$type] = node_type_get_name($type);
+            }
         }
     }
-    
-    var_dump($minimum_order_values); die();
 
     $form = array();
     $form['checkout'] = array();
@@ -28,6 +30,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
     $form['checkout']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
+        '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
     $form['submit'] = array(

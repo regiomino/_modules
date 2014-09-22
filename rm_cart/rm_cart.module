@@ -30,6 +30,30 @@ function rm_cart_menu() {
 	return $items;
 }
 
+function rm_cart_change_session_to_uid($old_session_id, $uid) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('cart_item'))
+        ->propertyCondition('status', 1)
+        ->fieldCondition('field_session_id', 'value', $old_session_id)
+        ->execute();
+    if(isset($tmp['node'])) {
+        $cart_items = entity_load('node', array_keys($tmp['node']));
+    }
+    else {
+        $cart_items = NULL;
+    }
+    if(!empty($cart_items)) {
+        $new_session_id = session_id();
+        foreach($cart_items as $cart_item) {
+            $cart_item->uid = $uid;
+            $cart_item->field_session_id[LANGUAGE_NONE][0]['value'] = $new_session_id;
+            node_save($cart_item);
+        }
+    }
+}
+
 function rm_cart_get_one_click_setting($uid, $suid) {
     $query = new EntityFieldQuery();
     $tmp = $query
@@ -55,11 +79,15 @@ function rm_cart_checkout_is_possible($account) {
     if(rm_cart_is_filled($account)) {
         //check if deliverytype is possible
         $minimum_order_values = array();
-        if(isset($_SESSION['regionselect']['zip'])) $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $_SESSION['regionselect']['zip']);
+        $zipcode = NULL;
+        if(isset($_SESSION['regionselect']['zip']) && !empty($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
+        $minimum_order_values = rm_cart_get_minimum_order_values($account->uid, $zipcode);
         $carttotal = rm_cart_get_cart_total($account->uid);
         if(isset($minimum_order_values)) {
-            foreach($minimum_order_values as $type => $mov) {
-                if($carttotal >= $mov) return TRUE;
+            foreach($minimum_order_values as $type => $value) {
+                foreach($value as $nid => $mov) {
+                    if($carttotal >= $mov) return TRUE;
+                }
             }
         }
     }
@@ -322,12 +350,17 @@ function rm_cart_get_cart($suid, $uid = NULL) {
     
     $session_id = session_id();
     $query = new EntityFieldQuery();
-    $tmp = $query
+    $query
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', array('cart_item'))
-        ->propertyCondition('status', 1)
-        ->propertyCondition('uid', $uid)
-        ->fieldCondition('field_session_id', 'value', $session_id)
+        ->propertyCondition('status', 1);    
+    if($uid) {
+        $query->propertyCondition('uid', $uid);
+    }
+    else {
+        $query->fieldCondition('field_session_id', 'value', $session_id);
+    }
+    $tmp = $query
         ->fieldCondition('field_user_reference', 'target_id', $suid)
         ->execute();
     if(isset($tmp['node'])) {
