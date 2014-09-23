@@ -8,67 +8,6 @@ function rm_user_enforce_login($message = NULL, $type = 'status') {
     }
 }
 
-function rm_user_init() {
-
-    // $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
-    
-    // foreach($nodes as $nid => $node) {
-        // $node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
-        // node_save($node);
-    // }
-    
-    // $query = new EntityFieldQuery();
-    // $tmp = $query
-        // ->entityCondition('entity_type', 'node')
-        // ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        // ->propertyCondition('status', 0)
-        // ->fieldCondition('field_salesguy', 'target_id', 1)
-        // ->execute();
-    // $allnodes = entity_load('node', array_keys($tmp['node']));
-    // foreach($allnodes as $nid => $nodeobject) {
-        // unset($nodeobject->field_salesguy[LANGUAGE_NONE]);
-        // $nodeobject->sticky = 0;
-        // node_save($nodeobject);
-    // }
-    
-    
-    // $ntqry = new EntityFieldQuery();
-    // $nttmp = $ntqry
-        // ->entityCondition('entity_type', 'node')
-        // ->entityCondition('bundle', 'note')
-        // ->execute();
-    // $allnotes = array();
-    // if(isset($nttmp['node'])) $allnotes = entity_load('node', array_keys($nttmp['node']));
-    // $notes = '';
-    
-    // if(!empty($allnotes)) {
-        // foreach($allnotes as $noteobject) {
-            // $noteobject->body[LANGUAGE_NONE][0]['value'] = $noteobject->title;
-            // node_save($noteobject);
-        // }
-    // }
-    
-    global $base_url;
-    if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
-        global $user;
-        if($user->uid > 0) {
-            $userobject = rm_user_address_complete($user->uid);
-            if($userobject) {
-                if(isset($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_first_name[LANGUAGE_NONE][0]['value']) && isset($userobject->field_last_name[LANGUAGE_NONE][0]['value']) && !empty($userobject->field_last_name[LANGUAGE_NONE][0]['value'])) {
-                    $name = $userobject->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $userobject->field_last_name[LANGUAGE_NONE][0]['value'];
-                }
-                else {
-                    $userobject = $account->mail;
-                }
-                drupal_set_message(t('Welcome back @username. Here are all the available vendors for your last location in @street, @zip @city. If you would like to enter a different address, please <a href="@url">click here</a>.', array('@street' => $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'], '@username' => $name, '@zip' => $userobject->field_address[LANGUAGE_NONE][0]['postal_code'], '@city' => $userobject->field_address[LANGUAGE_NONE][0]['locality'], '@url' => url())));
-                
-                drupal_goto('lieferanten/' . $userobject->field_address[LANGUAGE_NONE][0]['locality'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['postal_code'] . '/' . $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']);
-                
-            }
-        }
-    }
-}
-
 function rm_user_has_provided_address() {
     if( !isset($_SESSION['regionselect']['zip']) || empty($_SESSION['regionselect']['zip']) ||
         !isset($_SESSION['regionselect']['street']) || empty($_SESSION['regionselect']['street']) ||
