@@ -408,27 +408,26 @@ function rm_sales_publishprofile($nid) {
                 )
             );
 			//drupal_mail('rm_user', 'profile_published_user_registered', $nodeobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('account' => $account, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+            
+            $nodeobject->uid = $uid;
+            $nodeobject->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $uid;
+            node_save($nodeobject);
+            
+            rm_api_node_publish($nid);
+            
+            global $user;
+            rm_user_activity(
+                t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
+                $nodeobject->nid,
+                'node',
+                $user->uid
+            );
+            
+            drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
 		}
 		else {
-			$uid = $userexists->uid;
+			drupal_set_message(t('A user already exists with an identical email address as set in the profile. Please make sure you are not trying to publish a duplicate.'), 'status');
 		}
-		
-		$nodeobject->uid = $uid;
-		$nodeobject->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $uid;
-		node_save($nodeobject);
-		
-		rm_api_node_publish($nid);
-        
-        global $user;
-        rm_user_activity(
-            t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
-            $nodeobject->nid,
-            'node',
-            $user->uid
-        );
-        
-        drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
-        
     }
     else {
         drupal_set_message(t('Profile <a href="@url">@profile</a> has not been published due to a validation error', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'error');
@@ -859,7 +858,7 @@ function rm_sales_profilecare_form() {
             
             $suggestedcount = ($suggestedcount) ? '<span class="label label-success suggester-tooltip" data-toggle="tooltip" data-placement="top" title="' . $suggestedby . '">' . $suggestedcount . '</span>' : '<span class="label label-danger suggester-tooltip" data-toggle="tooltip" data-placement="top" title="von Regiomino vorgeschlagen">0</span>';
             
-            $duplicatelink = ($profileobject->status) ? '' : ' (' . l(t('Duplicate') . '?', 'manage/duplicate/' . $profileobject->nid) . ')';
+            $addsuggesterlink = '(' . l(t('More suggesters') . '?', 'manage/addsuggesters/' . $profileobject->nid, array('query' => drupal_get_destination())) . ')';
             
             if($profileobject->sticky) {
                 $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
@@ -869,7 +868,7 @@ function rm_sales_profilecare_form() {
             }
 			$profiletitle = ($profileobject->status) ? l($profileobject->title, 'node/' . $profileobject->nid) : $profileobject->title;
 			$options[$nid] = array(
-				'created' => date('d.m.Y H:i', $profileobject->created) . $duplicatelink,
+				'created' => date('d.m.Y H:i', $profileobject->created) . $addsuggesterlink,
 				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
@@ -928,17 +927,50 @@ function rm_sales_profilecare_form() {
 	return $exportall . render($filterform) . '<br /><div class="row">' . $output . theme('pager') . '</div>';
 }
 
-function rm_sales_duplicate_profiles_form($form, &$form_state, $nid) {
+function rm_sales_addsuggesters_form($form, &$form_state, $nid) {
     $form = array();
     
-    $query = new EntityFieldQuery();
-	$tmp = $query
-		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        ->propertyCondition('sticky', 1)
-        ->execute();
-        
+    $form['suggester'] = array(
+        '#type' => 'fieldset',
+    );
     
+    $form['suggester']['nid'] = array(
+        '#type' => 'value',
+        '#value' => $nid,
+    );
+    
+    $profileobject = node_load($nid);
+    
+    rm_api_attach_field_to_form('field_suggester', 'node', $profileobject->type, $profileobject, $form['suggester'], $form_state, LANGUAGE_NONE);
+    
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Save'),
+    );
+    
+    return $form;
+}
+
+function rm_sales_addsuggesters_form_submit($form, &$form_state) {
+    $profileobject = node_load($form_state['values']['nid']);
+    foreach($form_state['values']['field_suggester'][LANGUAGE_NONE] as $key => $value) {
+        if(!is_numeric($key) || empty($value['value'])) unset($form_state['values']['field_suggester'][LANGUAGE_NONE][$key]);
+    }
+    $profileobject->field_suggester = $form_state['values']['field_suggester'];
+    if(!empty($profileobject->field_suggester[LANGUAGE_NONE])) {
+        $profileobject->field_suggester[LANGUAGE_NONE] = array_values($profileobject->field_suggester[LANGUAGE_NONE]);
+    }
+    else {
+        unset($profileobject->field_suggester[LANGUAGE_NONE]);
+    }
+    node_save($profileobject);
+    global $user;
+	rm_user_activity(
+		t('Added suggesters to <a href="@url">@profile</a>', array('@url' => url('node/' . $profileobject->nid), '@profile' => $profileobject->title)),
+		$profileobject->nid,
+		'node',
+		$user->uid
+	);
 }
 
 /* function rm_sales_profileset_form() {

@@ -20,10 +20,10 @@ function rm_sales_menu() {
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
-    $items['manage/duplicate/%'] = array(
+    $items['manage/addsuggesters/%'] = array(
         'title' => 'Sales',
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('rm_sales_duplicate_profiles_form', 2),
+        'page arguments' => array('rm_sales_addsuggesters_form', 2),
         'access callback' => 'rm_sales_user_is_salesguy',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
