@@ -50,8 +50,8 @@ jQuery(document).ready(function ($) {
 
     $('#filterShops').keyup(function () {
         var rex = new RegExp($(this).val(), 'i');
-        $('.seller-item').hide();
-        $('.seller-item').filter(function () {
+        $('.col-seller-item').hide();
+        $('.col-seller-item').filter(function () {
             return rex.test($(this).data('title'));
         }).show();
         
