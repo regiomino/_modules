@@ -463,6 +463,14 @@ function rm_sales_profilecare_form() {
 				'column' => 'value',
 			),
 		),
+        'field_offerinfo_url' => array(
+			'data' => t('Offer URL'),
+			'type' => 'field',
+			'specifier' => array(
+				'field' => 'field_offerinfo_url',
+				'column' => 'value',
+			),
+		),
 		'field_salescomment' => array(
 			'data' => t('Comment'),
 			'type' => 'field',
@@ -734,6 +742,9 @@ function rm_sales_profilecare_form() {
                     $all_offers = '<span class="label label-' . $color . '"><i class="fa fa-shopping-cart"></i> ' . $active . '/' . $offercount . '</span>';
                     
                 }
+                
+                $offerinfourl = '';
+                if(isset($profileobject->field_offerinfo_url[LANGUAGE_NONE][0]['value'])) $offerinfourl .= $profileobject->field_offerinfo_url[LANGUAGE_NONE][0]['value'];
 			}
 			
             $suggestion_count = '';
@@ -871,6 +882,7 @@ function rm_sales_profilecare_form() {
 				'created' => date('d.m.Y H:i', $profileobject->created) . $addsuggesterlink,
 				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
+                'field_offerinfo_url' => ($profileobject->type == 'seller_profile') ? '<div class="offerinfourl"><input type="text" id="offerinfourl_' . $nid . '" class="form-control" value="' . $offerinfourl . '"></div>' : '',
                 'field_salescomment' => $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
 				// 'field_address_locality' => $locality,
@@ -1894,7 +1906,7 @@ function rm_sales_changepriority($nid, $priority) {
 		'node',
 		$user->uid
 	);
-	drupal_goto();
+	if(!rm_api_is_ajax()) drupal_goto();
 }
 
 function rm_sales_updatecomment($nid) {
@@ -1910,7 +1922,23 @@ function rm_sales_updatecomment($nid) {
 		'node',
 		$user->uid
 	);
-	drupal_goto();
+	if(!rm_api_is_ajax()) drupal_goto();
+}
+
+function rm_sales_updateofferinfourl($nid) {
+    $text = $_POST['text'];
+    $profileobject = node_load($nid);
+	$profileobject->field_offerinfo_url[LANGUAGE_NONE][0]['value'] = $text;
+	node_save($profileobject);
+	global $user;
+	$userobject = user_load($uid);
+	rm_user_activity(
+		t('Updated comment on <a href="@url">@profile</a>', array('@url' => url('node/' . $nid), '@profile' => $profileobject->title)),
+		$nid,
+		'node',
+		$user->uid
+	);
+	if(!rm_api_is_ajax()) drupal_goto();
 }
 
 function rm_sales_updatenextaction($nid) {
@@ -1926,7 +1954,7 @@ function rm_sales_updatenextaction($nid) {
 		'node',
 		$user->uid
 	);
-	drupal_goto();
+	if(!rm_api_is_ajax()) drupal_goto();
 }
 
 function rm_sales_press() {

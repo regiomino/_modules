@@ -51,6 +51,24 @@ jQuery(document).ready(function ($) {
         });
     });
     
+    $('.offerinfourl input').on('input', function() {
+        var throbberElement = $(this).parent();
+        $.fn.addThrobber(throbberElement);
+        var nidstring = $(this).attr('id');
+        var res = nidstring.split("_");
+        data = new Object;
+        data['nid'] = res[1];
+        data['text'] = $(this).val();
+        callback_url = Drupal.settings.basePath + 'manage/sales/updateofferinfourl/' + data['nid'];
+        $.ajax({
+            url: callback_url,
+            type: 'POST',
+            data: data
+        }).done(function() {
+            $.fn.removeThrobber(throbberElement);
+        });
+    });
+    
     $('.nextactions input').on('input', function() {
         var throbberElement = $(this).parent();
         $.fn.addThrobber(throbberElement);
