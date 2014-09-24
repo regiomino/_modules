@@ -45,6 +45,7 @@ function rm_cart_change_session_to_uid($old_session_id, $uid) {
         $cart_items = NULL;
     }
     if(!empty($cart_items)) {
+        rm_cart_remove_from_cart_all($uid, FALSE);
         $new_session_id = session_id();
         foreach($cart_items as $cart_item) {
             $cart_item->uid = $uid;
@@ -115,7 +116,7 @@ function rm_cart_remove_from_cart($cart_id, $goto = TRUE) {
     if(!rm_api_is_ajax() && $goto) drupal_goto();
 }
 
-function rm_cart_remove_from_cart_all($uid = NULL) {
+function rm_cart_remove_from_cart_all($uid = NULL, $goto = TRUE) {
     $query = new EntityFieldQuery();
     $query
         ->entityCondition('entity_type', 'node')
@@ -141,7 +142,7 @@ function rm_cart_remove_from_cart_all($uid = NULL) {
             rm_cart_remove_from_cart($cartitem->nid, FALSE);
         }
     }
-    drupal_goto();
+    if(!rm_api_is_ajax() && $goto) drupal_goto();
 }
 
 function rm_cart_add_to_cart($offer_description, $offer_variation, $trading_unit, $quantity = 1, $add = 0, $uid = NULL) {
