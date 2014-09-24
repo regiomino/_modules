@@ -65,7 +65,7 @@ jQuery(document).ready(function ($) {
             zindex: 1
         },
         prospect_profile: {
-            icon: pathToTheme + '/images/markers/prospect_profile.png',
+            icon: pathToTheme + '/images/markers/inactive_profile.png',
             zindex: 2
         },
         customer_profile: {
