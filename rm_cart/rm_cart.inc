@@ -38,6 +38,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('Delivery option'),
         '#options' => $deliverytypes,
     );
+    if(count($deliverytypes) == 1) {
+        $deliverytypeskeys = array_keys($deliverytypes);
+        $form['checkout']['delivery']['#default_value'] = $deliverytypeskeys[0];
+    }
     
     
     //Pickup agreement
@@ -70,6 +74,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
           ),
         ),
     );
+    if(count($pickupspots) == 1) {
+        $pickupspotskeys = array_keys($pickupspots);
+        $form['checkout']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
+    }
 
     //Pickup times
     if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
@@ -85,6 +93,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
                   ),
                 ),
             );
+            if(count($pickuptimes[$pickupspotkey]) == 1) {
+                $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey]);
+                $form['checkout']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
+            }
         }
     }
     
@@ -117,6 +129,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
+        if(count($shippingtimes) == 1) {
+            $shippingtimeskeys = array_keys($shippingtimes);
+            $form['checkout']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
+        }
         
         $form['checkout']['shipping_address_name'] = array(
             '#type' => 'textfield',
