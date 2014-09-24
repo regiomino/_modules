@@ -22,6 +22,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
             }
         }
     }
+    
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, $account->uid);
+    $shops_keys = array_keys($shops);
+    $shop = $shops[$shops_keys[0]];
 
     $form = array();
     $form['checkout'] = array();
@@ -32,9 +36,133 @@ function rm_cart_checkout($form, &$form_state, $account) {
     $form['checkout']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
-        '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
+    
+    
+    //Pickup agreement
+    $pickupspots = array();
+    $pickuptimes = array();
+    if(isset($minimum_order_values['pickup_agreement']) && !empty($minimum_order_values['pickup_agreement'])) {
+        foreach($minimum_order_values['pickup_agreement'] as $agreement_id => $mov) {
+            $agreement = node_load($agreement_id);
+            $pickupspots[$agreement->nid] = $agreement->field_address[LANGUAGE_NONE][0]['locality'] . ', ' . $agreement->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            for($i=0; $i<7; $i++) {
+                $strtotime = strtotime('tomorrow +' . $i . ' day');
+                if(!empty($agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1])) {
+                    $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
+                    $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
+                    $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
+                    $pickuptimes[$agreement->nid][$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                }
+            }
+        }
+    }
+    
+    //Pickup spots
+    $form['checkout']['pickup_spots'] = array(
+        '#type' => 'radios',
+        '#title' => t('Pickup spot'),
+        '#options' => $pickupspots,
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+          ),
+        ),
+    );
+
+    //Pickup times
+    if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
+        foreach($pickupspots as $pickupspotkey => $pickupspot) {
+            $form['checkout']['pickup_time_' . $pickupspotkey] = array(
+                '#type' => 'radios',
+                '#title' => t('Pickup times'),
+                '#options' => $pickuptimes[$pickupspotkey],
+                '#states' => array(
+                  'visible' => array(   // action to take.
+                    ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+                    ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
+                  ),
+                ),
+            );
+        }
+    }
+    
+    //Shipping agreement
+    $shippingtimes = array();
+    if(isset($minimum_order_values['shipping_agreement']) && !empty($minimum_order_values['shipping_agreement'])) {
+        foreach($minimum_order_values['shipping_agreement'] as $agreement_id => $mov) {
+            $agreement = node_load($agreement_id);
+            for($i=0; $i<7; $i++) {
+                $strtotime = strtotime('tomorrow +' . $i . ' day');
+                if(!empty($agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1])) {
+                    $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
+                    $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
+                    $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
+                    $shippingtimes[$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                }
+            }
+        }
+    }
+
+    //Shipping times
+    if(isset($shippingtimes) && !empty($shippingtimes)) {
+        $form['checkout']['shipping_time'] = array(
+            '#type' => 'radios',
+            '#title' => t('Shipping times'),
+            '#options' => $shippingtimes,
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
+        );
+        
+        $form['checkout']['shipping_address_name'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Your name'),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                ':input[name=shipping_time]' => array('checked' => TRUE),
+              ),
+            ),
+        );
+        
+        $form['checkout']['shipping_address_street'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Street'),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                ':input[name=shipping_time]' => array('checked' => TRUE),
+              ),
+            ),
+        );
+        
+        $form['checkout']['shipping_address_zip'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Postal code'),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                ':input[name=shipping_time]' => array('checked' => TRUE),
+              ),
+            ),
+        );
+        
+        $form['checkout']['shipping_address_city'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Locality'),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                ':input[name=shipping_time]' => array('checked' => TRUE),
+              ),
+            ),
+        );
+    }
+    
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Purchase now'),
@@ -43,5 +171,5 @@ function rm_cart_checkout($form, &$form_state, $account) {
 }
 
 function rm_cart_checkout_submit($form, &$form_state) {
-    var_dump($form_state['values']['oneclick']); die();
+    var_dump($form_state['values']); die();
 }
