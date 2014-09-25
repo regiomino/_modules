@@ -47,6 +47,16 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
+    $form['checkout']['iban'] = array(
+        '#type' => 'textfield',
+        '#title' => t('IBAN'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'bt'),
+          ),
+        ),
+    );
+    
     
     $form['checkout']['delivery'] = array(
         '#type' => 'radios',
