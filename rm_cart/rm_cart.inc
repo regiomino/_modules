@@ -34,10 +34,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
     );
     
-    $form['checkout']['delivery_fs'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Delivery'),
-    );
+    // $form['checkout']['delivery_fs'] = array(
+        // '#type' => 'fieldset',
+        // '#title' => t('Delivery'),
+    // );
     
     $form['checkout']['delivery_fs']['delivery'] = array(
         '#type' => 'radios',
@@ -71,7 +71,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
     }
     
     //Pickup spots
-    $form['checkout']['pickup_spots'] = array(
+    $form['checkout']['delivery_fs']['pickup_spots'] = array(
         '#type' => 'radios',
         '#title' => t('Pickup spot'),
         '#options' => $pickupspots,
@@ -83,13 +83,13 @@ function rm_cart_checkout($form, &$form_state, $account) {
     );
     if(count($pickupspots) == 1) {
         $pickupspotskeys = array_keys($pickupspots);
-        $form['checkout']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
+        $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
 
     //Pickup times
     if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
         foreach($pickupspots as $pickupspotkey => $pickupspot) {
-            $form['checkout']['pickup_time_' . $pickupspotkey] = array(
+            $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey] = array(
                 '#type' => 'radios',
                 '#title' => t('Pickup times'),
                 '#options' => $pickuptimes[$pickupspotkey],
@@ -102,7 +102,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             );
             if(count($pickuptimes[$pickupspotkey]) == 1) {
                 $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey]);
-                $form['checkout']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
+                $form['checkout']['delivery_fs']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
             }
         }
     }
@@ -126,7 +126,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
 
     //Shipping times
     if(isset($shippingtimes) && !empty($shippingtimes)) {
-        $form['checkout']['shipping_time'] = array(
+        $form['checkout']['delivery_fs']['shipping_time'] = array(
             '#type' => 'radios',
             '#title' => t('Shipping times'),
             '#options' => $shippingtimes,
@@ -138,10 +138,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         );
         if(count($shippingtimes) == 1) {
             $shippingtimeskeys = array_keys($shippingtimes);
-            $form['checkout']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
+            $form['checkout']['delivery_fs']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
         }
         
-        $form['checkout']['shipping_address_name'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
             '#states' => array(
@@ -152,7 +152,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_street'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
             '#states' => array(
@@ -163,7 +163,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_zip'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
             '#states' => array(
@@ -174,7 +174,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_city'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
             '#states' => array(
@@ -186,10 +186,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         );
     }
     
-    $form['checkout']['payment_fs'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Payment'),
-    );
+    // $form['checkout']['payment_fs'] = array(
+        // '#type' => 'fieldset',
+        // '#title' => t('Payment'),
+    // );
     
     $form['checkout']['payment_fs']['paymenttypes'] = array(
         '#type' => 'radios',
@@ -202,7 +202,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
-    $form['checkout']['iban'] = array(
+    $form['checkout']['payment_fs']['iban'] = array(
         '#type' => 'textfield',
         '#title' => t('IBAN'),
         '#states' => array(
@@ -212,7 +212,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
-    $form['checkout']['billing_address_name'] = array(
+    $form['checkout']['payment_fs']['billing_address_name'] = array(
         '#type' => 'textfield',
         '#title' => t('Your name'),
         '#states' => array(
@@ -222,7 +222,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
-    $form['checkout']['billing_address_street'] = array(
+    $form['checkout']['payment_fs']['billing_address_street'] = array(
         '#type' => 'textfield',
         '#title' => t('Street'),
         '#states' => array(
@@ -232,7 +232,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
-    $form['checkout']['billing_address_zip'] = array(
+    $form['checkout']['payment_fs']['billing_address_zip'] = array(
         '#type' => 'textfield',
         '#title' => t('Postal code'),
         '#states' => array(
@@ -242,7 +242,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
-    $form['checkout']['billing_address_city'] = array(
+    $form['checkout']['payment_fs']['billing_address_city'] = array(
         '#type' => 'textfield',
         '#title' => t('Locality'),
         '#states' => array(
