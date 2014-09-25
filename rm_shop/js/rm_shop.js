@@ -95,6 +95,7 @@ jQuery(document).ready(function ($) {
             var name = markers[i].getAttribute("name");
             var address = markers[i].getAttribute("address");
             var type = markers[i].getAttribute("type");
+            
             var point = new google.maps.LatLng(
                 parseFloat(markers[i].getAttribute("lat")),
                 parseFloat(markers[i].getAttribute("lng")));
@@ -141,5 +142,5 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    function doNothing() {}
+    
 });

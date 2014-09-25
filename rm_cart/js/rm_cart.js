@@ -255,7 +255,7 @@ jQuery(document).ready(function ($) {
                 .removeData("bs.affix");
         }
     }
-    
+     
     var cart = new rmCart();
         cart.init();
         
@@ -274,5 +274,25 @@ jQuery(document).ready(function ($) {
         return false;
  
     });
+    
+    
+      var map = new google.maps.Map(document.getElementById("pickupMap"), {
+        center: new google.maps.LatLng(49.800855, 11.017640),
+        zoom: 9,
+        mapTypeId: 'roadmap'
+    });
+
+    $('#pickupModalToggle').on('click.pickupModal', function(){
+        console.info('Clicked');
+        $('#pickupModal').modal();
+        
+    });
+ 
+ $('#pickupModal').on('shown.bs.modal', function() {
+   
+  var currentCenter = map.getCenter();  // Get current center before resizing
+  google.maps.event.trigger(map, "resize");
+  map.setCenter(currentCenter); // Re-set previous center
+});
  
 });
