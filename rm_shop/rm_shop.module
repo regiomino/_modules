@@ -141,8 +141,9 @@ function rm_shop_menu() {
         'page callback' => 'rm_shop_get_participantxml',
         'access arguments' => array('access content'),
     );
-    $items['rm-shop-spotxml'] = array(
+    $items['rm-shop-spotxml/%'] = array(
         'page callback' => 'rm_shop_get_spotxml',
+        'page arguments' => array(1),
         'access arguments' => array('access content'),
     );
     $items['lieferanten/%/%/%'] = array(
@@ -654,11 +655,7 @@ function rm_shop_regionselect_submit($form, &$form_state) {
 }
 
 
-function rm_shop_get_spotxml($suid = NULL) {
-
-    if(is_null($suid)) {
-        $suid = $_POST['suid'];
-    }
+function rm_shop_get_spotxml($suid) {
     
     $pickup_agreement_objects = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $suid);
 
