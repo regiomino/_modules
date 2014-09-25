@@ -33,14 +33,21 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#type' => 'value',
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
     );
-    $form['checkout']['delivery'] = array(
+    
+    // $form['checkout']['delivery_fs'] = array(
+        // '#type' => 'fieldset',
+        // '#title' => t('Delivery'),
+    // );
+    
+    $form['checkout']['delivery_fs']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
+        '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
     if(count($deliverytypes) == 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
-        $form['checkout']['delivery']['#default_value'] = $deliverytypeskeys[0];
+        $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
     }
     
     
@@ -64,7 +71,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
     }
     
     //Pickup spots
-    $form['checkout']['pickup_spots'] = array(
+    $form['checkout']['delivery_fs']['pickup_spots'] = array(
         '#type' => 'radios',
         '#title' => t('Pickup spot'),
         '#options' => $pickupspots,
@@ -76,13 +83,13 @@ function rm_cart_checkout($form, &$form_state, $account) {
     );
     if(count($pickupspots) == 1) {
         $pickupspotskeys = array_keys($pickupspots);
-        $form['checkout']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
+        $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
 
     //Pickup times
     if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
         foreach($pickupspots as $pickupspotkey => $pickupspot) {
-            $form['checkout']['pickup_time_' . $pickupspotkey] = array(
+            $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey] = array(
                 '#type' => 'radios',
                 '#title' => t('Pickup times'),
                 '#options' => $pickuptimes[$pickupspotkey],
@@ -95,7 +102,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             );
             if(count($pickuptimes[$pickupspotkey]) == 1) {
                 $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey]);
-                $form['checkout']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
+                $form['checkout']['delivery_fs']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
             }
         }
     }
@@ -119,7 +126,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
 
     //Shipping times
     if(isset($shippingtimes) && !empty($shippingtimes)) {
-        $form['checkout']['shipping_time'] = array(
+        $form['checkout']['delivery_fs']['shipping_time'] = array(
             '#type' => 'radios',
             '#title' => t('Shipping times'),
             '#options' => $shippingtimes,
@@ -131,10 +138,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         );
         if(count($shippingtimes) == 1) {
             $shippingtimeskeys = array_keys($shippingtimes);
-            $form['checkout']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
+            $form['checkout']['delivery_fs']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
         }
         
-        $form['checkout']['shipping_address_name'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
             '#states' => array(
@@ -145,7 +152,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_street'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
             '#states' => array(
@@ -156,7 +163,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_zip'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
             '#states' => array(
@@ -167,7 +174,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
         
-        $form['checkout']['shipping_address_city'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
             '#states' => array(
@@ -179,11 +186,112 @@ function rm_cart_checkout($form, &$form_state, $account) {
         );
     }
     
+    // $form['checkout']['payment_fs'] = array(
+        // '#type' => 'fieldset',
+        // '#title' => t('Payment'),
+    // );
+    
+    $form['checkout']['payment_fs']['paymenttypes'] = array(
+        '#type' => 'radios',
+        '#title' => t('Payment types'),
+        '#title_display' => 'none',
+        '#options' => array(
+            'bt' => t('Bank Transfer'),
+            'ibt' => t('Instant Bank Transfer'),
+            'pp' => t('PayPal'),
+        ),
+    );
+    
+    $form['checkout']['payment_fs']['iban'] = array(
+        '#type' => 'textfield',
+        '#title' => t('IBAN'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'bt'),
+          ),
+        ),
+    );
+    
+    $form['checkout']['payment_fs']['billing_address_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Your name'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['payment_fs']['billing_address_street'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Street'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['payment_fs']['billing_address_zip'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Postal code'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['payment_fs']['billing_address_city'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Locality'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Purchase now'),
     );
     return $form;
+}
+
+function rm_cart_checkout_validate($form, &$form_state) {
+    //Basic validation: make sure all sequentially required fields are filled out
+    if(empty($form_state['values']['paymenttypes'])) {
+        form_set_error('paymenttypes', t('Please select a payment type'));
+    }
+    else {
+        switch($form_state['values']['paymenttypes']) {
+            case "bt":
+                if(empty($form_state['values']['iban'])) form_set_error('iban', t('Please enter your IBAN'));
+            default:
+                if(empty($form_state['values']['billing_address_name'])) form_set_error('billing_address_name', t('Please enter the name for your billing address'));
+                if(empty($form_state['values']['billing_address_street'])) form_set_error('billing_address_street', t('Please enter the street of your billing address'));
+                if(empty($form_state['values']['billing_address_zip'])) form_set_error('billing_address_zip', t('Please enter the zipcode of your billing address'));
+                if(empty($form_state['values']['billing_address_city'])) form_set_error('billing_address_city', t('Please enter the city of your billing address'));
+                break;
+        }
+    }
+    
+    
+    if(empty($form_state['values']['delivery'])) {
+        form_set_error('delivery', t('Please select a delivery type'));
+    }
+    else {
+        switch($form_state['values']['delivery']) {
+            case "shipping_agreement":
+                break;
+            case "pickup_agreement":
+                break;
+            case "dispatch_agreement":
+                //TBD
+                break;
+        }
+    }
 }
 
 function rm_cart_checkout_submit($form, &$form_state) {

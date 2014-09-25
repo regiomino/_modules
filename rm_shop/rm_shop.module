@@ -141,6 +141,11 @@ function rm_shop_menu() {
         'page callback' => 'rm_shop_get_participantxml',
         'access arguments' => array('access content'),
     );
+    $items['rm-shop-spotxml/%'] = array(
+        'page callback' => 'rm_shop_get_spotxml',
+        'page arguments' => array(1),
+        'access arguments' => array('access content'),
+    );
     $items['lieferanten/%/%/%'] = array(
         'title' => 'Vendors in your region',
         'title callback' => 'rm_shop_get_shops_title',
@@ -647,6 +652,56 @@ function rm_shop_regionselect_submit($form, &$form_state) {
     $zip = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'postal_code');
     $city = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'locality', 'long_name');
     drupal_goto('lieferanten/' . $city . '/' . $zip . '/' . $street . ' ' . $house_no);
+}
+
+
+function rm_shop_get_spotxml($suid) {
+    
+    $pickup_agreement_objects = rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $suid);
+
+    $pickup_agreements = array();
+    foreach($pickup_agreement_objects as $nid=>$value) {
+
+        if( !empty($value->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+            !empty($value->field_address[LANGUAGE_NONE][0]['locality']) &&
+            !empty($value->field_location[LANGUAGE_NONE][0]['lat']) &&
+            !empty($value->field_location[LANGUAGE_NONE][0]['lon'])
+            ) {
+            $address = $value->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            if(isset($value->field_address[LANGUAGE_NONE][0]['premise']) && !empty($value->field_address[LANGUAGE_NONE][0]['premise'])) {
+                $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['premise'];
+            }
+            if(!empty($value->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['postal_code'];
+            $address .= ' ' . $value->field_address[LANGUAGE_NONE][0]['locality'];
+            $pickup_agreements['pickup_agreements'][] = array(
+                'nid' => $nid,
+                'address' => $address,
+                'lat' => $value->field_location[LANGUAGE_NONE][0]['lat'],
+                'lon' => $value->field_location[LANGUAGE_NONE][0]['lon'],
+            );
+        }
+    }
+
+    $dom = new DOMDocument("1.0");
+    $node = $dom->createElement("markers");
+    $parnode = $dom->appendChild($node);
+
+    header("Content-type: text/xml");
+
+    // Iterate through the rows, adding XML nodes for each
+    foreach($pickup_agreements as $type=>$more) {
+        foreach($more as $key=>$row) {
+            // ADD TO XML DOCUMENT NODE
+            $node = $dom->createElement("marker");
+            $newnode = $parnode->appendChild($node);
+            $newnode->setAttribute("nid", $row['nid']);
+            $newnode->setAttribute("address", $row['address']);
+            $newnode->setAttribute("lat", $row['lat']);
+            $newnode->setAttribute("lng", $row['lon']);
+        }
+    }
+
+    echo $dom->saveXML();
 }
 
 function rm_shop_get_participantxml() {
