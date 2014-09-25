@@ -33,10 +33,30 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#type' => 'value',
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
     );
+    
+    
+    
+    
+    $form['checkout']['paymenttypes'] = array(
+        '#type' => 'radios',
+        '#title' => t('Payment types'),
+        '#options' => array(
+            'bt' => t('Bank Transfer'),
+            'ibt' => t('Instant Bank Transfer'),
+            'pp' => t('PayPal'),
+        ),
+    );
+    
+    
     $form['checkout']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
         '#options' => $deliverytypes,
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
     );
     if(count($deliverytypes) == 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
