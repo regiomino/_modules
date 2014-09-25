@@ -34,39 +34,16 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
     );
     
-    
-    
-    
-    $form['checkout']['paymenttypes'] = array(
-        '#type' => 'radios',
-        '#title' => t('Payment types'),
-        '#options' => array(
-            'bt' => t('Bank Transfer'),
-            'ibt' => t('Instant Bank Transfer'),
-            'pp' => t('PayPal'),
-        ),
+    $form['checkout']['delivery_fs'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Delivery'),
     );
     
-    $form['checkout']['iban'] = array(
-        '#type' => 'textfield',
-        '#title' => t('IBAN'),
-        '#states' => array(
-          'visible' => array(   // action to take.
-            ':input[name=paymenttypes]' => array('value' => 'bt'),
-          ),
-        ),
-    );
-    
-    
-    $form['checkout']['delivery'] = array(
+    $form['checkout']['delivery_fs']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
+        '#title_display' => 'none',
         '#options' => $deliverytypes,
-        '#states' => array(
-          'visible' => array(   // action to take.
-            ':input[name=paymenttypes]' => array('checked' => TRUE),
-          ),
-        ),
     );
     if(count($deliverytypes) == 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
@@ -208,6 +185,72 @@ function rm_cart_checkout($form, &$form_state, $account) {
             ),
         );
     }
+    
+    $form['checkout']['payment_fs'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Payment'),
+    );
+    
+    $form['checkout']['payment_fs']['paymenttypes'] = array(
+        '#type' => 'radios',
+        '#title' => t('Payment types'),
+        '#title_display' => 'none',
+        '#options' => array(
+            'bt' => t('Bank Transfer'),
+            'ibt' => t('Instant Bank Transfer'),
+            'pp' => t('PayPal'),
+        ),
+    );
+    
+    $form['checkout']['iban'] = array(
+        '#type' => 'textfield',
+        '#title' => t('IBAN'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'bt'),
+          ),
+        ),
+    );
+    
+    $form['checkout']['billing_address_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Your name'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['billing_address_street'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Street'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['billing_address_zip'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Postal code'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
+    
+    $form['checkout']['billing_address_city'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Locality'),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('checked' => TRUE),
+          ),
+        ),
+    );
     
     $form['submit'] = array(
         '#type' => 'submit',
