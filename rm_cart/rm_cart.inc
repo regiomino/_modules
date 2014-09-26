@@ -77,6 +77,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      */
     $pickupspots = array();
     $pickuptimes = array();
+    $pickupdays = array();
     if(isset($minimum_order_values['pickup_agreement']) && !empty($minimum_order_values['pickup_agreement'])) {
         foreach($minimum_order_values['pickup_agreement'] as $agreement_id => $mov) {
             $agreement = node_load($agreement_id);
@@ -97,7 +98,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
                     foreach($regular_times[date('N', $strtotime)] as $dateval) {
                         $begin_time = strtotime($earliestorder . ' ' . $dateval['starthours'] . ' +' . $i . ' day');
                         $end_time = strtotime($earliestorder . ' ' . $dateval['endhours'] . ' +' . $i . ' day');
-                        $pickuptimes[$agreement->nid][$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                        $pickupdays[$agreement->nid][date('Ymd', $begin_time)] = date('d.m.Y', $begin_time);
+                        $pickuptimes[$agreement->nid][date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
                     }
                 }
             }
@@ -125,12 +127,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
     /*
      *  Felder für Abholzeiten
      */
-    if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
+    if(isset($pickupdays) && !empty($pickupdays) && isset($pickupspots) && !empty($pickupspots)) {
         foreach($pickupspots as $pickupspotkey => $pickupspot) {
-            $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey] = array(
-                '#type' => 'radios',
-                '#title' => t('Pickup times'),
-                '#options' => $pickuptimes[$pickupspotkey],
+            $form['checkout']['delivery_fs']['pickup_days']['pickup_day_' . $pickupspotkey] = array(
+                '#type' => 'select',
+                '#title' => t('Pickup days'),
+                '#options' => $pickupdays[$pickupspotkey],
                 '#states' => array(
                   'visible' => array(   // action to take.
                     ':input[name=delivery]' => array('value' => 'pickup_agreement'),
@@ -138,10 +140,31 @@ function rm_cart_checkout($form, &$form_state, $account) {
                   ),
                 ),
             );
-            if(count($pickuptimes[$pickupspotkey]) == 1) {
-                $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey]);
-                $form['checkout']['delivery_fs']['pickup_time_' . $pickupspotkey]['#default_value'] = $pickuptimeskeys[0];
+            if(count($pickupdays[$pickupspotkey]) == 1) {
+                $pickupdayskeys = array_keys($pickupdays[$pickupspotkey]);
+                $form['checkout']['delivery_fs']['pickup_days']['pickup_day_' . $pickupspotkey]['#default_value'] = $pickupdayskeys[0];
             }
+            
+            
+            foreach($pickupdays[$pickupspotkey] as $pickupdaykey => $pickupday) {
+                $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey . '_' . $pickupdaykey] = array(
+                    '#type' => 'select',
+                    '#title' => t('Pickup times'),
+                    '#options' => $pickuptimes[$pickupspotkey][$pickupdaykey],
+                    '#states' => array(
+                      'visible' => array(   // action to take.
+                        ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+                        ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
+                        ':input[name=pickup_day_' . $pickupspotkey . ']' => array('value' => $pickupdaykey),
+                      ),
+                    ),
+                );
+                if(count($pickuptimes[$pickupspotkey][$pickupdaykey]) == 1) {
+                    $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey][$pickupdaykey]);
+                    $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey . '_' . $pickupdaykey]['#default_value'] = $pickuptimeskeys[0];
+                }
+            }
+        
         }
     }
     
@@ -149,6 +172,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      *  Liefervereinbarungen auslesen
      */
     $shippingtimes = array();
+    $shippingdays = array();
     if(isset($minimum_order_values['shipping_agreement']) && !empty($minimum_order_values['shipping_agreement'])) {
         foreach($minimum_order_values['shipping_agreement'] as $agreement_id => $mov) {
             $agreement = node_load($agreement_id);
@@ -158,29 +182,48 @@ function rm_cart_checkout($form, &$form_state, $account) {
                     $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
                     $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
                     $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
-                    $shippingtimes[$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                    $shippingdays[date('Ymd', $begin_time)] = date('d.m.Y', $begin_time);
+                    $shippingtimes[date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
                 }
             }
         }
     }
 
-    if(isset($shippingtimes) && !empty($shippingtimes)) {
+    if(isset($shippingdays) && !empty($shippingdays)) {
         /*
          *  Feld für Lieferzeiten
          */
-        $form['checkout']['delivery_fs']['shipping_time'] = array(
-            '#type' => 'radios',
-            '#title' => t('Shipping times'),
-            '#options' => $shippingtimes,
+        $form['checkout']['delivery_fs']['shipping_days']['shipping_day'] = array(
+            '#type' => 'select',
+            '#title' => t('Shipping days'),
+            '#options' => $shippingdays,
             '#states' => array(
               'visible' => array(   // action to take.
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
               ),
             ),
         );
-        if(count($shippingtimes) == 1) {
-            $shippingtimeskeys = array_keys($shippingtimes);
-            $form['checkout']['delivery_fs']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
+        if(count($shippingdays) == 1) {
+            $shippingdayskeys = array_keys($shippingdays);
+            $form['checkout']['delivery_fs']['shipping_days']['shipping_day']['#default_value'] = $shippingdayskeys[0];
+        }
+        
+        foreach($shippingdays as $shippingdaykey => $shippingday) {
+            $form['checkout']['delivery_fs']['shipping_times']['shipping_time_' . $shippingdaykey] = array(
+                '#type' => 'select',
+                '#title' => t('Shipping times'),
+                '#options' => $shippingtimes[$shippingdaykey],
+                '#states' => array(
+                  'visible' => array(   // action to take.
+                    ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                    ':input[name=shipping_day]' => array('value' => $shippingdaykey),
+                  ),
+                ),
+            );
+            if(count($shippingtimes) == 1) {
+                $shippingtimeskeys = array_keys($shippingtimes);
+                $form['checkout']['delivery_fs']['shipping_times']['shipping_time_' . $shippingdaykey]['#default_value'] = $shippingtimeskeys[0];
+            }
         }
         
         /*
@@ -192,7 +235,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#states' => array(
               'visible' => array(   // action to take.
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-                ':input[name=shipping_time]' => array('checked' => TRUE),
               ),
             ),
         );
@@ -202,7 +244,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#states' => array(
               'visible' => array(   // action to take.
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-                ':input[name=shipping_time]' => array('checked' => TRUE),
               ),
             ),
         );
@@ -212,7 +253,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#states' => array(
               'visible' => array(   // action to take.
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-                ':input[name=shipping_time]' => array('checked' => TRUE),
               ),
             ),
         );
@@ -222,7 +262,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#states' => array(
               'visible' => array(   // action to take.
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-                ':input[name=shipping_time]' => array('checked' => TRUE),
               ),
             ),
         );
