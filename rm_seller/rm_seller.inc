@@ -579,7 +579,7 @@ function rm_seller_pre_render_date_empty(&$element) {
 }
 
 function rm_seller_offer_form_submit($form, &$form_state) {
-    var_dump("test"); die();
+
     if(!empty($form_state['values'])) {
         foreach($form_state['values'] as $field_name => $field_value) {
             if($field_value != '') {
