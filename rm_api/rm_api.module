@@ -15,6 +15,37 @@ function rm_api_menu() {
     return $items;
 }
 
+function rm_api_convert_office_hours($office_hours) {
+    $weekdays = rm_api_get_weekdays();
+    $convertedtimes = array();
+    if(!empty($office_hours)) {
+        foreach($office_hours as $key => $values) {
+            $convertedtimes[$values['day']][] = array(
+                'starthours' => substr($values['starthours'], 0, -2) . ':' . substr($values['starthours'], -2),
+                'endhours' => substr($values['endhours'], 0, -2) . ':' . substr($values['endhours'], -2),
+                'weekday' => $weekdays[$values['day']],
+            );
+        }
+    }
+    return $convertedtimes;
+}
+
+function rm_api_get_weekdays($fdow = 'Monday') {
+    switch($fdow) {
+        case "Monday":
+            $weekdays = array(
+                1 => t('Monday'),
+                2 => t('Tuesday'),
+                3 => t('Wednesday'),
+                4 => t('Thursday'),
+                5 => t('Friday'),
+                6 => t('Saturday'),
+                7 => t('Sunday'),
+            );
+            return $weekdays;
+    }
+}
+
 /**
  * Method for printing a rendered block back to an ajax call.
  *
@@ -715,6 +746,11 @@ function rm_api_cron() {
     }
 }
 
+function rm_api_google_address_check_fulltext($address) {
+    $result = drupal_http_request('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&sensor=false');
+    return json_decode($result->data);
+}
+
 function rm_api_google_address_check($street, $zipcode, $city, $country = 'Deutschland') {
     $result = drupal_http_request('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($street) . ',+' . urlencode($zipcode) . '+' . urlencode($city) . ',+' . $country . '&sensor=false');
     return json_decode($result->data);
@@ -722,12 +758,12 @@ function rm_api_google_address_check($street, $zipcode, $city, $country = 'Deuts
 
 function rm_api_validate_google_address($gmapsdata) {
     $errors = array();
-    // if($gmapsdata->status != 'OK') {
-        // $errors[] = t('We cannot confirm your address. Please try again.');
-    // }
-    // elseif ($gmapsdata->results[0]->geometry->location_type != 'ROOFTOP') {
-        // $errors[] = t('We cannot confirm your address. Please check if you entered it alright.');
-    // }
+    if($gmapsdata->status != 'OK') {
+        $errors[] = t('We cannot confirm your address. Please try again.');
+    }
+    elseif ($gmapsdata->results[0]->geometry->location_type != 'ROOFTOP') {
+        $errors[] = t('We cannot confirm your address. Please check if you entered it alright.');
+    }
     return $errors;
 }
 

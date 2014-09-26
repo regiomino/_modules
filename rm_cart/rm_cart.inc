@@ -57,14 +57,16 @@ function rm_cart_checkout($form, &$form_state, $account) {
     if(isset($minimum_order_values['pickup_agreement']) && !empty($minimum_order_values['pickup_agreement'])) {
         foreach($minimum_order_values['pickup_agreement'] as $agreement_id => $mov) {
             $agreement = node_load($agreement_id);
+            $regular_times = rm_api_convert_office_hours($agreement->field_regular_times[LANGUAGE_NONE]);
             $pickupspots[$agreement->nid] = $agreement->field_address[LANGUAGE_NONE][0]['locality'] . ', ' . $agreement->field_address[LANGUAGE_NONE][0]['thoroughfare'];
             for($i=0; $i<7; $i++) {
                 $strtotime = strtotime('tomorrow +' . $i . ' day');
-                if(!empty($agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1])) {
-                    $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
-                    $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
-                    $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
-                    $pickuptimes[$agreement->nid][$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                if(!empty($regular_times[date('N', $strtotime)])) {
+                    foreach($regular_times[date('N', $strtotime)] as $dateval) {
+                        $begin_time = strtotime('tomorrow ' . $dateval['starthours'] . ' +' . $i . ' day');
+                        $end_time = strtotime('tomorrow ' . $dateval['endhours'] . ' +' . $i . ' day');
+                        $pickuptimes[$agreement->nid][$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                    }
                 }
             }
         }
