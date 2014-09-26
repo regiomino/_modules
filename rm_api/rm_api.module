@@ -15,6 +15,37 @@ function rm_api_menu() {
     return $items;
 }
 
+function rm_api_convert_office_hours($office_hours) {
+    $weekdays = rm_api_get_weekdays();
+    $convertedtimes = array();
+    if(!empty($office_hours)) {
+        foreach($office_hours as $key => $values) {
+            $convertedtimes[$values['day']][] = array(
+                'starthours' => substr($values['starthours'], 0, -2) . ':' . substr($values['starthours'], -2),
+                'endhours' => substr($values['endhours'], 0, -2) . ':' . substr($values['endhours'], -2),
+                'weekday' => $weekdays[$values['day']],
+            );
+        }
+    }
+    return $convertedtimes;
+}
+
+function rm_api_get_weekdays($fdow = 'Monday') {
+    switch($fdow) {
+        case "Monday":
+            $weekdays = array(
+                1 => t('Monday'),
+                2 => t('Tuesday'),
+                3 => t('Wednesday'),
+                4 => t('Thursday'),
+                5 => t('Friday'),
+                6 => t('Saturday'),
+                7 => t('Sunday'),
+            );
+            return $weekdays;
+    }
+}
+
 /**
  * Method for printing a rendered block back to an ajax call.
  *
