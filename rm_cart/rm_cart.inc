@@ -2,13 +2,32 @@
 
 function rm_cart_checkout($form, &$form_state, $account) {
     global $user;
+    $form = array();
+    $form['checkout'] = array();
     
+    /*
+     *  Login erzwingen
+     */
     rm_user_enforce_login(t('Please log in with your commercial account before you continue'), 'warning');
     
+    /*
+     *  Verkäufer UID in Session schreiben
+     */
     $_SESSION['chosen_seller'] = $account->uid;
     
+    /*
+     *  One Click Einstellung in value-Feld speichern um diese nach dem Submit aktualisieren zu können
+     *  steht auf -1 wenn keine Einstellung vorhanden ist und neu angelegt werden muss
+     */
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
+    $form['checkout']['oneclick'] = array(
+        '#type' => 'value',
+        '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
+    );
     
+    /*
+     *  Verfügbare Lieferarten anhand der Agreements und Mindestbestellwerte prüfen
+     */
     $minimum_order_values = array();
     $deliverytypes = array();
     $zipcode = NULL;
@@ -23,22 +42,24 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
     
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, $account->uid);
-    $shops_keys = array_keys($shops);
-    $shop = $shops[$shops_keys[0]];
+    /*
+     *  Längsten Aufschub von allen Produkten ermitteln und als Maßstab für alle anderen Zeiten definieren
+     *  $longestdelay
+     */
+    $cart_items = rm_cart_get_cart($account->uid, $user->uid);
+    $longestdelay = 0;
+    if(!empty($cart_items)) {
+        foreach($cart_items as $cart_item) {
+            $offer_variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
+            if(isset($offer_variation->field_leadtime[LANGUAGE_NONE][0]['value']) && !empty($offer_variation->field_leadtime[LANGUAGE_NONE][0]['value']) && $offer_variation->field_leadtime[LANGUAGE_NONE][0]['value'] > $longestdelay) {
+                $longestdelay = $offer_variation->field_leadtime[LANGUAGE_NONE][0]['value'];
+            }
+        }
+    }
 
-    $form = array();
-    $form['checkout'] = array();
-    $form['checkout']['oneclick'] = array(
-        '#type' => 'value',
-        '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
-    );
-    
-    // $form['checkout']['delivery_fs'] = array(
-        // '#type' => 'fieldset',
-        // '#title' => t('Delivery'),
-    // );
-    
+    /*
+     *  Feld für Lieferart
+     */
     $form['checkout']['delivery_fs']['delivery'] = array(
         '#type' => 'radios',
         '#title' => t('Delivery option'),
@@ -51,20 +72,31 @@ function rm_cart_checkout($form, &$form_state, $account) {
     }
     
     
-    //Pickup agreement
+    /*
+     *  Abholvereinbarungen auslesen
+     */
     $pickupspots = array();
     $pickuptimes = array();
     if(isset($minimum_order_values['pickup_agreement']) && !empty($minimum_order_values['pickup_agreement'])) {
         foreach($minimum_order_values['pickup_agreement'] as $agreement_id => $mov) {
             $agreement = node_load($agreement_id);
-            $regular_times = rm_api_convert_office_hours($agreement->field_regular_times[LANGUAGE_NONE]);
+            
+            //Pickup spots festlegen
             $pickupspots[$agreement->nid] = $agreement->field_address[LANGUAGE_NONE][0]['locality'] . ', ' . $agreement->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            $surcharge = 0;
+            if(!empty($agreement->field_surcharge[LANGUAGE_NONE][0]['value']) && $agreement->field_surcharge[LANGUAGE_NONE][0]['value'] > 0) $surcharge = $agreement->field_surcharge[LANGUAGE_NONE][0]['value'];
+            $pickupspots[$agreement->nid] .= ($surcharge > 0) ? ' (+' . number_format($surcharge, 2, ",", ".") . '€)' : ' (kostenlos)';
+            
+            $regular_times = rm_api_convert_office_hours($agreement->field_regular_times[LANGUAGE_NONE]);
             for($i=0; $i<7; $i++) {
-                $strtotime = strtotime('tomorrow +' . $i . ' day');
+                $now = time();
+                $oneday = 86400;
+                $earliestorder = date('Y-m-d', $now + $longestdelay + $oneday);
+                $strtotime = strtotime($earliestorder . ' +' . $i . ' days');
                 if(!empty($regular_times[date('N', $strtotime)])) {
                     foreach($regular_times[date('N', $strtotime)] as $dateval) {
-                        $begin_time = strtotime('tomorrow ' . $dateval['starthours'] . ' +' . $i . ' day');
-                        $end_time = strtotime('tomorrow ' . $dateval['endhours'] . ' +' . $i . ' day');
+                        $begin_time = strtotime($earliestorder . ' ' . $dateval['starthours'] . ' +' . $i . ' day');
+                        $end_time = strtotime($earliestorder . ' ' . $dateval['endhours'] . ' +' . $i . ' day');
                         $pickuptimes[$agreement->nid][$begin_time . '-' . $end_time] = date('d.m.Y H:i', $begin_time) . ' - ' . date('H:i', $end_time);
                     }
                 }
@@ -72,7 +104,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
     
-    //Pickup spots
+    /*
+     *  Feld für Abholpunkte
+     */
     $form['checkout']['delivery_fs']['pickup_spots'] = array(
         '#type' => 'radios',
         '#title' => t('Pickup spot'),
@@ -88,7 +122,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
 
-    //Pickup times
+    /*
+     *  Felder für Abholzeiten
+     */
     if(isset($pickuptimes) && !empty($pickuptimes) && isset($pickupspots) && !empty($pickupspots)) {
         foreach($pickupspots as $pickupspotkey => $pickupspot) {
             $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey] = array(
@@ -109,7 +145,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
     
-    //Shipping agreement
+    /*
+     *  Liefervereinbarungen auslesen
+     */
     $shippingtimes = array();
     if(isset($minimum_order_values['shipping_agreement']) && !empty($minimum_order_values['shipping_agreement'])) {
         foreach($minimum_order_values['shipping_agreement'] as $agreement_id => $mov) {
@@ -126,8 +164,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
 
-    //Shipping times
     if(isset($shippingtimes) && !empty($shippingtimes)) {
+        /*
+         *  Feld für Lieferzeiten
+         */
         $form['checkout']['delivery_fs']['shipping_time'] = array(
             '#type' => 'radios',
             '#title' => t('Shipping times'),
@@ -143,6 +183,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
             $form['checkout']['delivery_fs']['shipping_time']['#default_value'] = $shippingtimeskeys[0];
         }
         
+        /*
+         *  Feld für Lieferadresse
+         */
         $form['checkout']['delivery_fs']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
@@ -153,7 +196,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        
         $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
@@ -164,7 +206,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        
         $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
@@ -175,7 +216,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        
         $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
@@ -188,11 +228,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         );
     }
     
-    // $form['checkout']['payment_fs'] = array(
-        // '#type' => 'fieldset',
-        // '#title' => t('Payment'),
-    // );
-    
+    /*
+     *  Feld für Zahlungsart
+     */
     $form['checkout']['payment_fs']['paymenttypes'] = array(
         '#type' => 'radios',
         '#title' => t('Payment types'),
@@ -204,6 +242,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
+    /*
+     *  Feld für IBAN
+     */
     $form['checkout']['payment_fs']['iban'] = array(
         '#type' => 'textfield',
         '#title' => t('IBAN'),
@@ -214,6 +255,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
+    /*
+     *  Feld für Rechnungsadresse
+     */
     $form['checkout']['payment_fs']['billing_address_name'] = array(
         '#type' => 'textfield',
         '#title' => t('Your name'),
@@ -254,6 +298,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         ),
     );
     
+    /*
+     *  Submit
+     */
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Purchase now'),
