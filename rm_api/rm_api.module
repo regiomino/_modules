@@ -746,6 +746,11 @@ function rm_api_cron() {
     }
 }
 
+function rm_api_google_address_check_fulltext($address) {
+    $result = drupal_http_request('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&sensor=false');
+    return json_decode($result->data);
+}
+
 function rm_api_google_address_check($street, $zipcode, $city, $country = 'Deutschland') {
     $result = drupal_http_request('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($street) . ',+' . urlencode($zipcode) . '+' . urlencode($city) . ',+' . $country . '&sensor=false');
     return json_decode($result->data);
@@ -753,12 +758,12 @@ function rm_api_google_address_check($street, $zipcode, $city, $country = 'Deuts
 
 function rm_api_validate_google_address($gmapsdata) {
     $errors = array();
-    // if($gmapsdata->status != 'OK') {
-        // $errors[] = t('We cannot confirm your address. Please try again.');
-    // }
-    // elseif ($gmapsdata->results[0]->geometry->location_type != 'ROOFTOP') {
-        // $errors[] = t('We cannot confirm your address. Please check if you entered it alright.');
-    // }
+    if($gmapsdata->status != 'OK') {
+        $errors[] = t('We cannot confirm your address. Please try again.');
+    }
+    elseif ($gmapsdata->results[0]->geometry->location_type != 'ROOFTOP') {
+        $errors[] = t('We cannot confirm your address. Please check if you entered it alright.');
+    }
     return $errors;
 }
 
