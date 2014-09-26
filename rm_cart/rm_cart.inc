@@ -303,7 +303,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      */
     $form['submit'] = array(
         '#type' => 'submit',
-        '#value' => t('Purchase now'),
+        '#value' => t('Continue'),
     );
     return $form;
 }
@@ -344,5 +344,34 @@ function rm_cart_checkout_validate($form, &$form_state) {
 }
 
 function rm_cart_checkout_submit($form, &$form_state) {
-    var_dump($form_state['values']); die();
+    $now = time();
+    $nowdate = date('d.mY H:i:s', $now);
+    $cart_items = rm_cart_get_cart($account->uid, $user->uid);
+    $longestdelay = 0;
+    global $user;
+    if(!empty($cart_items)) {
+        foreach($cart_items as $cart_item) {
+            $order_item = rm_api_create_new_node('order_item', $nowdate, 'de', $user->uid, 1);
+            $cart_item_tu = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
+            $cart_item_variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
+            
+            //Felder befüllen
+            
+            $order_item->field_ordernumber[LANGUAGE_NONE][0]['value'] = rm_cart_generate_order_number($user->uid, $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
+            
+            $order_item->field_orderamount = $cart_item->field_quantity;
+            $order_item->field_tu_amount = $cart_item_tu->field_tu_amount;
+            $order_item->field_tu_price = $cart_item_tu->field_tu_price;
+            $order_item->field_tu_deposit = $cart_item_tu->field_tu_deposit;
+            $order_item->field_tu_vat = $cart_item_tu->field_tu_vat;
+            $order_item->field_tu_packaging = $cart_item_tu->field_tu_packaging;
+            $order_item->field_trading_unit_reference = $cart_item->field_trading_unit_reference;
+            $order_item->field_offer_variation_reference = $cart_item->field_offer_variation_reference;
+            $order_item->field_offer_desc_reference = $cart_item->field_offer_desc_reference;
+            
+            //TBD
+            $order_item->field_surcharge[LANGUAGE_NONE][0]['value'] = '';
+        }
+    }
+    
 }

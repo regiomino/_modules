@@ -30,6 +30,10 @@ function rm_cart_menu() {
 	return $items;
 }
 
+function rm_cart_generate_order_number($uid, $suid, $timestamp) {
+    return date('Ymd', $timestamp) . '-' . $suid . '-' . $uid;
+}
+
 function rm_cart_change_session_to_uid($old_session_id, $uid) {
     $query = new EntityFieldQuery();
     $tmp = $query
