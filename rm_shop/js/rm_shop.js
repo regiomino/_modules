@@ -141,6 +141,10 @@ jQuery(document).ready(function ($) {
             infoWindow.open(map, marker);
         });
     }
+    
+    function doNothing(){
+        
+    }
 
     
 });

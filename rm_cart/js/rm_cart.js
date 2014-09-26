@@ -69,47 +69,7 @@ jQuery(document).ready(function ($) {
                         }
                     _self.addLoader($cont);
                     _self.addToCart(data);
-                    
-
-               /* $qty.val( function(i, value) {
-                    
-                    if ($el.data('operation') == -1 && value == 1 ) {
-                        $el.attr('disabled',true);
-                    
-                       // _self.removeItemFromCart($cont.data('offerid'));
-                        clearTimeout(_self.timeout);
-                        return +value + (1 * +$el.data('operation'));
-                    
-                    } else if ($el.data('operation') == +1 && value == maxItems ) {
-                         $el.attr('disabled',true);
-                         keepOn = false;
-                        return value;
-                       
-                    } else { 
-                        return +value + (1 * +$el.data('operation'));
-                    }
-                });
-                if(keepOn) {
-                   
-                    var amount = $qty.val();
-                    
-                    // debounce things
-                    clearTimeout(_self.timeout);
-                                            
-                   _self.timeout = setTimeout(function(){
-                        _self.timeout = null;
-                        
-                        var data = {
-                            offerid :  parseInt($cont.data('offerid'),10),
-                            variation : parseInt($cont.data('variation'),10),
-                            tradingunit : parseInt($cont.data('tradingunit'),10),
-                            amount : parseInt($qty.val(),10),
-                            add : 0
-                        }
-                          
-                        _self.addToCart(data);
-                    },_self.STEPPER_DEBOUNCE_VALUE);
-                }*/
+                
             });
 
              // Stepper Input Focus
@@ -117,7 +77,6 @@ jQuery(document).ready(function ($) {
                 var $el = $(this);
                 $el.mouseup(function(e) { return false; });
                 $el.select();
-                
                 inputValCache = $el.val();
             });
             
@@ -275,24 +234,89 @@ jQuery(document).ready(function ($) {
  
     });
     
+    var Map = function(){
+        
+    }
     
-      var map = new google.maps.Map(document.getElementById("pickupMap"), {
-        center: new google.maps.LatLng(49.800855, 11.017640),
-        zoom: 9,
-        mapTypeId: 'roadmap'
-    });
+     function downloadUrl(url,callback) {
+        var request = window.ActiveXObject ?
+            new ActiveXObject('Microsoft.XMLHTTP') :
+            new XMLHttpRequest;
+
+        request.onreadystatechange = function() {
+            if (request.readyState == 4) {
+                request.onreadystatechange = doNothing;
+                callback(request, request.status);
+            }
+        };
+
+        request.open('GET', url, true);
+        request.send(null);
+    }
+
+    function bindInfoWindow(marker, map, infoWindow, html) {
+        google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.setContent(html);
+            infoWindow.open(map, marker);
+        });
+    }
 
     $('#pickupModalToggle').on('click.pickupModal', function(){
-        console.info('Clicked');
+         
         $('#pickupModal').modal();
-        
     });
  
  $('#pickupModal').on('shown.bs.modal', function() {
+     var pathToTheme = Drupal.settings.basePath + "sites/all/themes/" + Drupal.settings.ajaxPageState.theme;
+        var pickupIcon = pathToTheme + '/images/markers/pickup_icon.png';
+        var infoWindow = new google.maps.InfoWindow;
+        var latlng = [];
    
-  var currentCenter = map.getCenter();  // Get current center before resizing
-  google.maps.event.trigger(map, "resize");
-  map.setCenter(currentCenter); // Re-set previous center
+    var map = new google.maps.Map(document.getElementById("pickupMap"), {
+            maxZoom: 15,
+            mapTypeId: 'roadmap'
+        });
+    
+      console.info(Drupal.settings.suid);
+        downloadUrl(Drupal.settings.basePath + 'rm-shop-spotxml/' + Drupal.settings.suid, function(data) {
+        var xml = data.responseXML;
+        var markers = xml.documentElement.getElementsByTagName("marker");
+        
+        for (var i = 0; i < markers.length; i++) {
+             
+            var address = markers[i].getAttribute("address");
+            var id = markers[i].getAttribute("nid");
+            
+            var point = new google.maps.LatLng(
+                parseFloat(markers[i].getAttribute("lat")),
+                parseFloat(markers[i].getAttribute("lng"))
+                );
+            
+            latlng.push(point)
+                
+            var html = "<b>" + address + "</b>";
+            
+            var marker = new google.maps.Marker({
+                map: map,
+                position: point,
+                icon: pickupIcon,
+                 
+            });
+            bindInfoWindow(marker, map, infoWindow, html);
+        }
+        
+        var latlngbounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < latlng.length; i++) {
+            latlngbounds.extend(latlng[i]);
+        }
+        map.setCenter(latlngbounds.getCenter());
+        map.fitBounds(latlngbounds);
+    }); 
+  
 });
  
+ 
+ function doNothing() {
+    
+ }
 });
