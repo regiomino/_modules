@@ -30,6 +30,117 @@ function rm_cart_menu() {
 	return $items;
 }
 
+function rm_cart_generate_order(
+    $item_type,
+    $order_number,
+    $order_status,
+    $order_amount,
+    $tu_amount,
+    $tu_price,
+    $tu_deposit,
+    $tu_vat,
+    $tu_packaging,
+    $expiration_date,
+    $use_within,
+    $leadtime,
+    $gtin,
+    $productunit_first,
+    $productunit_second,
+    $sku,
+    $description,
+    $offer_desc_reference,
+    $offer_variation_reference,
+    $trading_unit_reference,
+    $seller_reference,
+    $uid = NULL
+) {
+    //Makes it possible to create orders for other users -> useful for support
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    else {
+        $uid = 1;
+    }
+    $user = user_load($uid);
+    
+    //Create new node object
+    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => $item_type, '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
+    
+    //Add field values
+    $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = $item_type;
+    $order_item->field_order_number[LANGUAGE_NONE][0]['value'] = $order_number;
+    $order_item->field_order_status[LANGUAGE_NONE][0]['value'] = $order_status;
+    $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] = $order_amount;
+    $order_item->field_tu_amount[LANGUAGE_NONE][0]['value'] = $tu_amount;
+    $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] = $tu_price;
+    $order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'] = $tu_deposit;
+    $order_item->field_tu_vat[LANGUAGE_NONE][0]['value'] = $tu_vat;
+    $order_item->field_tu_packaging[LANGUAGE_NONE][0]['value'] = $tu_packaging;
+    $order_item->field_expiration_date[LANGUAGE_NONE][0]['value'] = $expiration_date;
+    $order_item->field_use_within[LANGUAGE_NONE][0]['value'] = $use_within;
+    $order_item->field_leadtime[LANGUAGE_NONE][0]['value'] = $leadtime;
+    $order_item->field_gtin[LANGUAGE_NONE][0]['value'] = $gtin;
+    $order_item->field_productunit[LANGUAGE_NONE][0]['first'] = $productunit_first;
+    $order_item->field_productunit[LANGUAGE_NONE][0]['second'] = $productunit_second;
+    $order_item->field_sku[LANGUAGE_NONE][0]['value'] = $sku;
+    $order_item->body[LANGUAGE_NONE][0]['value'] = $description;
+    $order_item->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'] = $offer_desc_reference;
+    $order_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'] = $offer_variation_reference;
+    $order_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit_reference;
+    $order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $seller_reference;
+    node_save($order_item);
+}
+
+function rm_cart_change_order_status($order_number, $new_status) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'order_item')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('field_order_number', 'value', $order_number)
+        ->execute();
+    if(isset($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+        foreach($order_items as $order_item) {
+            $order_item->field_order_status[LANGUAGE_NONE][0]['value'] = $new_status;
+            node_save($order_item);
+        }
+    }
+}
+
+function rm_cart_get_order($order_number) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'order_item')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('field_order_number', 'value', $order_number)
+        ->execute();
+    $order_items = array();
+    if(isset($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+    }
+    return $order_items;
+}
+
+function rm_cart_get_orders($uid, $header = NULL, $pager = NULL) {
+    $query = new EntityFieldQuery();
+    $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'order_item')
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid);
+    if(!is_null($header)) $query->tableSort($header);
+	if(!is_null($pager)) $query->pager($pager);
+	$tmp = $query->execute();
+    $order_items = array();
+    if(isset($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+    }
+    return $order_items;
+}
+
 function rm_cart_generate_order_number($uid, $suid, $timestamp) {
     return date('Ymd', $timestamp) . '-' . $suid . '-' . $uid;
 }

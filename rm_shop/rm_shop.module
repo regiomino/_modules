@@ -1,6 +1,53 @@
 <?php
 
 function rm_shop_init() {
+// $item_type = 'product'; //could be "surcharge"
+// $now = time();
+// $order_number = rm_cart_generate_order_number(1, 44, $now);
+// $oder_status = 'pending';
+// $order_amount = 2;
+// $tu_amount = 1;
+// $tu_price = 4.34;
+// $tu_deposit = 1;
+// $tu_vat = 10.7;
+// $tu_packaging = 'crate';
+// $expiration_date = 122324324;
+// $use_within = 7;
+// $leadtime = 3;
+// $gtin = 'EAN-782767';
+// $productunit_first = 1;
+// $productunit_second = 'pc';
+// $sku = '44-BGDH-2';
+// $description = 'Super Produkt';
+// $offer_desc_reference = 7563;
+// $offer_variation_reference = 7562;
+// $trading_unit_reference = 7561;
+// $seller_reference = 44;
+
+// rm_cart_generate_order(
+    // $item_type,
+    // $order_number,    
+    // $oder_status,
+    // $order_amount,
+    // $tu_amount,
+    // $tu_price,
+    // $tu_deposit,
+    // $tu_vat,
+    // $tu_packaging,
+    // $expiration_date,
+    // $use_within,
+    // $leadtime,
+    // $gtin,
+    // $productunit_first,
+    // $productunit_second,
+    // $sku,
+    // $description,
+    // $offer_desc_reference,
+    // $offer_variation_reference,
+    // $trading_unit_reference,
+    // $seller_reference);
+    
+    //rm_cart_change_order_status('20141001-44-1', 'completed');
 
     // $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
     

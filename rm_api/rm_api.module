@@ -73,7 +73,7 @@ function rm_api_invoke_block_view_ajax() {
 }
 
 /**
- * Method for creating new node objects.
+ * Method for deleting files from node objects.
  *
  * @param $nid
  * 		The nid of the node that holds the file
