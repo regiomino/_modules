@@ -113,11 +113,11 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#type' => 'radios',
         '#title' => t('Pickup spot'),
         '#options' => $pickupspots,
-        // '#states' => array(
-          // 'visible' => array(   // action to take.
-            // ':input[name=delivery]' => array('value' => 'pickup_agreement'),
-          // ),
-        // ),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+          ),
+        ),
     );
     if(count($pickupspots) == 1) {
         $pickupspotskeys = array_keys($pickupspots);
@@ -132,13 +132,15 @@ function rm_cart_checkout($form, &$form_state, $account) {
             $form['checkout']['delivery_fs']['pickup_days']['pickup_day_' . $pickupspotkey] = array(
                 '#type' => 'select',
                 '#title' => t('Pickup days'),
+                '#title_display' => 'none',
                 '#options' => $pickupdays[$pickupspotkey],
-                // '#states' => array(
-                  // 'visible' => array(   // action to take.
-                    // ':input[name=delivery]' => array('value' => 'pickup_agreement'),
-                    // ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
-                  // ),
-                // ),
+                '#field_prefix' => '<span class="fa fa-calendar"></span>',
+                '#states' => array(
+                  'visible' => array(   // action to take.
+                    ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+                    ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
+                  ),
+                ),
             );
             if(count($pickupdays[$pickupspotkey]) == 1) {
                 $pickupdayskeys = array_keys($pickupdays[$pickupspotkey]);
@@ -150,14 +152,16 @@ function rm_cart_checkout($form, &$form_state, $account) {
                 $form['checkout']['delivery_fs']['pickup_times']['pickup_time_' . $pickupspotkey . '_' . $pickupdaykey] = array(
                     '#type' => 'select',
                     '#title' => t('Pickup times'),
+                    '#title_display' => 'none',
                     '#options' => $pickuptimes[$pickupspotkey][$pickupdaykey],
-                    // '#states' => array(
-                      // 'visible' => array(   // action to take.
-                        // ':input[name=delivery]' => array('value' => 'pickup_agreement'),
-                        // ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
-                        // ':input[name=pickup_day_' . $pickupspotkey . ']' => array('value' => $pickupdaykey),
-                      // ),
-                    // ),
+                    '#field_prefix' => '<span class="fa fa-clock-o"></span>',
+                    '#states' => array(
+                      'visible' => array(   // action to take.
+                        ':input[name=delivery]' => array('value' => 'pickup_agreement'),
+                        ':input[name=pickup_spots]' => array('value' => $pickupspotkey),
+                        ':input[name=pickup_day_' . $pickupspotkey . ']' => array('value' => $pickupdaykey),
+                      ),
+                    ),
                 );
                 if(count($pickuptimes[$pickupspotkey][$pickupdaykey]) == 1) {
                     $pickuptimeskeys = array_keys($pickuptimes[$pickupspotkey][$pickupdaykey]);
@@ -197,11 +201,13 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#type' => 'select',
             '#title' => t('Shipping days'),
             '#options' => $shippingdays,
-            // '#states' => array(
-              // 'visible' => array(   // action to take.
-                // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-              // ),
-            // ),
+            '#field_prefix' => '<span class="fa fa-calendar"></span>',
+            '#title_display' => 'none',
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
         );
         if(count($shippingdays) == 1) {
             $shippingdayskeys = array_keys($shippingdays);
@@ -212,13 +218,15 @@ function rm_cart_checkout($form, &$form_state, $account) {
             $form['checkout']['delivery_fs']['shipping_times']['shipping_time_' . $shippingdaykey] = array(
                 '#type' => 'select',
                 '#title' => t('Shipping times'),
+                '#title_display' => 'none',
                 '#options' => $shippingtimes[$shippingdaykey],
-                // '#states' => array(
-                  // 'visible' => array(   // action to take.
-                    // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-                    // ':input[name=shipping_day]' => array('value' => $shippingdaykey),
-                  // ),
-                // ),
+                '#field_prefix' => '<span class="fa fa-clock-o"></span>',
+                '#states' => array(
+                  'visible' => array(   // action to take.
+                    ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+                    ':input[name=shipping_day]' => array('value' => $shippingdaykey),
+                  ),
+                ),
             );
             if(count($shippingtimes) == 1) {
                 $shippingtimeskeys = array_keys($shippingtimes);
@@ -232,38 +240,38 @@ function rm_cart_checkout($form, &$form_state, $account) {
         $form['checkout']['delivery_fs']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
-            // '#states' => array(
-              // 'visible' => array(   // action to take.
-                // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-              // ),
-            // ),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
         );
         $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
-            // '#states' => array(
-              // 'visible' => array(   // action to take.
-                // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-              // ),
-            // ),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
         );
         $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
-            // '#states' => array(
-              // 'visible' => array(   // action to take.
-                // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-              // ),
-            // ),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
         );
         $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
-            // '#states' => array(
-              // 'visible' => array(   // action to take.
-                // ':input[name=delivery]' => array('value' => 'shipping_agreement'),
-              // ),
-            // ),
+            '#states' => array(
+              'visible' => array(   // action to take.
+                ':input[name=delivery]' => array('value' => 'shipping_agreement'),
+              ),
+            ),
         );
     }
     
@@ -275,7 +283,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('Payment types'),
         '#title_display' => 'none',
         '#options' => array(
-            'bt' => t('Bank Transfer'),
+            'bt' => t('Debit'),
             'ibt' => t('Instant Bank Transfer'),
             'pp' => t('PayPal'),
         ),
@@ -287,11 +295,39 @@ function rm_cart_checkout($form, &$form_state, $account) {
     $form['checkout']['payment_fs']['iban'] = array(
         '#type' => 'textfield',
         '#title' => t('IBAN'),
-        // '#states' => array(
-          // 'visible' => array(   // action to take.
-            // ':input[name=paymenttypes]' => array('value' => 'bt'),
-          // ),
-        // ),
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'bt'),
+          ),
+        ),
+    );
+    
+    /*
+     *  Feld für PayPal
+     */
+    $form['checkout']['payment_fs']['paypal'] = array(
+        '#type' => 'textfield',
+        '#value' => t('You will be redirected to @paymentprovider after checkout to complete your order', array('@paymentprovider' => 'PayPal')),
+        '#disabled' => TRUE,
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'pp'),
+          ),
+        ),
+    );
+    
+    /*
+     *  Feld für Sofortüberweisung
+     */
+    $form['checkout']['payment_fs']['ibt'] = array(
+        '#type' => 'textfield',
+        '#value' => t('You will be redirected to @paymentprovider after checkout to complete your order', array('@paymentprovider' => 'sofort.com')),
+        '#disabled' => TRUE,
+        '#states' => array(
+          'visible' => array(   // action to take.
+            ':input[name=paymenttypes]' => array('value' => 'ibt'),
+          ),
+        ),
     );
     
     /*
