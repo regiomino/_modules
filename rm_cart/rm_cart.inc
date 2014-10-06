@@ -66,7 +66,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
-    if(count($deliverytypes) >= 1) {
+    if(count($deliverytypes) == 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
         $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
     }
@@ -119,7 +119,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           ),
         ),
     );
-    if(count($pickupspots) >= 1) {
+    if(count($pickupspots) == 1) {
         $pickupspotskeys = array_keys($pickupspots);
         $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
@@ -283,7 +283,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('Payment types'),
         '#title_display' => 'none',
         '#options' => array(
-            'sepa' => t('Debit'),
+            'bt' => t('Debit'),
             'ibt' => t('Instant Bank Transfer'),
             'pp' => t('PayPal'),
         ),
@@ -297,7 +297,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('IBAN'),
         '#states' => array(
           'visible' => array(   // action to take.
-            ':input[name=paymenttypes]' => array('value' => 'sepa'),
+            ':input[name=paymenttypes]' => array('value' => 'bt'),
           ),
         ),
     );
@@ -390,7 +390,7 @@ function rm_cart_checkout_validate($form, &$form_state) {
     }
     else {
         switch($form_state['values']['paymenttypes']) {
-            case "sepa":
+            case "bt":
                 if(empty($form_state['values']['iban'])) form_set_error('iban', t('Please enter your IBAN'));
             default:
                 if(empty($form_state['values']['billing_address_name'])) form_set_error('billing_address_name', t('Please enter the name for your billing address'));
@@ -426,30 +426,48 @@ function rm_cart_checkout_submit($form, &$form_state) {
     global $user;
     if(!empty($cart_items)) {
         foreach($cart_items as $cart_item) {
-            /*$order_item = rm_cart_generate_order(
-                $item_type,
-                $order_number,
-                $order_status,
-                $order_amount,
-                $tu_amount,
-                $tu_price,
-                $tu_deposit,
-                $tu_vat,
-                $tu_packaging,
-                $expiration_date,
-                $use_within,
-                $leadtime,
-                $gtin,
-                $productunit_first,
-                $productunit_second,
-                $sku,
-                $description,
-                $offer_desc_reference,
-                $offer_variation_reference,
-                $trading_unit_reference,
-                $seller_reference,
-                $uid = NULL
-            );*/
+        
+            $order_number = rm_cart_generate_order_number($user->uid, $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
+            $order_status = 'pending';
+            $order_amount = $cart_item->field_quantity[LANGUAGE_NONE][0]['value'];
+            $tu_amount = $cart_item_tu->field_tu_amount[LANGUAGE_NONE][0]['value'];
+            $tu_price = $cart_item_tu->field_tu_price[LANGUAGE_NONE][0]['value'];
+            $tu_deposit = $cart_item_tu->field_tu_deposit[LANGUAGE_NONE][0]['value'];
+            $tu_vat = $cart_item_tu->field_tu_vat[LANGUAGE_NONE][0]['value'];
+            $tu_packaging = $cart_item_tu->field_tu_packaging[LANGUAGE_NONE][0]['value'];
+            
+            $billing_name = $form_state['values']['billing_address_name'];
+            $billing_street = $form_state['values']['billing_address_street'];
+            $billing_zip = $form_state['values']['billing_address_zip'];
+            $billing_city = $form_state['values']['billing_address_city'];
+            $shipping_name = $form_state['values']['shipping_address_name'];
+            $shipping_street = $form_state['values']['shipping_address_street'];
+            $shipping_zip = $form_state['values']['shipping_address_zip'];
+            $shipping_city = $form_state['values']['shipping_address_city'];
+            $delivery_type = $form_state['values']['delivery'];
+            $pickup_spot = $form_state['values']['pickup_spots'];
+            $delivery_range_from = '';
+            $delivery_range_to = '';
+            $payment_type = '';
+            $iban = '';
+            
+            $expiration_date = '';
+            $use_within = '';
+            $leadtime = '';
+            $gtin = '';
+            $productunit_first = '';
+            $productunit_second = '';
+            $sku = '';
+            $description = '';
+            $offer_desc_reference = $cart_item->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'];
+            $offer_variation_reference = $cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'];
+            $trading_unit_reference = $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'];
+            $seller_reference = '';
+            
+        
+            $order_item = rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL);
+        
+   
         }
     }
     
