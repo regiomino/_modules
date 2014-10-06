@@ -66,7 +66,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
-    if(count($deliverytypes) == 1) {
+    if(count($deliverytypes) >= 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
         $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
     }
@@ -86,7 +86,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             $pickupspots[$agreement->nid] = $agreement->field_address[LANGUAGE_NONE][0]['locality'] . ', ' . $agreement->field_address[LANGUAGE_NONE][0]['thoroughfare'];
             $surcharge = 0;
             if(!empty($agreement->field_surcharge[LANGUAGE_NONE][0]['value']) && $agreement->field_surcharge[LANGUAGE_NONE][0]['value'] > 0) $surcharge = $agreement->field_surcharge[LANGUAGE_NONE][0]['value'];
-            $pickupspots[$agreement->nid] .= ($surcharge > 0) ? ' (+' . number_format($surcharge, 2, ",", ".") . '€)' : ' (kostenlos)';
+            $pickupspots[$agreement->nid] .= ($surcharge > 0) ? ' (+' . number_format($surcharge, 2, ",", ".") . '€)' : ' (' . t('free of charge') . ')';
             
             $regular_times = rm_api_convert_office_hours($agreement->field_regular_times[LANGUAGE_NONE]);
             for($i=0; $i<7; $i++) {
@@ -119,7 +119,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           ),
         ),
     );
-    if(count($pickupspots) == 1) {
+    if(count($pickupspots) >= 1) {
         $pickupspotskeys = array_keys($pickupspots);
         $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
@@ -426,26 +426,30 @@ function rm_cart_checkout_submit($form, &$form_state) {
     global $user;
     if(!empty($cart_items)) {
         foreach($cart_items as $cart_item) {
-            $order_item = rm_api_create_new_node('order_item', $nowdate, 'de', $user->uid, 1);
-            $cart_item_tu = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
-            $cart_item_variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
-            
-            //Felder befüllen
-            
-            $order_item->field_ordernumber[LANGUAGE_NONE][0]['value'] = rm_cart_generate_order_number($user->uid, $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
-            
-            $order_item->field_orderamount = $cart_item->field_quantity;
-            $order_item->field_tu_amount = $cart_item_tu->field_tu_amount;
-            $order_item->field_tu_price = $cart_item_tu->field_tu_price;
-            $order_item->field_tu_deposit = $cart_item_tu->field_tu_deposit;
-            $order_item->field_tu_vat = $cart_item_tu->field_tu_vat;
-            $order_item->field_tu_packaging = $cart_item_tu->field_tu_packaging;
-            $order_item->field_trading_unit_reference = $cart_item->field_trading_unit_reference;
-            $order_item->field_offer_variation_reference = $cart_item->field_offer_variation_reference;
-            $order_item->field_offer_desc_reference = $cart_item->field_offer_desc_reference;
-            
-            //TBD
-            $order_item->field_surcharge[LANGUAGE_NONE][0]['value'] = '';
+            /*$order_item = rm_cart_generate_order(
+                $item_type,
+                $order_number,
+                $order_status,
+                $order_amount,
+                $tu_amount,
+                $tu_price,
+                $tu_deposit,
+                $tu_vat,
+                $tu_packaging,
+                $expiration_date,
+                $use_within,
+                $leadtime,
+                $gtin,
+                $productunit_first,
+                $productunit_second,
+                $sku,
+                $description,
+                $offer_desc_reference,
+                $offer_variation_reference,
+                $trading_unit_reference,
+                $seller_reference,
+                $uid = NULL
+            );*/
         }
     }
     

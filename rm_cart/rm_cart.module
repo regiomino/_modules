@@ -40,6 +40,15 @@ function rm_cart_generate_order(
     $tu_deposit,
     $tu_vat,
     $tu_packaging,
+    $billing_name,
+    $billing_street,
+    $billing_zip,
+    $billing_city,
+    $shipping_name,
+    $shipping_street,
+    $shipping_zip,
+    $shipping_city,
+    $delivery_type,
     $expiration_date,
     $use_within,
     $leadtime,
@@ -90,6 +99,7 @@ function rm_cart_generate_order(
     $order_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] = $trading_unit_reference;
     $order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $seller_reference;
     node_save($order_item);
+    return $order_item;
 }
 
 function rm_cart_change_order_status($order_number, $new_status) {
