@@ -237,7 +237,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         /*
          *  Feld für Lieferadresse
          */
-        $form['checkout']['delivery_fs']['shipping_address_name'] = array(
+        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
             '#states' => array(
@@ -246,7 +246,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address_street'] = array(
+        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
             '#states' => array(
@@ -255,7 +255,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
+        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
             '#states' => array(
@@ -264,7 +264,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address_city'] = array(
+        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
             '#states' => array(
@@ -426,6 +426,8 @@ function rm_cart_checkout_submit($form, &$form_state) {
     global $user;
     if(!empty($cart_items)) {
         foreach($cart_items as $cart_item) {
+            $cart_item_tu = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
+            $cart_item_variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
         
             $order_number = rm_cart_generate_order_number($user->uid, $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
             $order_status = 'pending';
@@ -446,29 +448,42 @@ function rm_cart_checkout_submit($form, &$form_state) {
             $shipping_city = $form_state['values']['shipping_address_city'];
             $delivery_type = $form_state['values']['delivery'];
             $pickup_spot = $form_state['values']['pickup_spots'];
-            $delivery_range_from = '';
-            $delivery_range_to = '';
-            $payment_type = '';
-            $iban = '';
             
-            $expiration_date = '';
-            $use_within = '';
-            $leadtime = '';
-            $gtin = '';
-            $productunit_first = '';
-            $productunit_second = '';
-            $sku = '';
-            $description = '';
+            switch($delivery_type) {
+                case 'pickup_agreement':
+                    $timevals = explode('-', $form_state['values']['pickup_time_' . $form_state['values']['pickup_spots'] . '_' . $form_state['values']['pickup_day_' . $form_state['values']['pickup_spots']]]);
+                    $delivery_range_from = $timevals[0];
+                    $delivery_range_to = $timevals[1];
+                    break;
+                case 'shipping_agreement':
+                    $timevals = explode('-', $form_state['values']['shipping_time_' . $form_state['values']['shipping_day']]);
+                    $delivery_range_from = $timevals[0];
+                    $delivery_range_to = $timevals[1];
+                    break;
+            }
+            
+            $payment_type = $form_state['values']['paymenttypes'];
+            $iban = $form_state['values']['iban'];
+            
+            $expiration_date = $cart_item_variation->field_expiration_date[LANGUAGE_NONE][0]['value'];
+            $use_within = $cart_item_variation->field_use_within[LANGUAGE_NONE][0]['value'];
+            $leadtime = $cart_item_variation->field_leadtime[LANGUAGE_NONE][0]['value'];
+            $gtin = $cart_item_variation->field_gtin[LANGUAGE_NONE][0]['value'];
+            $productunit_first = $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['first'];
+            $productunit_second = $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['second'];
+            $sku = $cart_item_variation->field_sku[LANGUAGE_NONE][0]['value'];
+            $description = $cart_item_variation->body[LANGUAGE_NONE][0]['value'];
+            
             $offer_desc_reference = $cart_item->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'];
             $offer_variation_reference = $cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'];
             $trading_unit_reference = $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'];
-            $seller_reference = '';
+            
+            $seller_reference = $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'];
             
         
             $order_item = rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL);
-        
-   
         }
+        //AUCH NOCH AUFPREISE SPEICHERN ALS order item_type 'surcharge'!!!!
     }
     
 }
