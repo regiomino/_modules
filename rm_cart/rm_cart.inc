@@ -66,7 +66,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title_display' => 'none',
         '#options' => $deliverytypes,
     );
-    if(count($deliverytypes) == 1) {
+    if(count($deliverytypes) >= 1) {
         $deliverytypeskeys = array_keys($deliverytypes);
         $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
     }
@@ -119,7 +119,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           ),
         ),
     );
-    if(count($pickupspots) == 1) {
+    if(count($pickupspots) >= 1) {
         $pickupspotskeys = array_keys($pickupspots);
         $form['checkout']['delivery_fs']['pickup_spots']['#default_value'] = $pickupspotskeys[0];
     }
@@ -237,7 +237,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         /*
          *  Feld für Lieferadresse
          */
-        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_name'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_name'] = array(
             '#type' => 'textfield',
             '#title' => t('Your name'),
             '#states' => array(
@@ -246,7 +246,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_street'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
             '#states' => array(
@@ -255,7 +255,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_zip'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
             '#states' => array(
@@ -264,7 +264,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        $form['checkout']['delivery_fs']['shipping_address']['shipping_address_city'] = array(
+        $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
             '#states' => array(
