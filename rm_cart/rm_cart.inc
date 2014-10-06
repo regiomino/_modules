@@ -283,7 +283,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('Payment types'),
         '#title_display' => 'none',
         '#options' => array(
-            'bt' => t('Debit'),
+            'sepa' => t('Debit'),
             'ibt' => t('Instant Bank Transfer'),
             'pp' => t('PayPal'),
         ),
@@ -297,7 +297,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('IBAN'),
         '#states' => array(
           'visible' => array(   // action to take.
-            ':input[name=paymenttypes]' => array('value' => 'bt'),
+            ':input[name=paymenttypes]' => array('value' => 'sepa'),
           ),
         ),
     );
@@ -390,7 +390,7 @@ function rm_cart_checkout_validate($form, &$form_state) {
     }
     else {
         switch($form_state['values']['paymenttypes']) {
-            case "bt":
+            case "sepa":
                 if(empty($form_state['values']['iban'])) form_set_error('iban', t('Please enter your IBAN'));
             default:
                 if(empty($form_state['values']['billing_address_name'])) form_set_error('billing_address_name', t('Please enter the name for your billing address'));

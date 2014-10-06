@@ -31,7 +31,6 @@ function rm_cart_menu() {
 }
 
 function rm_cart_generate_order(
-    $item_type,
     $order_number,
     $order_status,
     $order_amount,
@@ -49,6 +48,13 @@ function rm_cart_generate_order(
     $shipping_zip,
     $shipping_city,
     $delivery_type,
+    $pickup_agreement,
+    $shipping_agreement,
+    $dispatch_agreement,
+    $delivery_range_from,
+    $delivery_range_to,
+    $payment_type,
+    $iban,
     $expiration_date,
     $use_within,
     $leadtime,
@@ -74,10 +80,10 @@ function rm_cart_generate_order(
     $user = user_load($uid);
     
     //Create new node object
-    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => $item_type, '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
+    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => 'product', '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
     
     //Add field values
-    $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = $item_type;
+    $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = 'product';
     $order_item->field_order_number[LANGUAGE_NONE][0]['value'] = $order_number;
     $order_item->field_order_status[LANGUAGE_NONE][0]['value'] = $order_status;
     $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] = $order_amount;
