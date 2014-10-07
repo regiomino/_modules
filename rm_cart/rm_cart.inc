@@ -98,7 +98,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
                     foreach($regular_times[date('N', $strtotime)] as $dateval) {
                         $begin_time = strtotime($earliestorder . ' ' . $dateval['starthours'] . ' +' . $i . ' day');
                         $end_time = strtotime($earliestorder . ' ' . $dateval['endhours'] . ' +' . $i . ' day');
-                        $pickupdays[$agreement->nid][date('Ymd', $begin_time)] = date('d.m.Y', $begin_time);
+                        $pickupdays[$agreement->nid][date('Ymd', $begin_time)] = t(date('l', $begin_time)) . ', ' . date('d.m.Y', $begin_time);
                         $pickuptimes[$agreement->nid][date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
                     }
                 }
@@ -186,7 +186,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
                     $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
                     $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
                     $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
-                    $shippingdays[date('Ymd', $begin_time)] = date('d.m.Y', $begin_time);
+                    $shippingdays[date('Ymd', $begin_time)] = t(date('l', $begin_time)) . ', ' . date('d.m.Y', $begin_time);
                     $shippingtimes[date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
                 }
             }
