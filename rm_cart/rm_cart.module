@@ -27,7 +27,7 @@ function rm_cart_menu() {
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
     $items['order/%'] = array(
-        'title' => 'Checkout',
+        'title' => 'Confirm your order',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_cart_checkout_confirm', 1),
         'access callback' => 'rm_cart_user_owns_order',
@@ -53,7 +53,7 @@ function rm_cart_user_owns_order($order_number) {
     }
 }
 
-function rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
+function rm_cart_generate_order($order_number, $order_status, $item_title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
 
     //Makes it possible to create orders for other users -> useful for support
     if(is_null($uid)) {
@@ -66,7 +66,7 @@ function rm_cart_generate_order($order_number, $order_status, $order_amount, $tu
     $user = user_load($uid);
     
     //Create new node object
-    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => 'product', '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
+    $order_item = rm_api_create_new_node('order_item', $item_title, 'de', $user->uid, 1);
     
     //Add field values
     $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = 'product';
@@ -122,7 +122,7 @@ function rm_cart_generate_order($order_number, $order_status, $order_amount, $tu
     return $order_item;
 }
 
-function rm_cart_generate_order_surcharge($order_number, $order_status, $order_amount, $tu_price, $tu_vat, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $payment_type, $iban, $description, $seller_reference, $uid = NULL) {
+function rm_cart_generate_order_surcharge($order_number, $order_status, $item_title, $order_amount, $tu_price, $tu_vat, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $payment_type, $iban, $description, $seller_reference, $uid = NULL) {
 
     //Makes it possible to create orders for other users -> useful for support
     if(is_null($uid)) {
@@ -135,7 +135,7 @@ function rm_cart_generate_order_surcharge($order_number, $order_status, $order_a
     $user = user_load($uid);
     
     //Create new node object
-    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => 'surcharge', '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
+    $order_item = rm_api_create_new_node('order_item', $item_title, 'de', $user->uid, 1);
     
     //Add field values
     $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = 'surcharge';
@@ -194,6 +194,7 @@ function rm_cart_get_order($order_number) {
         ->entityCondition('bundle', 'order_item')
         ->propertyCondition('status', 1)
         ->fieldCondition('field_order_number', 'value', $order_number)
+        ->propertyOrderBy('nid', 'DESC')
         ->execute();
     $order_items = array();
     if(isset($tmp['node'])) {
@@ -220,7 +221,25 @@ function rm_cart_get_orders($uid, $header = NULL, $pager = NULL) {
 }
 
 function rm_cart_generate_order_number($uid, $suid, $timestamp) {
-    return date('Ymd', $timestamp) . '-' . $suid . '-' . $uid;
+    $counter = 1;
+    $newnumberfound = FALSE;
+    while(!$newnumberfound) {
+        $try_order_number = date('Ymd', $timestamp) . '-' . $suid . '-' . $uid . '-' . $counter;
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'order_item')
+            ->fieldCondition('field_order_number', 'value', $try_order_number)
+            ->execute();
+        if(empty($tmp['node'])) {
+            $newnumberfound = TRUE;
+        }
+        else {
+            $counter++;
+        }
+    }
+    
+    return $try_order_number;
 }
 
 function rm_cart_change_session_to_uid($old_session_id, $uid) {
@@ -642,6 +661,11 @@ function rm_cart_theme() {
 		),
 		'rm_cart_checkout' => array(
 			'template' => 'rm_cart_checkout_theme',
+            'arguments' => array('form' => 'form'),
+			'render element' => 'form',
+		),
+		'rm_cart_checkout_confirm' => array(
+			'template' => 'rm_cart_checkout_confirm_theme',
             'arguments' => array('form' => 'form'),
 			'render element' => 'form',
 		),
