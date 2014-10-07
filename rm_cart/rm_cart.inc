@@ -468,10 +468,10 @@ function rm_cart_checkout_submit($form, &$form_state) {
         $billing_street = $form_state['values']['billing_address_street'];
         $billing_zip = $form_state['values']['billing_address_zip'];
         $billing_city = $form_state['values']['billing_address_city'];
-        $shipping_name = $form_state['values']['shipping_address_name'];
-        $shipping_street = $form_state['values']['shipping_address_street'];
-        $shipping_zip = $form_state['values']['shipping_address_zip'];
-        $shipping_city = $form_state['values']['shipping_address_city'];
+        $shipping_name = (isset($form_state['values']['shipping_address_name'])) ? $form_state['values']['shipping_address_name'] : '';
+        $shipping_street = (isset($form_state['values']['shipping_address_street'])) ? $form_state['values']['shipping_address_street'] : '';
+        $shipping_zip = (isset($form_state['values']['shipping_address_zip'])) ? $form_state['values']['shipping_address_zip'] : '';
+        $shipping_city = (isset($form_state['values']['shipping_address_city'])) ? $form_state['values']['shipping_address_city'] : '';
         $delivery_type = $form_state['values']['delivery'];
         $payment_type = $form_state['values']['paymenttypes'];
         $iban = $form_state['values']['iban'];
