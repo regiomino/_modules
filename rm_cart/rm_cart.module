@@ -26,8 +26,31 @@ function rm_cart_menu() {
         'file' => 'rm_cart.inc',
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
+    $items['order/%'] = array(
+        'title' => 'Checkout',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_cart_checkout_confirm', 1),
+        'access callback' => 'rm_cart_user_owns_order',
+        'access arguments' => array(1),
+        'file' => 'rm_cart.inc',
+        'file path' => drupal_get_path('module', 'rm_cart'),
+    );
     
 	return $items;
+}
+
+function rm_cart_user_owns_order($order_number) {
+    global $user;
+    $order_items = rm_cart_get_order($order_number);
+    $err = 0;
+    if(!empty($order_items)) {
+        foreach($order_items as $order_item) {
+            if($order_item->uid != $user->uid) {
+                $err++;
+            }
+        }
+        if(!$err) return TRUE;
+    }
 }
 
 function rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {

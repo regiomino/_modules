@@ -1,5 +1,29 @@
 <?php
 
+function rm_cart_checkout_confirm($form, &$form_state, $order_number) {
+    global $user;
+    $form = array();
+    $order_items = rm_cart_get_order($order_number);
+    if(!empty($order_items)) {
+        foreach($order_items as $order_item) {
+            
+        }
+        $form['order']['order_number'] = array(
+            '#type' => 'value',
+            '#value' => $order_number,
+        );
+        $form['order']['submit'] = array(
+            '#type' => 'submit',
+            '#value' => t('Purchase now'),
+        );
+    }
+
+}
+
+function rm_cart_checkout_confirm_submit($form, &$form_state) {
+    rm_cart_change_order_status($form_state['values']['order_number'], 'completed');
+}
+
 function rm_cart_checkout($form, &$form_state, $account) {
     global $user;
     $form = array();
@@ -501,7 +525,11 @@ function rm_cart_checkout_submit($form, &$form_state) {
         
             $order_item = rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference,$seller_reference, $uid = NULL);
         }
-        
+        drupal_goto('order/' . $order_number);
+    }
+    else {
+        drupal_set_message(t('Your cart is empty', 'error'));
+        drupal_goto();
     }
     
 }
