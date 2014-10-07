@@ -99,6 +99,54 @@ function rm_cart_generate_order($order_number, $order_status, $order_amount, $tu
     return $order_item;
 }
 
+function rm_cart_generate_order_surcharge($order_number, $order_status, $order_amount, $tu_price, $tu_vat, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $payment_type, $iban, $description, $seller_reference, $uid = NULL) {
+
+    //Makes it possible to create orders for other users -> useful for support
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    else {
+        $uid = 1;
+    }
+    $user = user_load($uid);
+    
+    //Create new node object
+    $order_item = rm_api_create_new_node('order_item', t('Order @order (@type) from @user', array('@type' => 'surcharge', '@order' => $order_number, '@user' => format_username($user))), 'de', $user->uid, 1);
+    
+    //Add field values
+    $order_item->field_item_type[LANGUAGE_NONE][0]['value'] = 'surcharge';
+    
+    $order_item->field_order_number[LANGUAGE_NONE][0]['value'] = $order_number;
+    $order_item->field_order_status[LANGUAGE_NONE][0]['value'] = $order_status;
+    $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] = $order_amount;
+    
+    $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] = $tu_price;
+    $order_item->field_tu_vat[LANGUAGE_NONE][0]['value'] = $tu_vat;
+    
+    $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line'] = $billing_name;
+    $order_item->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'] = $billing_street;
+    $order_item->field_billingaddress[LANGUAGE_NONE][0]['postal_code'] = $billing_zip;
+    $order_item->field_billingaddress[LANGUAGE_NONE][0]['locality'] = $billing_city;
+    
+    $order_item->field_address[LANGUAGE_NONE][0]['name_line'] = $shipping_name;
+    $order_item->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $shipping_street;
+    $order_item->field_address[LANGUAGE_NONE][0]['postal_code'] = $shipping_zip;
+    $order_item->field_address[LANGUAGE_NONE][0]['locality'] = $shipping_city;
+    
+    $order_item->field_paymenttype[LANGUAGE_NONE][0]['value'] = $payment_type;
+    
+    $order_item->field_iban[LANGUAGE_NONE][0]['value'] = $iban;
+    
+    $order_item->body[LANGUAGE_NONE][0]['value'] = $description;
+    
+    $order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $seller_reference;
+    
+    node_save($order_item);
+    
+    return $order_item;
+}
+
 function rm_cart_change_order_status($order_number, $new_status) {
     $query = new EntityFieldQuery();
     $tmp = $query

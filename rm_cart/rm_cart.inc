@@ -14,6 +14,10 @@ function rm_cart_checkout($form, &$form_state, $account) {
      *  Verkäufer UID in Session schreiben
      */
     $_SESSION['chosen_seller'] = $account->uid;
+    $form['checkout']['chosen_seller'] = array(
+        '#type' => 'value',
+        '#value' => $account->uid,
+    );
     
     /*
      *  One Click Einstellung in value-Feld speichern um diese nach dem Submit aktualisieren zu können
@@ -56,21 +60,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
             }
         }
     }
-
-    /*
-     *  Feld für Lieferart
-     */
-    $form['checkout']['delivery_fs']['delivery'] = array(
-        '#type' => 'radios',
-        '#title' => t('Delivery option'),
-        '#title_display' => 'none',
-        '#options' => $deliverytypes,
-    );
-    if(count($deliverytypes) >= 1) {
-        $deliverytypeskeys = array_keys($deliverytypes);
-        $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
-    }
-    
     
     /*
      *  Abholvereinbarungen auslesen
@@ -105,6 +94,52 @@ function rm_cart_checkout($form, &$form_state, $account) {
             }
         }
     }
+    
+    /*
+     *  Liefervereinbarungen auslesen
+     */
+    $shippingtimes = array();
+    $shippingdays = array();
+    if(isset($minimum_order_values['shipping_agreement']) && !empty($minimum_order_values['shipping_agreement'])) {
+        foreach($minimum_order_values['shipping_agreement'] as $agreement_id => $mov) {
+            $agreement = node_load($agreement_id);
+            for($i=0; $i<7; $i++) {
+                $strtotime = strtotime('tomorrow +' . $i . ' day');
+                if(!empty($agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1])) {
+                    $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
+                    $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
+                    $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
+                    $shippingdays[date('Ymd', $begin_time)] = t(date('l', $begin_time)) . ', ' . date('d.m.Y', $begin_time);
+                    $shippingtimes[date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
+                }
+            }
+        }
+        $form['checkout']['delivery_fs']['shipping_spots'] = array(
+            '#type' => 'value',
+            '#value' => $agreement_id,
+        );
+    }
+
+    /*
+     *  Feld für Lieferart
+     */
+    $form['checkout']['delivery_fs']['delivery'] = array(
+        '#type' => 'radios',
+        '#title' => t('Delivery option'),
+        '#title_display' => 'none',
+        '#options' => $deliverytypes,
+    );
+    if(isset($form['checkout']['delivery_fs']['delivery']['#options']['shipping_agreement'])) {
+        $shipping_spot_surcharge = node_load($form['checkout']['delivery_fs']['shipping_spots']['#value'])->field_surcharge[LANGUAGE_NONE][0]['value'];
+        $form['checkout']['delivery_fs']['delivery']['#options']['shipping_agreement'] .= ($shipping_spot_surcharge > 0) ? '<br><small>(+' . number_format($shipping_spot_surcharge, 2, ",", ".") . '€)</small>' : '<br><small>(' . t('free of charge') . ')</small>';
+    }
+    if(count($deliverytypes) >= 1) {
+        $deliverytypeskeys = array_keys($deliverytypes);
+        $form['checkout']['delivery_fs']['delivery']['#default_value'] = $deliverytypeskeys[0];
+    }
+    
+    
+    
     
     /*
      *  Feld für Abholpunkte
@@ -172,26 +207,6 @@ function rm_cart_checkout($form, &$form_state, $account) {
         }
     }
     
-    /*
-     *  Liefervereinbarungen auslesen
-     */
-    $shippingtimes = array();
-    $shippingdays = array();
-    if(isset($minimum_order_values['shipping_agreement']) && !empty($minimum_order_values['shipping_agreement'])) {
-        foreach($minimum_order_values['shipping_agreement'] as $agreement_id => $mov) {
-            $agreement = node_load($agreement_id);
-            for($i=0; $i<7; $i++) {
-                $strtotime = strtotime('tomorrow +' . $i . ' day');
-                if(!empty($agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1])) {
-                    $dateval = $agreement->field_regular_times[LANGUAGE_NONE][date('N', $strtotime) - 1];
-                    $begin_time = strtotime('tomorrow ' . substr($dateval['starthours'], 0, -2) . ':' . substr($dateval['starthours'], -2) . ' +' . $i . ' day');
-                    $end_time = strtotime('tomorrow ' . substr($dateval['endhours'], 0, -2) . ':' . substr($dateval['endhours'], -2) . ' +' . $i . ' day');
-                    $shippingdays[date('Ymd', $begin_time)] = t(date('l', $begin_time)) . ', ' . date('d.m.Y', $begin_time);
-                    $shippingtimes[date('Ymd', $begin_time)][$begin_time . '-' . $end_time] = date('H:i', $begin_time) . ' - ' . date('H:i', $end_time);
-                }
-            }
-        }
-    }
 
     if(isset($shippingdays) && !empty($shippingdays)) {
         /*
@@ -283,7 +298,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('Payment types'),
         '#title_display' => 'none',
         '#options' => array(
-            'bt' => t('Debit'),
+            'sepa' => t('SEPA'),
             'ibt' => t('Instant Bank Transfer'),
             'pp' => t('PayPal'),
         ),
@@ -297,7 +312,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title' => t('IBAN'),
         '#states' => array(
           'visible' => array(   // action to take.
-            ':input[name=paymenttypes]' => array('value' => 'bt'),
+            ':input[name=paymenttypes]' => array('value' => 'sepa'),
           ),
         ),
     );
@@ -390,7 +405,7 @@ function rm_cart_checkout_validate($form, &$form_state) {
     }
     else {
         switch($form_state['values']['paymenttypes']) {
-            case "bt":
+            case "sepa":
                 if(empty($form_state['values']['iban'])) form_set_error('iban', t('Please enter your IBAN'));
             default:
                 if(empty($form_state['values']['billing_address_name'])) form_set_error('billing_address_name', t('Please enter the name for your billing address'));
@@ -421,69 +436,72 @@ function rm_cart_checkout_validate($form, &$form_state) {
 function rm_cart_checkout_submit($form, &$form_state) {
     $now = time();
     $nowdate = date('d.mY H:i:s', $now);
-    $cart_items = rm_cart_get_cart($account->uid, $user->uid);
-    $longestdelay = 0;
     global $user;
+    $cart_items = rm_cart_get_cart($form_state['values']['chosen_seller'], $user->uid);
+    $longestdelay = 0;
     if(!empty($cart_items)) {
+        $cart_item_keys = array_keys($cart_items);
+        $order_number = rm_cart_generate_order_number($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
+        $order_status = 'pending';
+        $billing_name = $form_state['values']['billing_address_name'];
+        $billing_street = $form_state['values']['billing_address_street'];
+        $billing_zip = $form_state['values']['billing_address_zip'];
+        $billing_city = $form_state['values']['billing_address_city'];
+        $shipping_name = $form_state['values']['shipping_address_name'];
+        $shipping_street = $form_state['values']['shipping_address_street'];
+        $shipping_zip = $form_state['values']['shipping_address_zip'];
+        $shipping_city = $form_state['values']['shipping_address_city'];
+        $delivery_type = $form_state['values']['delivery'];
+        $payment_type = $form_state['values']['paymenttypes'];
+        $iban = $form_state['values']['iban'];
+        switch($delivery_type) {
+            case 'pickup_agreement':
+                $timevals = explode('-', $form_state['values']['pickup_time_' . $form_state['values']['pickup_spots'] . '_' . $form_state['values']['pickup_day_' . $form_state['values']['pickup_spots']]]);
+                $delivery_range_from = $timevals[0];
+                $delivery_range_to = $timevals[1];
+                $pickup_spot = $form_state['values']['pickup_spots'];
+                $pickup_spot_surcharge = node_load($pickup_spot)->field_surcharge[LANGUAGE_NONE][0]['value'];
+                if($pickup_spot_surcharge > 0) {
+                    $order_item = rm_cart_generate_order_surcharge($order_number, $order_status, 1, $pickup_spot_surcharge, 19, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $payment_type, $iban, t('Surcharge for pickup'), $form_state['values']['chosen_seller']);
+                }
+                break;
+            case 'shipping_agreement':
+                $timevals = explode('-', $form_state['values']['shipping_time_' . $form_state['values']['shipping_day']]);
+                $delivery_range_from = $timevals[0];
+                $delivery_range_to = $timevals[1];
+                $pickup_spot = 0;
+                $shipping_spot_surcharge = node_load($form_state['values']['shipping_spots'])->field_surcharge[LANGUAGE_NONE][0]['value'];
+                if($shipping_spot_surcharge > 0) {
+                    $order_item = rm_cart_generate_order_surcharge($order_number, $order_status, 1, $shipping_spot_surcharge, 19, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $payment_type, $iban, t('Surcharge for shipping'), $form_state['values']['chosen_seller']);
+                }
+                break;
+        }
+        
         foreach($cart_items as $cart_item) {
             $cart_item_tu = node_load($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id']);
             $cart_item_variation = node_load($cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id']);
-        
-            $order_number = rm_cart_generate_order_number($user->uid, $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
-            $order_status = 'pending';
             $order_amount = $cart_item->field_quantity[LANGUAGE_NONE][0]['value'];
             $tu_amount = $cart_item_tu->field_tu_amount[LANGUAGE_NONE][0]['value'];
             $tu_price = $cart_item_tu->field_tu_price[LANGUAGE_NONE][0]['value'];
             $tu_deposit = $cart_item_tu->field_tu_deposit[LANGUAGE_NONE][0]['value'];
             $tu_vat = $cart_item_tu->field_tu_vat[LANGUAGE_NONE][0]['value'];
-            $tu_packaging = $cart_item_tu->field_tu_packaging[LANGUAGE_NONE][0]['value'];
-            
-            $billing_name = $form_state['values']['billing_address_name'];
-            $billing_street = $form_state['values']['billing_address_street'];
-            $billing_zip = $form_state['values']['billing_address_zip'];
-            $billing_city = $form_state['values']['billing_address_city'];
-            $shipping_name = $form_state['values']['shipping_address_name'];
-            $shipping_street = $form_state['values']['shipping_address_street'];
-            $shipping_zip = $form_state['values']['shipping_address_zip'];
-            $shipping_city = $form_state['values']['shipping_address_city'];
-            $delivery_type = $form_state['values']['delivery'];
-            $pickup_spot = $form_state['values']['pickup_spots'];
-            
-            switch($delivery_type) {
-                case 'pickup_agreement':
-                    $timevals = explode('-', $form_state['values']['pickup_time_' . $form_state['values']['pickup_spots'] . '_' . $form_state['values']['pickup_day_' . $form_state['values']['pickup_spots']]]);
-                    $delivery_range_from = $timevals[0];
-                    $delivery_range_to = $timevals[1];
-                    break;
-                case 'shipping_agreement':
-                    $timevals = explode('-', $form_state['values']['shipping_time_' . $form_state['values']['shipping_day']]);
-                    $delivery_range_from = $timevals[0];
-                    $delivery_range_to = $timevals[1];
-                    break;
-            }
-            
-            $payment_type = $form_state['values']['paymenttypes'];
-            $iban = $form_state['values']['iban'];
-            
-            $expiration_date = $cart_item_variation->field_expiration_date[LANGUAGE_NONE][0]['value'];
-            $use_within = $cart_item_variation->field_use_within[LANGUAGE_NONE][0]['value'];
-            $leadtime = $cart_item_variation->field_leadtime[LANGUAGE_NONE][0]['value'];
-            $gtin = $cart_item_variation->field_gtin[LANGUAGE_NONE][0]['value'];
-            $productunit_first = $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['first'];
-            $productunit_second = $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['second'];
-            $sku = $cart_item_variation->field_sku[LANGUAGE_NONE][0]['value'];
-            $description = $cart_item_variation->body[LANGUAGE_NONE][0]['value'];
-            
+            $tu_packaging = $cart_item_tu->field_tu_packaging[LANGUAGE_NONE][0]['value'];            
+            $expiration_date = (isset($cart_item_variation->field_expiration_date[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->field_expiration_date[LANGUAGE_NONE][0]['value'] : '';
+            $use_within = (isset($cart_item_variation->field_use_within[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->field_use_within[LANGUAGE_NONE][0]['value'] : 0;
+            $leadtime = (isset($cart_item_variation->field_leadtime[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->field_leadtime[LANGUAGE_NONE][0]['value'] : 0;
+            $gtin = (isset($cart_item_variation->field_gtin[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->field_gtin[LANGUAGE_NONE][0]['value'] : '';
+            $productunit_first = (isset($cart_item_variation->field_productunit[LANGUAGE_NONE][0]['first'])) ? $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['first'] : '';
+            $productunit_second = (isset($cart_item_variation->field_productunit[LANGUAGE_NONE][0]['second'])) ? $cart_item_variation->field_productunit[LANGUAGE_NONE][0]['second'] : '';
+            $sku = (isset($cart_item_variation->field_sku[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->field_sku[LANGUAGE_NONE][0]['value'] : '';
+            $description = (isset($cart_item_variation->body[LANGUAGE_NONE][0]['value'])) ? $cart_item_variation->body[LANGUAGE_NONE][0]['value'] : '';
             $offer_desc_reference = $cart_item->field_offer_desc_reference[LANGUAGE_NONE][0]['target_id'];
             $offer_variation_reference = $cart_item->field_offer_variation_reference[LANGUAGE_NONE][0]['target_id'];
             $trading_unit_reference = $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'];
-            
             $seller_reference = $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'];
-            
         
-            $order_item = rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL);
+            $order_item = rm_cart_generate_order($order_number, $order_status, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference,$seller_reference, $uid = NULL);
         }
-        //AUCH NOCH AUFPREISE SPEICHERN ALS order item_type 'surcharge'!!!!
+        
     }
     
 }
