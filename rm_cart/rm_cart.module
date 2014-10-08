@@ -68,7 +68,7 @@ function rm_cart_thankyou() {
 		watchdog('thankyou', $result);
 	}
 	$output = t('You will now receive an email with further information about your order.');
-	$output .= '<div id="trustedShopsCheckout" style="display:none;"></div>';
+	//$output .= '<div id="trustedShopsCheckout" style="display:none;"></div>';
 	return $output;
 }
 
