@@ -53,8 +53,25 @@ function rm_cart_menu() {
         'page callback' => 'rm_cart_paypal_ipn',
         'access arguments' => array('access content'),
     );
+    $items['thankyou'] = array(
+        'title' => t('Thank you!'),
+        'page callback' => 'rm_cart_thankyou',
+        'access arguments' => array('access content'),
+    );
 	return $items;
 }
+
+function rm_cart_thankyou() {
+	if(isset($_REQUEST['hash']) && !empty($_REQUEST['hash']) && isset($_REQUEST['hash2']) && !empty($_REQUEST['hash2'])) {
+		$pw = variable_get('regiomino_payment_novalnet_password', 'eb1e78328c46506b46a4ac4a1e378b91');
+		$result = rm_cart_novalnet_checkHash($_REQUEST, $pw);
+		watchdog('thankyou', $result);
+	}
+	$output = t('You will now receive an email with further information about your order.');
+	$output .= '<div id="trustedShopsCheckout" style="display:none;"></div>';
+	return $output;
+}
+
 //TBD noch prüfen ob das stimmt und klappt
 function rm_cart_novalnet_confirm() {
 	watchdog('novalnet_ibt', 'path has been triggered: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
@@ -109,16 +126,16 @@ function rm_cart_paypal_ipn() {
 	if (isset($_POST["txn_id"]) && isset($_POST["txn_type"])){
 		$req = 'cmd=_notify-validate';
 		// assign posted variables to local variables
-		$data['item_name']			= $_POST['item_name'];
-		$data['item_number'] 		= $_POST['item_number'];
-		$data['payment_status'] 	= $_POST['payment_status'];
-		$data['payment_amount'] 	= $_POST['mc_gross'];
-		$data['payment_currency']	= $_POST['mc_currency'];
-		$data['txn_id']				= $_POST['txn_id'];
-		$data['receiver_email'] 	= $_POST['receiver_email'];
-		$data['payer_email'] 		= $_POST['payer_email'];
-		$data['custom'] 			= $_POST['custom'];
-		$data['invoice'] 			= $_POST['invoice'];
+		if(isset($_POST['item_name'])) $data['item_name'] = $_POST['item_name'];
+		if(isset($_POST['item_number'])) $data['item_number'] = $_POST['item_number'];
+		if(isset($_POST['payment_status'])) $data['payment_status'] = $_POST['payment_status'];
+		if(isset($_POST['mc_gross'])) $data['payment_amount'] = $_POST['mc_gross'];
+		if(isset($_POST['mc_currency'])) $data['payment_currency'] = $_POST['mc_currency'];
+		if(isset($_POST['txn_id'])) $data['txn_id'] = $_POST['txn_id'];
+		if(isset($_POST['receiver_email'])) $data['receiver_email'] = $_POST['receiver_email'];
+		if(isset($_POST['payer_email'])) $data['payer_email'] = $_POST['payer_email'];
+		if(isset($_POST['custom'])) $data['custom'] = $_POST['custom'];
+		if(isset($_POST['invoice'])) $data['invoice'] = $_POST['invoice'];
 		
 		foreach ($_POST as $key => $value) {
 			$value = urlencode(stripslashes($value));
