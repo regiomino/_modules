@@ -72,7 +72,6 @@ function rm_cart_thankyou() {
 	return $output;
 }
 
-//TBD noch prüfen ob das stimmt und klappt
 function rm_cart_novalnet_confirm() {
 	watchdog('novalnet_ibt', 'path has been triggered: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
 	if($_REQUEST['status'] && $_REQUEST['status_message']) {

@@ -20,7 +20,17 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
     $order_items = rm_cart_get_order($form_state['values']['order_number']);
     $order_items_keys = array_keys($order_items);
     $order_item = $order_items[$order_items_keys[0]];
+    
+    //TBD Bestelleingangsbestätigung senden
+    
     switch($order_item->field_paymenttype[LANGUAGE_NONE][0]['value']) {
+        case 'cash':
+        case 'invoice':
+            global $base_url;
+            global $base_path;
+            rm_cart_successfulpayment($form_state['values']['order_number']);
+            drupal_goto('thankyou');
+            break;
         case 'pp':
             global $base_url;
             global $base_path;
@@ -190,27 +200,6 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             );
             $payment_goto = $url;
             $payment_options = $options;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
             break;
         case 'sepa':
             break;
@@ -511,15 +500,37 @@ function rm_cart_checkout($form, &$form_state, $account) {
     /*
      *  Feld für Zahlungsart
      */
+    $allpaymenttypes = array(
+        'sepa' => t('SEPA'),
+        'ibt' => t('Instant Bank Transfer'),
+        'pp' => t('PayPal'),
+        'cash' => t('Cash'),
+        'invoice' => t('Invoice'),
+    );
+    $availablepaymenttypes = array();
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, $account->uid);
+    $shop_ids = array_keys($shops);
+    $shop = $shops[$shop_ids[0]];
+    foreach($shop->agreements['payment_agreement'] as $user_reference => $payment_agreements) {
+        foreach($payment_agreements as $payment_agreement) {
+            foreach($payment_agreement->field_payment_types[LANGUAGE_NONE] as $field_paymenttype) {
+                if($field_paymenttype['value'] == 'prepaid') {
+                    //$availablepaymenttypes['sepa'] = $allpaymenttypes['sepa'];
+                    $availablepaymenttypes['ibt'] = $allpaymenttypes['ibt'];
+                    $availablepaymenttypes['pp'] = $allpaymenttypes['pp'];
+                }
+                else {
+                    $availablepaymenttypes[$field_paymenttype['value']] = $allpaymenttypes[$field_paymenttype['value']];
+                }
+            }
+        }
+    }
+
     $form['checkout']['payment_fs']['paymenttypes'] = array(
         '#type' => 'radios',
         '#title' => t('Payment types'),
         '#title_display' => 'none',
-        '#options' => array(
-            'sepa' => t('SEPA'),
-            'ibt' => t('Instant Bank Transfer'),
-            'pp' => t('PayPal'),
-        ),
+        '#options' => $availablepaymenttypes,
     );
     
     /*
