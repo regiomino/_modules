@@ -104,7 +104,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             foreach($order_items as $order_item) {
                 $orderaddup += round($order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * ($order_item->field_tu_price[LANGUAGE_NONE][0]['value'] / 100 * (100 + $order_item->field_tu_vat[LANGUAGE_NONE][0]['value'])), 2);
                 if(isset($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value']) && $order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'] > 0) {
-                    $orderaddup += = round($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'], 2);
+                    $orderaddup += round($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'], 2);
                 }
             }
             

@@ -60,7 +60,7 @@ function rm_cart_novalnet_confirm() {
 	watchdog('novalnet_ibt', 'path has been triggered: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
 	if($_REQUEST['status'] && $_REQUEST['status_message']) {
 		watchdog('novalnet_ibt', 'notification from novalnet received: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
-        //if (regiomino_order_novalnet_checkHash($_REQUEST, 'eb1e78328c46506b46a4ac4a1e378b91') == true) {
+        //if (rm_cart_novalnet_checkHash($_REQUEST, 'eb1e78328c46506b46a4ac4a1e378b91') == true) {
         //for some reason request does not contain hash2 as stated in docs
         if(true) {
             //daten sind in ordnung
