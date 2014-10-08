@@ -85,32 +85,29 @@ function rm_cart_novalnet_confirm() {
 
 function rm_cart_redirectpayment() {
 	$urlparam = drupal_get_query_parameters();
-
 	$nn_url = variable_get('regiomino_payment_novalnet_onlinepayport', 'https://payport.novalnet.de/online_transfer_payport');
 	$form = '';
-  if ($urlparam) {
-    $form .= t('Please wait, you are now being redirected automatically. If this does not happen within 2 minutes, please click on the button below to continue!');
-    $form .= "<form action='$nn_url' method='post'>";
-    foreach($urlparam as $k=>$v){
-      $form .= "<input type='hidden' name='$k' value='$v'>";
+    if($urlparam) {
+        $form .= t('Please wait, you are now being redirected automatically. If this does not happen within 2 minutes, please click on the button below to continue!');
+        $form .= "<form action='$nn_url' method='post'>";
+        foreach($urlparam as $k=>$v){
+            $form .= "<input type='hidden' name='$k' value='$v'>";
+        }
+        $form .= "<input type='submit' name='submit2' value='" . t('Perform payment') . "'>";
+        $form .= "</form>";
+        $form .= "<script type='text/javascript'>document.forms[2].submit();</script>";
+        return $form;
     }
-    $form .= "<input type='submit' name='submit2' value='" . t('Perform payment') . "'>";
-    $form .= "</form>";
-    $form .= "<script type='text/javascript'>document.forms[2].submit();</script>";
-		return $form;
-  }
 	else {
 		drupal_not_found();
 	}
 }
 
 function rm_cart_paypal_ipn() {
-
 	$postdata = serialize($_POST);
 	watchdog('order', 'my confirmation post data: @postdata', array('@postdata' => $postdata));
 	if (isset($_POST["txn_id"]) && isset($_POST["txn_type"])){
 		$req = 'cmd=_notify-validate';
-		
 		// assign posted variables to local variables
 		$data['item_name']			= $_POST['item_name'];
 		$data['item_number'] 		= $_POST['item_number'];
