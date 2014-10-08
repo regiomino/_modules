@@ -373,7 +373,7 @@ function rm_user_mail($key, &$message, $params) {
 	switch($key) {
 		//switching on $key lets you create variations of the email based on the $key parameter
 		case 'profile_published_user_registered':
-			$message['subject'] = 'Ihr Profil regiomino.de';
+			$message['subject'] = 'Ihr Profil auf regiomino.de';
 
 			$message['body'][] = '<p>Hi,</p><p>Ihr Profil auf www.regiomino.de wurde freigeschaltet und es wurde ein neues Benutzerkonto für Sie angelegt. Sie können sich jetzt mit folgenden Daten auf www.regiomino.de anmelden.</p><p>E-Mail: ' . $params['account']->mail . '<br />Passwort: ' . $params['password'] . '</p><p>Viele Grüße,<br />Ihr Regiomino-Team</p>';
 			

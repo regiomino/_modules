@@ -22,6 +22,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
     $order_item = $order_items[$order_items_keys[0]];
     
     //TBD Bestelleingangsbestätigung senden
+    drupal_mail('rm_cart', 'incoming_order', 'mfrericks@gmail.com', NULL, array('param1' => 'value1'), variable_get('site_mail', 'support@regiomino.de'));
     
     switch($order_item->field_paymenttype[LANGUAGE_NONE][0]['value']) {
         case 'cash':

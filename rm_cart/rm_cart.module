@@ -877,6 +877,12 @@ function rm_cart_block_view($delta = '') {
 
 function rm_cart_theme() {
 	return array(
+        'rm_cart_theme_incoming_order_mail' => array(
+			'template' => 'rm_cart_incoming_order_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_cart_theme_cart_block' => array(
 			'template' => 'rm_cart_cart_block_theme',
 			'variables' => array(
@@ -900,4 +906,22 @@ function rm_cart_theme() {
 			'render element' => 'form',
 		),
 	);
+}
+
+function rm_cart_mail($key, &$message, $params) {
+	global $base_url;
+	global $base_path;
+	switch($key) {
+		//switching on $key lets you create variations of the email based on the $key parameter
+		case 'incoming_order':
+			$message['subject'] = 'Eingang Ihrer Bestellung';
+
+			$message['body'][] = theme('rm_cart_theme_incoming_order_mail', array(
+                                        'vars' => array(
+                                            'param' => NULL,
+                                        ),
+                                    ));
+			
+		break;
+	}
 }
