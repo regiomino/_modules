@@ -202,13 +202,13 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
 
 function rm_cart_cron() {
     $order_items = rm_cart_get_order_items_by_status('processing', 10);
-    var_dump($order_items); die();
     $orders = array();
     if(!empty($order_items)) {
         foreach($order_items as $order_item) {
             $orders[$order_item->field_order_number[LANGUAGE_NONE][0]['value']] = $order_item;
         }
     }
+    var_dump($orders); die();
     if(!empty($orders)) {
         foreach($orders as $order) {
             $userobject = user_load($order->uid);
