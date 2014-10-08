@@ -481,6 +481,21 @@ function rm_shop_get_shops_title($arg) {
     return t('Vendors in @region', array('@region' => $arg));
 }
 
+function rm_shop_get_shop($suid) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node');
+    $query->entityCondition('bundle', array('seller_profile'));
+    $query->propertyCondition('status', 1);
+    $query->propertyCondition('uid', $suid);
+    $result = $query->execute();
+    $shop = array();
+    if(isset($result['node'])) {
+        $shop_keys = array_keys($result['node']);
+        $shop = node_load($shop_keys[0]);
+    }
+    return $shop;
+}
+
 function rm_shop_validate_address($city, $zipcode, $street) {
     if(empty($city) || empty($zipcode) || empty($street)) return FALSE;
     $result = rm_api_google_address_check($street, $zipcode, $city);
