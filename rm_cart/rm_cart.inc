@@ -150,7 +150,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             $uniqid = rm_cart_novalnet_decode($uniqid_encoded, $pw);
             */
             
-            $url = $base_path . 'internal/provider';
+            $url = 'internal/provider';
             global $user;
             $options = array(
                 'query' => array(

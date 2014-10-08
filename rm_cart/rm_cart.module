@@ -112,7 +112,7 @@ function rm_cart_redirectpayment() {
         }
         $form .= "<input type='submit' name='submit2' value='" . t('Perform payment') . "'>";
         $form .= "</form>";
-        $form .= "<script type='text/javascript'>document.forms[2].submit();</script>";
+        $form .= "<script type='text/javascript'>document.forms[0].submit();</script>";
         return $form;
     }
 	else {
