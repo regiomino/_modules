@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_cart_theme_incoming_order_mail.tpl.php
