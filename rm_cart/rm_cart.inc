@@ -17,8 +17,200 @@ function rm_cart_checkout_confirm($form, &$form_state, $order_number) {
 function rm_cart_checkout_confirm_submit($form, &$form_state) {
     rm_cart_change_order_status($form_state['values']['order_number'], 'completed');
     //Perform payment
-    //TBD
-    drupal_goto();
+    $order_items = rm_cart_get_order($form_state['values']['order_number']);
+    $order_items_keys = array_keys($order_items);
+    $order_item = $order_items[$order_items_keys[0]];
+    switch($order_item->field_paymenttype[LANGUAGE_NONE][0]['value']) {
+        case 'pp':
+            global $base_url;
+            global $base_path;
+            $return_url = $base_url . $base_path . 'thankyou';
+            $cancel_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
+            $notify_url = $base_url . $base_path . 'internal/confirmation';
+            $cmd = '_cart';
+            $upload = 1;
+            $currency = 'EUR';
+            $image = $base_url . $base_path . drupal_get_path('theme', 'rmtwo') . '/images/paypallogo.png';
+            $paypal_email = variable_get('regiomino_payment_paypal_account', 'support@regiomino.de');
+            $url = 'https://www.paypal.com/cgi-bin/webscr';
+            $options = array(
+                'query' => array(
+                    'cmd' => $cmd,
+                    'lc' => 'DE',
+                    'upload' => $upload,
+                    'business' => $paypal_email,
+                    //'amount' => $item_amount,
+                    'return' => $return_url,
+                    'cancel_return' => $cancel_return,
+                    'notify_url' => $notify_url,
+                    'currency_code' => $currency,
+                    'no_shipping' => 1,
+                    'image_url' => $image,
+                    //'first_name' => $billingaddressitems[0]['first_name'],
+                    'last_name' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line'],
+                    'address1' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'],
+                    //'address2' => $billingaddressitems[0]['premise'],
+                    'city' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['locality'],
+                    'zip' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['postal_code'],
+                    'custom' => $form_state['values']['order_number'],
+                    'invoice' => $form_state['values']['order_number'],
+                ),
+                'https' => TRUE,
+                'external' => TRUE,
+            );
+            
+            //Add cart items to query
+            $counter = 1;
+            foreach($order_items as $order_item) {
+                $options['query']['item_name_' . $counter] = utf8_decode($order_item->title);
+                $options['query']['item_number_' . $counter] = $order_item->nid;
+                $options['query']['amount_' . $counter] = round($order_item->field_tu_price[LANGUAGE_NONE][0]['value'] / 100 * (100 + $order_item->field_tu_vat[LANGUAGE_NONE][0]['value']), 2);
+                $options['query']['quantity_' . $counter] = $order_item->field_order_amount[LANGUAGE_NONE][0]['value'];
+                $counter++;
+                //Sum up costs for shipping
+                if(isset($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value']) && $order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'] > 0) {
+                    $options['query']['item_name_' . $counter] = t('Deposit');
+                    $options['query']['item_number_' . $counter] = '0';
+                    $options['query']['amount_' . $counter] = round($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'], 2);
+                    $options['query']['quantity_' . $counter] = 1;
+                    $counter++;
+                }
+            }
+            
+            
+
+            $payment_goto = $url;
+            $payment_options = $options;
+            
+            break;
+        case 'ibt':
+        
+            global $base_url;
+            global $base_path;
+            $return_url = $base_url . $base_path . 'thankyou';
+            $error_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
+
+            $pw = variable_get('regiomino_payment_novalnet_password', 'eb1e78328c46506b46a4ac4a1e378b91');
+
+            #Verschlüsselung
+            
+            $vendor = variable_get('regiomino_payment_novalnet_vendor', 1852);
+            $auth_code_encoded = variable_get('regiomino_payment_novalnet_authcode', 'fXtYibPcVkVy7iJvKQ0WPZ2yK6Mwan');
+            $product_encoded = variable_get('regiomino_payment_novalnet_product', 2489);
+            $tariff_encoded = variable_get('regiomino_payment_novalnet_tariff', 4115);
+            $test_mode_encoded = variable_get('regiomino_payment_novalnet_testmode', 0);
+            
+            $orderaddup = 0;
+            foreach($order_items as $order_item) {
+                $orderaddup += round($order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * ($order_item->field_tu_price[LANGUAGE_NONE][0]['value'] / 100 * (100 + $order_item->field_tu_vat[LANGUAGE_NONE][0]['value'])), 2);
+                if(isset($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value']) && $order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'] > 0) {
+                    $orderaddup += = round($order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'], 2);
+                }
+            }
+            
+            $auth_code_encoded = rm_cart_novalnet_encode($auth_code_encoded, $pw);
+            $product_encoded = rm_cart_novalnet_encode($product_encoded, $pw);
+            $tariff_encoded = rm_cart_novalnet_encode($tariff_encoded, $pw);
+            $test_mode_encoded = rm_cart_novalnet_encode($test_mode_encoded, $pw);
+            $uniqid_encoded = rm_cart_novalnet_encode($order_number, $pw);
+            $amount_encoded = rm_cart_novalnet_encode($orderaddup*100, $pw);
+
+            #Hashwert-Berechnung
+            $hashP = array(
+                'product_id' => $product_encoded,
+                'tariff' => $tariff_encoded,
+                'auth_code' => $auth_code_encoded,
+                'amount' => $amount_encoded,
+                'test_mode' => $test_mode_encoded,
+                'uniqid' => $uniqid_encoded,
+            );
+            $hash = rm_cart_novalnet_hashIt($hashP, $pw);
+
+            
+            /*Die o.g. 6 Parameter (auth_code, product, tariff, amount, test_mode, uniqid) werden auch bei der Antwort von Novalnet entsprechend verschlüsselt, der Hash-Wert seitens Novalnet wird im Parameter hash2 übermittelt. Anhand der Funktion checkHash (siehe unten) kann man feststellen, ob eine Manipulation stattgefunden hat:
+            $_REQUEST enthält u.a.:
+            $_REQUEST['hash2'],
+            $_REQUEST['auth_code'],
+            $_REQUEST['product'],
+            $_REQUEST['tariff'],
+            $_REQUEST['amount'],
+            $_REQUEST['test_mode'],
+            $_REQUEST['uniqid']
+            */
+            /*
+            #nun check
+            if (rm_cart_novalnet_checkHash($_REQUEST, $pw) == true) {}#OK
+            else{}#not OK, Daten sind vielleicht manipuliert.
+            #Entschlüsselung:
+            $auth_code = rm_cart_novalnet_decode($auth_code_encoded, $pw); # oder $auth_code = rm_cart_novalnet_decode($_REQUEST['auth_code'], $pw);
+            $product = rm_cart_novalnet_decode($product_encoded, $pw);
+            $tariff = rm_cart_novalnet_decode($tariff_encoded, $pw);
+            $amount = rm_cart_novalnet_decode($amount_encoded, $pw);
+            $test_mode = rm_cart_novalnet_decode($test_mode_encoded, $pw);
+            $uniqid = rm_cart_novalnet_decode($uniqid_encoded, $pw);
+            */
+            
+            $url = $base_path . 'internal/provider';
+            global $user;
+            $options = array(
+                'query' => array(
+                    'utf8' => 1,
+                    'vendor' => $vendor,
+                    'product' => $product_encoded,
+                    'key' => 33,
+                    'tariff' => $tariff_encoded,
+                    'auth_code' => $auth_code_encoded,
+                    'currency' => 'EUR',
+                    'amount' => $amount_encoded,
+                    //'first_name' => $billingaddressitems[0]['first_name'],
+                    'last_name' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line'],
+                    'email' => $user->mail,
+                    'street' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'],
+                    'search_in_street' => 1,
+                    'city' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['locality'],
+                    'zip' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['postal_code'],
+                    'country_code' => 'DE',
+                    'lang' => 'DE',
+                    'remote_ip' => ip_address(),
+                    'return_url' => $return_url,
+                    'return_method' => 'POST',
+                    'error_return_url' => $error_return,
+                    'error_return_method' => 'POST',
+                    'test_mode' => $test_mode_encoded,
+                    'user_variable_0' => 'www.regiomino.de',
+                    'uniqid' => $uniqid_encoded,
+                    'hash' => $hash,
+                ),
+                'https' => TRUE,
+            );
+            $payment_goto = $url;
+            $payment_options = $options;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            break;
+        case 'sepa':
+            break;
+    }
+    drupal_goto($payment_goto, $payment_options);
 }
 
 function rm_cart_checkout($form, &$form_state, $account) {

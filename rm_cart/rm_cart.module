@@ -35,8 +35,225 @@ function rm_cart_menu() {
         'file' => 'rm_cart.inc',
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
-    
+    //Used to post and redirect sofortüberweisung payments to provider gateway
+    $items['internal/provider'] = array(
+        'title' => t('Redirect to the payment provider'),
+        'page callback' => 'rm_cart_redirectpayment',
+        'access arguments' => array('access content'),
+    );
+	//Used for Novalnet Payment notification
+    $items['internal/ibt'] = array(
+        'title' => t('Confirmation'),
+        'page callback' => 'rm_cart_novalnet_confirm',
+        'access arguments' => array('access content'),
+    );
+    //Used for PayPal IPN
+    $items['internal/confirmation'] = array(
+        'title' => t('Confirmation'),
+        'page callback' => 'rm_cart_paypal_ipn',
+        'access arguments' => array('access content'),
+    );
 	return $items;
+}
+//TBD noch prüfen ob das stimmt und klappt
+function rm_cart_novalnet_confirm() {
+	watchdog('novalnet_ibt', 'path has been triggered: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
+	if($_REQUEST['status'] && $_REQUEST['status_message']) {
+		watchdog('novalnet_ibt', 'notification from novalnet received: @postdata', array('@postdata' => print_r($_REQUEST, TRUE)));
+        //if (regiomino_order_novalnet_checkHash($_REQUEST, 'eb1e78328c46506b46a4ac4a1e378b91') == true) {
+        //for some reason request does not contain hash2 as stated in docs
+        if(true) {
+            //daten sind in ordnung
+            watchdog('novalnet_ibt', 'success checkhash');
+            if($_REQUEST['status'] == 100) {
+                //success
+                watchdog('novalnet_ibt', 'success txn');
+                rm_cart_successfulpayment($_REQUEST['uniqid']);
+            }
+            else {
+                //failure
+                watchdog('novalnet_ibt', 'failure txn');
+            }
+        }
+        else {
+            //daten sind mglw manipuliert
+            watchdog('novalnet_ibt', 'failure checkhash');
+            //send alertmail
+        }
+	}
+}
+
+function rm_cart_redirectpayment() {
+	$urlparam = drupal_get_query_parameters();
+
+	$nn_url = variable_get('regiomino_payment_novalnet_onlinepayport', 'https://payport.novalnet.de/online_transfer_payport');
+	$form = '';
+  if ($urlparam) {
+    $form .= t('Please wait, you are now being redirected automatically. If this does not happen within 2 minutes, please click on the button below to continue!');
+    $form .= "<form action='$nn_url' method='post'>";
+    foreach($urlparam as $k=>$v){
+      $form .= "<input type='hidden' name='$k' value='$v'>";
+    }
+    $form .= "<input type='submit' name='submit2' value='" . t('Perform payment') . "'>";
+    $form .= "</form>";
+    $form .= "<script type='text/javascript'>document.forms[2].submit();</script>";
+		return $form;
+  }
+	else {
+		drupal_not_found();
+	}
+}
+
+function rm_cart_paypal_ipn() {
+
+	$postdata = serialize($_POST);
+	watchdog('order', 'my confirmation post data: @postdata', array('@postdata' => $postdata));
+	if (isset($_POST["txn_id"]) && isset($_POST["txn_type"])){
+		$req = 'cmd=_notify-validate';
+		
+		// assign posted variables to local variables
+		$data['item_name']			= $_POST['item_name'];
+		$data['item_number'] 		= $_POST['item_number'];
+		$data['payment_status'] 	= $_POST['payment_status'];
+		$data['payment_amount'] 	= $_POST['mc_gross'];
+		$data['payment_currency']	= $_POST['mc_currency'];
+		$data['txn_id']				= $_POST['txn_id'];
+		$data['receiver_email'] 	= $_POST['receiver_email'];
+		$data['payer_email'] 		= $_POST['payer_email'];
+		$data['custom'] 			= $_POST['custom'];
+		$data['invoice'] 			= $_POST['invoice'];
+		
+		foreach ($_POST as $key => $value) {
+			$value = urlencode(stripslashes($value));
+			$value = preg_replace('/(.*[^%^0^D])(%0A)(.*)/i','${1}%0D%0A${3}',$value);// IPN fix
+			$req .= "&$key=$value";
+		}
+
+		/* watchdog('invoice_number', '@ordernumber', array('@ordernumber' => $data['invoice']));
+		watchdog('serialize_invoice_number', '@ordernumber', array('@ordernumber' => serialize($data['invoice']))); */
+		// post back to PayPal system to validate
+		$header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
+		$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
+		$header .= "Content-Length: " . strlen($req) . "\r\n\r\n";
+		
+		$fp = fsockopen ('ssl://www.paypal.com', 443, $errno, $errstr, 30);	
+
+		if (!$fp) {
+			// HTTP ERROR
+		} else {
+			fputs ($fp, $header . $req);
+			while (!feof($fp)) {
+				$res = fgets ($fp, 1024);
+				if (strcmp($res, "VERIFIED") == 0) {
+					// Used for debugging
+					//watchdog('verified_response', 'Verified Response<br />data = <pre>@somestring</pre>', array('@somestring' => serialize($post)));
+					//Validate payment (Check unique txnid & correct price)
+					//$valid_txnid = check_txnid($data['txn_id']);
+					$valid_txnid = TRUE;
+					//$valid_price = check_price($data['payment_amount'], $data['item_number']);
+					$valid_price = TRUE;
+					// PAYMENT VALIDATED & VERIFIED!
+					if($valid_txnid && $valid_price){
+						rm_cart_successfulpayment($data['custom']);
+					}
+                    else {
+					}
+				}else if (strcmp ($res, "INVALID") == 0) {
+					// PAYMENT INVALID & INVESTIGATE MANUALLY!
+					watchdog('verified_response', 'Invalid Response<br />data = <pre>@somestring</pre>', array('@somestring' => serialize($post)));
+				}
+			}
+			fclose ($fp);
+		}
+	}
+}
+
+function rm_cart_successfulpayment($order_number) {
+	watchdog('order', 'Payment for order @number received', array('@number' => $order_number));
+    rm_cart_change_order_status($order_number, 'processing');
+    //TBD Send mail to confirm payment receiption and status change
+}
+
+function rm_cart_novalnet_decode($data, $pw) {
+	$data = trim($data);
+	if ($data == '') {
+		return 'Error: no data';
+	}
+	if (!function_exists('base64_decode') or !function_exists('pack') or !function_exists('crc32')) {
+		return 'Error: func base64_decode/pack/crc32 n/a';
+	}
+	try {
+		$data = base64_decode(strrev($data));
+		if (!preg_match('/^[0-9a-fA-F]+$/', $data)) {
+			return 'Error: data contains non hexadecimal values!';
+		}
+		$data = pack("H".strlen($data), $data);
+		$data = substr($data, 0, stripos($data, $pw));
+		$pos = strpos($data, "|");
+		if ($pos === false) {
+		return "Error: CKSum not found!";
+		}
+		$crc = substr($data, 0, $pos);
+		$value = trim(substr($data, $pos+1));
+		if ($crc != sprintf('%u', crc32($value))) {
+		return "Error; CKSum invalid!";
+		}
+		return $value;
+	}
+	catch (Exception $e) {
+		return 'Error: '.$e->getMessage();
+	}
+}
+
+function rm_cart_novalnet_encode($data, $pw) {
+	$data = trim($data);
+	if ($data == '') {
+		return 'Error: no data!';
+	}
+	if (!function_exists('base64_encode') or !function_exists('pack') or !function_exists('crc32')) {
+		return "Error: func 'base64_encode/pack/crc32 n/a'";
+	}
+	try {
+		$crc = sprintf('%u', crc32($data));# %u ist obligatorisch für ccrc32, gibt einen vorzeichenbehafteten Wert zurück
+		$data = $crc."|".$data;
+		$data = bin2hex($data.$pw);
+		$data = strrev(base64_encode($data));
+	}
+	catch (Exception $e){
+		return 'Error: '.$e->getMessage();
+	}
+	return $data;
+}
+
+function rm_cart_novalnet_hashIt($h, $pw) {
+	if (!$h) return 'Error: no data';
+	if (!function_exists('md5')) {
+		return 'Error: func md5 n/a';
+	}
+	if (is_array($h)) {
+		return md5($h['auth_code'].$h['product_id'].$h['tariff'].$h['amount'].$h['test_mode'].$h['uniqid'].strrev($pw));
+	}
+	else {
+		return 'Error: $h is not an array!';
+	}
+}
+
+function rm_cart_novalnet_checkHash($request, $pw) {
+	if (!$request) {
+		return false;
+	}
+	if (is_array($request)){
+		$h['auth_code'] = $request['auth_code'];
+		$h['product_id'] = $request['product'];
+		$h['tariff'] = $request['tariff'];
+		$h['amount'] = $request['amount'];
+		$h['test_mode'] = $request['test_mode'];
+		$h['uniqid'] = $request['uniqid'];
+	}
+	if ($request['hash2'] != rm_cart_novalnet_hashIt($h, $pw)){
+		return false;
+	}
+	return true;
 }
 
 function rm_cart_user_owns_order($order_number) {
