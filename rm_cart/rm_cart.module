@@ -208,12 +208,11 @@ function rm_cart_cron() {
             $orders[$order_item->field_order_number[LANGUAGE_NONE][0]['value']] = $order_item;
         }
     }
-    var_dump($orders); die();
     if(!empty($orders)) {
         foreach($orders as $order) {
             $userobject = user_load($order->uid);
             drupal_mail('rm_cart', 'accepted_order', $userobject->mail, NULL, array('order' => $order), variable_get('site_mail', 'support@regiomino.de'));
-            rm_cart_change_order_status($order->field_order_number[LANGUAGE_NONE][0]['value'], 'processing');
+            rm_cart_change_order_status($order->field_order_number[LANGUAGE_NONE][0]['value'], 'accepted');
         }
     }
 }
