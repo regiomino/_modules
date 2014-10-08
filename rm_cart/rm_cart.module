@@ -211,7 +211,30 @@ function rm_cart_cron() {
     if(!empty($orders)) {
         foreach($orders as $order) {
             $userobject = user_load($order->uid);
-            drupal_mail('rm_cart', 'accepted_order', $userobject->mail, NULL, array('order' => $order), variable_get('site_mail', 'support@regiomino.de'));
+            $shop = rm_shop_get_shop($order->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+            drupal_mail(
+                'rm_cart',
+                'accepted_order',
+                $userobject->mail,
+                NULL,
+                array(
+                    'order_number' => $order->field_order_number[LANGUAGE_NONE][0]['value'],
+                    'user_gender' => $userobject->field_gender[LANGUAGE_NONE][0]['value'],
+                    'user_first_name' => $userobject->field_first_name[LANGUAGE_NONE][0]['value'],
+                    'user_last_name' => $userobject->field_last_name[LANGUAGE_NONE][0]['value'],
+                    'order_items' => rm_cart_get_order($order->field_order_number[LANGUAGE_NONE][0]['value']),
+                    'billing_address' => $order->field_billingaddress[LANGUAGE_NONE][0],
+                    'shipping_address' => $order->field_address[LANGUAGE_NONE][0],
+                    'delivery_type' => $order->field_deliverytype[LANGUAGE_NONE][0]['value'],
+                    'payment_type' => $order->field_paymenttype[LANGUAGE_NONE][0]['value'],
+                    'pickup_agreement' => $order->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id'],
+                    'delivery_range_from' => $order->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
+                    'delivery_range_to' => $order->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
+                    'seller_user' => user_load($order->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                    'shop' => $shop,
+                ),
+                variable_get('site_mail', 'support@regiomino.de')
+            );
             rm_cart_change_order_status($order->field_order_number[LANGUAGE_NONE][0]['value'], 'accepted');
         }
     }
