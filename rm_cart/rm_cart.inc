@@ -22,7 +22,27 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
     $order_item = $order_items[$order_items_keys[0]];
     $userobject = user_load($order_item->uid);
     //TBD Bestelleingangsbestätigung senden
-    drupal_mail('rm_cart', 'incoming_order', $userobject->mail, NULL, array('param1' => 'value1'), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail(
+        'rm_cart',
+        'incoming_order',
+        $userobject->mail,
+        NULL,
+        array(
+            'order_number' => $form_state['values']['order_number'],
+            'user_gender' => $userobject->field_gender[LANGUAGE_NONE][0]['value'],
+            'user_first_name' => $userobject->field_first_name[LANGUAGE_NONE][0]['value'],
+            'user_last_name' => $userobject->field_last_name[LANGUAGE_NONE][0]['value'],
+            'order_items' => $order_items,
+            'billing_address' => $order_item->field_billingaddress[LANGUAGE_NONE][0],
+            'shipping_address' => $order_item->field_address[LANGUAGE_NONE][0],
+            'delivery_type' => $order_item->field_deliverytype[LANGUAGE_NONE][0]['values'],
+            'payment_type' => $order_item->field_paymenttype[LANGUAGE_NONE][0]['values'],
+            'pickup_agreement' => $order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id'],
+            'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
+            'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value']
+        ),
+        variable_get('site_mail', 'support@regiomino.de')
+    );
     
     switch($order_item->field_paymenttype[LANGUAGE_NONE][0]['value']) {
         case 'cash':

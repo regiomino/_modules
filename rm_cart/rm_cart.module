@@ -930,7 +930,18 @@ function rm_cart_mail($key, &$message, $params) {
 
 			$message['body'][] = theme('rm_cart_theme_incoming_order_mail', array(
                                         'vars' => array(
-                                            'param' => NULL,
+                                            'order_number' => $params['order_number'],
+                                            'user_gender' => $params['user_gender'],
+                                            'user_first_name' => $params['user_first_name'],
+                                            'user_last_name' => $params['user_last_name'],
+                                            'order_items' => $params['order_items'],
+                                            'billing_address' => $params['billing_address'],
+                                            'shipping_address' => $params['shipping_address'],
+                                            'delivery_type' => $params['delivery_type'],
+                                            'payment_type' => $params['payment_type'],
+                                            'pickup_agreement' => node_load($params['pickup_agreement']),
+                                            'delivery_range_from' => $params['delivery_range_from'],
+                                            'delivery_range_to' => $params['delivery_range_to'],
                                         ),
                                     ));
 			
