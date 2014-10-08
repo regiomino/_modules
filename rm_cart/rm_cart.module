@@ -201,7 +201,7 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
 }
 
 function rm_cart_cron() {
-    $order_items = rm_cart_get_order_items_by_status('processing', 3600);
+    $order_items = rm_cart_get_order_items_by_status('processing', 1);
     $orders = array();
     if(!empty($order_items)) {
         foreach($order_items as $order_item) {
