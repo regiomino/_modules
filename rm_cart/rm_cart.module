@@ -938,7 +938,7 @@ function rm_cart_mail($key, &$message, $params) {
 		case 'incoming_payment':
 			$message['subject'] = 'Wir haben Ihre ' . $params['provider'] . '-Zahlung erhalten!';
 
-			$message['body'][] = theme('rm_cart_theme_incoming_order_mail', array(
+			$message['body'][] = theme('rm_cart_theme_incoming_payment_mail', array(
                                         'vars' => array(
                                             'provider' => $params['provider'],
                                             'totalamount' => $params['totalamount'],
