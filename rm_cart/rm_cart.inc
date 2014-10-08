@@ -152,6 +152,11 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             
             $url = 'internal/provider';
             global $user;
+            $customername = explode(' ', $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line']);
+            if(!isset($customername[1])) {
+                $customername[0] = 'na';
+                $customername[1] = $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line'];
+            }
             $options = array(
                 'query' => array(
                     'utf8' => 1,
@@ -162,8 +167,8 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
                     'auth_code' => $auth_code_encoded,
                     'currency' => 'EUR',
                     'amount' => $amount_encoded,
-                    //'first_name' => $billingaddressitems[0]['first_name'],
-                    'last_name' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['name_line'],
+                    'first_name' => $customername[0],
+                    'last_name' => $customername[1],
                     'email' => $user->mail,
                     'street' => $order_item->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'],
                     'search_in_street' => 1,
