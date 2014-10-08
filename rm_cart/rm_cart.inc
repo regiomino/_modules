@@ -21,7 +21,9 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
     $order_items_keys = array_keys($order_items);
     $order_item = $order_items[$order_items_keys[0]];
     $userobject = user_load($order_item->uid);
-    //TBD Bestelleingangsbestätigung senden
+
+    $shop = rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+    
     drupal_mail(
         'rm_cart',
         'incoming_order',
@@ -39,7 +41,8 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             'payment_type' => $order_item->field_paymenttype[LANGUAGE_NONE][0]['values'],
             'pickup_agreement' => $order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id'],
             'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
-            'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value']
+            'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
+            'seller_title' => $shop->title
         ),
         variable_get('site_mail', 'support@regiomino.de')
     );

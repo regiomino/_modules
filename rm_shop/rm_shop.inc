@@ -10,6 +10,21 @@ function rm_shop_suggest() {
     drupal_goto('kontakt', array('query' => array('suggest' => 1)));
 }
 
+function rm_shop_get_shop($suid) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node');
+    $query->entityCondition('bundle', array('seller_profile'));
+    $query->propertyCondition('status', 1);
+    $query->propertyCondition('uid', $suid);
+    $result = $query->execute();
+    $shop = array();
+    if(isset($result['node'])) {
+        $shop_keys = array_keys($result['node']);
+        $shop = node_load($shop_keys[0]);
+    }
+    return $shop;
+}
+
 function rm_shop_get_shops($city, $zipcode, $street) {
 
     $_SESSION['regionselect'] = array(

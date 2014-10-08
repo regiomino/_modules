@@ -194,7 +194,7 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
 
     if($provider != 'external') {
         $userobject = user_load($order_item->uid);
-        drupal_mail('rm_cart', 'incoming_payment', $userobject->mail, NULL, array('order_number' => $order_number, 'totalamount' => $payment_amount, 'provider' => $provider), variable_get('site_mail', 'support@regiomino.de'));
+        drupal_mail('rm_cart', 'incoming_payment', $userobject->mail, NULL, array('order_number' => $order_number, 'totalamount' => $payment_amount, 'provider' => $provider, 'userobject' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
     }
     
     //TBD Bestellinfos an Verkäufer faxen
@@ -1018,6 +1018,7 @@ function rm_cart_mail($key, &$message, $params) {
                                             'pickup_agreement' => node_load($params['pickup_agreement']),
                                             'delivery_range_from' => $params['delivery_range_from'],
                                             'delivery_range_to' => $params['delivery_range_to'],
+                                            'seller_title' => $params['seller_title'],
                                         ),
                                     ));
 			
@@ -1030,6 +1031,7 @@ function rm_cart_mail($key, &$message, $params) {
                                             'provider' => $params['provider'],
                                             'totalamount' => $params['totalamount'],
                                             'order_number' => $params['order_number'],
+                                            'userobject' => $params['userobject'],
                                         ),
                                     ));
 			
