@@ -183,13 +183,37 @@ function rm_cart_paypal_ipn() {
 
 function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
 	watchdog('order', 'Payment for order @number received', array('@number' => $order_number));
+    
     rm_cart_change_order_status($order_number, 'processing');
+    
+    $order_items = rm_cart_get_order($order_number);
+    $order_items_keys = array_keys($order_items);
+    $order_item = $order_items[$order_items_keys[0]];
+        
+    rm_cart_unpublish_cart($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $order_item->uid, FALSE);
+
     if($provider != 'external') {
-        $order_items = rm_cart_get_order($order_number);
-        $order_items_keys = array_keys($order_items);
-        $order_item = $order_items[$order_items_keys[0]];
         $userobject = user_load($order_item->uid);
         drupal_mail('rm_cart', 'incoming_payment', $userobject->mail, NULL, array('order_number' => $order_number, 'totalamount' => $payment_amount, 'provider' => $provider), variable_get('site_mail', 'support@regiomino.de'));
+    }
+    
+    //TBD Bestellinfos an Verkäufer faxen
+}
+
+function rm_cart_cron() {
+    $order_items = rm_cart_get_order_items_by_status('processing', 10);
+    $orders = array();
+    if(!empty($order_items)) {
+        foreach($order_items as $order_item) {
+            $orders[$order_item->field_order_number[LANGUAGE_NONE][0]['value']] = $order_item;
+        }
+    }
+    if(!empty($orders)) {
+        foreach($orders as $order) {
+            $userobject = user_load($order->uid);
+            drupal_mail('rm_cart', 'accepted_order', $userobject->mail, NULL, array('order' => $order), variable_get('site_mail', 'support@regiomino.de'));
+            rm_cart_change_order_status($order->field_order_number[LANGUAGE_NONE][0]['value'], 'processing');
+        }
     }
 }
 
@@ -439,6 +463,24 @@ function rm_cart_get_order($order_number) {
     return $order_items;
 }
 
+function rm_cart_get_order_items_by_status($status, $delay = 0) {
+    $query = new EntityFieldQuery();
+    $timestamp = time();
+    $agestamp = $timestamp - $delay;
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'order_item')
+        ->propertyCondition('status', 1)
+        ->propertyCondition('created', $agestamp, '<=')
+        ->fieldCondition('field_order_status', 'value', $status)
+        ->execute();
+    $order_items = array();
+    if(isset($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+    }
+    return $order_items;
+}
+
 function rm_cart_get_orders($uid, $header = NULL, $pager = NULL) {
     $query = new EntityFieldQuery();
     $query
@@ -561,6 +603,25 @@ function rm_cart_remove_from_cart($cart_id, $goto = TRUE) {
     node_save($cartobject);
     //Detect if request is ajax or not
     if(!rm_api_is_ajax() && $goto) drupal_set_message(t('The product was removed from your cart'), 'status');
+    if(!rm_api_is_ajax() && $goto) drupal_goto();
+}
+
+function rm_cart_unpublish_cart($suid, $uid, $goto = TRUE) {
+    $query = new EntityFieldQuery();
+    $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('cart_item'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid)
+        ->fieldCondition('field_user_reference', 'target_id', $suid);
+    $tmp = $query->execute();
+    $cartitems = array();
+    if(isset($tmp['node'])) $cartitems = entity_load('node', array_keys($tmp['node']));
+    if(!empty($cartitems)) {
+        foreach($cartitems as $cartitem) {
+            rm_cart_remove_from_cart($cartitem->nid, FALSE);
+        }
+    }
     if(!rm_api_is_ajax() && $goto) drupal_goto();
 }
 
@@ -889,6 +950,12 @@ function rm_cart_theme() {
 				'vars' => NULL,
 			)
 		),
+        'rm_cart_theme_accepted_order_mail' => array(
+			'template' => 'rm_cart_accepted_order_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
         'rm_cart_theme_incoming_payment_mail' => array(
 			'template' => 'rm_cart_incoming_payment_mail_theme',
 			'variables' => array(
@@ -925,6 +992,15 @@ function rm_cart_mail($key, &$message, $params) {
 	global $base_path;
 	switch($key) {
 		//switching on $key lets you create variations of the email based on the $key parameter
+        case 'accepted_order':
+            $message['subject'] = 'Vielen Dank für Ihre Bestellung';
+
+			$message['body'][] = theme('rm_cart_theme_accepted_order_mail', array(
+                                        'vars' => array(
+                                            'order' => $params['order'],
+                                        ),
+                                    ));
+        break;
 		case 'incoming_order':
 			$message['subject'] = 'Eingang Ihrer Bestellung';
 
