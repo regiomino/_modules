@@ -112,7 +112,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             $product_encoded = rm_cart_novalnet_encode($product_encoded, $pw);
             $tariff_encoded = rm_cart_novalnet_encode($tariff_encoded, $pw);
             $test_mode_encoded = rm_cart_novalnet_encode($test_mode_encoded, $pw);
-            $uniqid_encoded = rm_cart_novalnet_encode($order_number, $pw);
+            $uniqid_encoded = rm_cart_novalnet_encode($form_state['values']['order_number'], $pw);
             $amount_encoded = rm_cart_novalnet_encode($orderaddup*100, $pw);
 
             #Hashwert-Berechnung
