@@ -84,7 +84,7 @@ function rm_cart_novalnet_confirm() {
             if($_REQUEST['status'] == 100) {
                 //success
                 watchdog('novalnet_ibt', 'success txn');
-                rm_cart_successfulpayment($_REQUEST['uniqid']);
+                rm_cart_successfulpayment($_REQUEST['uniqid'], t('Instant Bank Transfer'), $_REQUEST['amount']/100);
             }
             else {
                 //failure
@@ -167,7 +167,7 @@ function rm_cart_paypal_ipn() {
 					$valid_price = TRUE;
 					// PAYMENT VALIDATED & VERIFIED!
 					if($valid_txnid && $valid_price){
-						rm_cart_successfulpayment($data['custom']);
+						rm_cart_successfulpayment($data['custom'], t('PayPal'), $data['payment_amount']);
 					}
                     else {
 					}
@@ -181,10 +181,16 @@ function rm_cart_paypal_ipn() {
 	}
 }
 
-function rm_cart_successfulpayment($order_number) {
+function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
 	watchdog('order', 'Payment for order @number received', array('@number' => $order_number));
     rm_cart_change_order_status($order_number, 'processing');
-    //TBD Send mail to confirm payment receiption and status change
+    if($provider != 'external') {
+        $order_items = rm_cart_get_order($order_number);
+        $order_items_keys = array_keys($order_items);
+        $order_item = $order_items[$order_items_keys[0]];
+        $userobject = user_load($order_item->uid);
+        drupal_mail('rm_cart', 'incoming_payment', $userobject->mail, NULL, array('order_number' => $order_number, 'totalamount' => $payment_amount, 'provider' => $provider), variable_get('site_mail', 'support@regiomino.de'));
+    }
 }
 
 function rm_cart_novalnet_decode($data, $pw) {
@@ -883,6 +889,12 @@ function rm_cart_theme() {
 				'vars' => NULL,
 			)
 		),
+        'rm_cart_theme_incoming_payment_mail' => array(
+			'template' => 'rm_cart_incoming_payment_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_cart_theme_cart_block' => array(
 			'template' => 'rm_cart_cart_block_theme',
 			'variables' => array(
@@ -919,6 +931,18 @@ function rm_cart_mail($key, &$message, $params) {
 			$message['body'][] = theme('rm_cart_theme_incoming_order_mail', array(
                                         'vars' => array(
                                             'param' => NULL,
+                                        ),
+                                    ));
+			
+		break;
+		case 'incoming_payment':
+			$message['subject'] = 'Wir haben Ihre ' . $params['provider'] . '-Zahlung erhalten!';
+
+			$message['body'][] = theme('rm_cart_theme_incoming_order_mail', array(
+                                        'vars' => array(
+                                            'provider' => $params['provider'],
+                                            'totalamount' => $params['totalamount'],
+                                            'order_number' => $params['order_number'],
                                         ),
                                     ));
 			

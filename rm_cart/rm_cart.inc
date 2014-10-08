@@ -29,7 +29,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
         case 'invoice':
             global $base_url;
             global $base_path;
-            rm_cart_successfulpayment($form_state['values']['order_number']);
+            rm_cart_successfulpayment($form_state['values']['order_number'], 'external', 0);
             drupal_goto('thankyou');
             break;
         case 'pp':
