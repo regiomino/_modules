@@ -1091,9 +1091,15 @@ function rm_cart_generate_order_fax($order_number) {
     $order_items_keys = array_keys($order_items);
     $order_item = $order_items[$order_items_keys[0]];
     
+    $userobject = user_load($order_item->uid);
+    
     $html = theme('rm_cart_theme_order_fax', array(
                 'vars' => array(
                     'order_number' => $order_number,
+                    'user_gender' => $userobject->field_gender[LANGUAGE_NONE][0]['value'],
+                    'user_first_name' => $userobject->field_first_name[LANGUAGE_NONE][0]['value'],
+                    'user_last_name' => $userobject->field_last_name[LANGUAGE_NONE][0]['value'],
+                    'user_number' => $userobject->uid,
                     'order_items' => $order_items,
                     'billing_address' => $order_item->field_billingaddress[LANGUAGE_NONE][0],
                     'shipping_address' => $order_item->field_address[LANGUAGE_NONE][0],
@@ -1102,11 +1108,11 @@ function rm_cart_generate_order_fax($order_number) {
                     'pickup_agreement' => ($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) ? node_load($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) : 0,
                     'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
                     'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
-                    'seller_user' => user_load($order->field_user_reference[LANGUAGE_NONE][0]['target_id']),
-                    'shop' => rm_shop_get_shop($order->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                    'seller_user' => user_load($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                    'shop' => rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
                 ),
             ));
-    
+     
     $tcpdf->writeHTML($html);
 
     $tcpdf->Output("private://r_sellerincoming_tmp.pdf", "F");

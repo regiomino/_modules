@@ -1,6 +1,7 @@
 <?php
 
 function rm_shop_init() {
+
 // $item_type = 'product'; //could be "surcharge"
 // $now = time();
 // $order_number = rm_cart_generate_order_number(1, 44, $now);

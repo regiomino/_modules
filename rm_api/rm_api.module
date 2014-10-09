@@ -620,6 +620,8 @@ function rm_api_mailchimp_unsubscribe($email, $delete_member = FALSE, $send_good
  *      A string with the complete fax number that the file is supposed to be send to
  */
 function rm_api_send_fax($filename, $faxnumber, $author = 1, $faxserial = 0) {
+
+
     $fp = fopen($filename, "r");
     $data = '';
     while(!feof($fp)) $data .= fread($fp, 1024);
