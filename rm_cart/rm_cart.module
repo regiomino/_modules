@@ -1013,6 +1013,12 @@ function rm_cart_theme() {
 				'vars' => NULL,
 			)
 		),
+        'rm_cart_theme_order_notification' => array(
+			'template' => 'rm_cart_order_notification_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
         'rm_cart_theme_accepted_order_mail' => array(
 			'template' => 'rm_cart_accepted_order_mail_theme',
 			'variables' => array(
@@ -1056,9 +1062,9 @@ function rm_cart_mail($key, &$message, $params) {
 	switch($key) {
 		//switching on $key lets you create variations of the email based on the $key parameter
         case 'order_notification':
-            $message['subject'] = 'Neue Bestellung von Regiomino';
+            $message['subject'] = 'Neue Bestellung über Regiomino';
 
-			$message['body'][] = theme('rm_cart_theme_order_fax', array(
+			$message['body'][] = theme('rm_cart_theme_order_notification', array(
                                         'vars' => array(
                                             'order_number' => $params['order_number'],
                                             'user_gender' => $params['user_gender'],
