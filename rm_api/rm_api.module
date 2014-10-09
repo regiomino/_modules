@@ -1031,3 +1031,42 @@ function rm_api_return_country_select($default = NULL, $classes = NULL, $lang = 
     $html .= '</select>';
     return $html;
 }
+
+function rm_api_initialize_pdf($author = 'Regiomino GmbH', $title = 'Neue Bestelleingänge', $subject = 'Neue Bestelleingänge', $keywords = 'Regiomino, Rechnung, Bestellungen, Einkauf, Lebensmittel', $footer = '&nbsp;', $header = '&nbsp;') {
+    // Never make an instance of TCPDF or TCPDFDrupal classes manually.
+    // Use tcpdf_get_instance() instead.
+    $tcpdf_params = array(
+        'unicode' => TRUE,
+        'encoding' => 'UTF-8',
+    );
+    // TCPDF class will be TCPDFRegiomino from rm_api/rm_api.class.inc.
+    $tcpdf_class = array(
+        'class' => 'TCPDFRegiomino',
+        'filetype' => 'inc',
+        'filename' => 'rm_api.class',
+        'module' => 'rm_api',
+    );
+    // rm_api/rm_api.config.inc will be used as the config file.
+    $tcpdf_config = array(
+        'filetype' => 'inc',
+        'filename' => 'rm_api.config',
+        'module' => 'rm_api', 
+    );
+    
+    $tcpdf = tcpdf_get_instance($tcpdf_params, $tcpdf_class, $tcpdf_config);
+    
+    $tcpdf->DrupalInitialize(array(
+        'author' => $author,
+        'title' => $title,
+        'subject' => $subject,
+        'keywords' => $keywords,
+        'footer' => array(
+            'html' => $footer,
+        ),
+        'header' => array(
+            'html' => $header,
+        ),
+    ));
+    
+    return $tcpdf;
+}

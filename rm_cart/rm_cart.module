@@ -973,6 +973,12 @@ function rm_cart_theme() {
 				'vars' => NULL,
 			)
 		),
+        'rm_cart_theme_order_fax' => array(
+			'template' => 'rm_cart_order_fax_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
         'rm_cart_theme_accepted_order_mail' => array(
 			'template' => 'rm_cart_accepted_order_mail_theme',
 			'variables' => array(
@@ -1075,4 +1081,36 @@ function rm_cart_mail($key, &$message, $params) {
 			
 		break;
 	}
+}
+
+function rm_cart_generate_order_fax($order_number) {
+
+    $tcpdf = rm_api_initialize_pdf();
+    
+    $order_items = rm_cart_get_order($order_number);
+    $order_items_keys = array_keys($order_items);
+    $order_item = $order_items[$order_items_keys[0]];
+    
+    $html = theme('rm_cart_theme_order_fax', array(
+                'vars' => array(
+                    'order_number' => $order_number,
+                    'order_items' => $order_items,
+                    'billing_address' => $order_item->field_billingaddress[LANGUAGE_NONE][0],
+                    'shipping_address' => $order_item->field_address[LANGUAGE_NONE][0],
+                    'delivery_type' => $order_item->field_deliverytype[LANGUAGE_NONE][0]['value'],
+                    'payment_type' => $order_item->field_paymenttype[LANGUAGE_NONE][0]['value'],
+                    'pickup_agreement' => ($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) ? node_load($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) : 0,
+                    'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
+                    'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
+                    'seller_user' => user_load($order->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                    'shop' => rm_shop_get_shop($order->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                ),
+            ));
+    
+    $tcpdf->writeHTML($html);
+
+    $tcpdf->Output("private://r_sellerincoming_tmp.pdf", "F");
+    $filepath = "private://r_sellerincoming_tmp.pdf";
+
+    return $filepath;
 }
