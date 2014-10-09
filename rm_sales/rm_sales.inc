@@ -391,9 +391,9 @@ function rm_sales_publishprofile($nid) {
 				'init' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
 				'roles' => array(
 					DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-					'4' => 'seller',
 				),
 			);
+            if($nodeobject->type == 'seller_profile') $fields['roles'][4] = 'seller';
 			//the first parameter is left blank so a new user is created
 			$account = user_save('', $fields);
 			$account->password = $fields['pass'];
