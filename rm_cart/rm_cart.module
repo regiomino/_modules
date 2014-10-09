@@ -1034,6 +1034,7 @@ function rm_cart_mail($key, &$message, $params) {
                                             'delivery_range_to' => $params['delivery_range_to'],
                                             'seller_user' => $params['seller_user'],
                                             'shop' => $params['shop'],
+                                            'gtc' => node_load(4),
                                         ),
                                     ));
         break;
@@ -1055,6 +1056,7 @@ function rm_cart_mail($key, &$message, $params) {
                                             'delivery_range_from' => $params['delivery_range_from'],
                                             'delivery_range_to' => $params['delivery_range_to'],
                                             'seller_title' => $params['seller_title'],
+                                            'gtc' => node_load(4),
                                         ),
                                     ));
 			
