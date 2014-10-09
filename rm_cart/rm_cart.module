@@ -189,11 +189,36 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
     $order_items = rm_cart_get_order($order_number);
     $order_items_keys = array_keys($order_items);
     $order_item = $order_items[$order_items_keys[0]];
-    
+    $userobject = user_load($order_item->uid);
     $shop = rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']);
     
     $testmode = 1;
-    
+    $receiver = $shop->field_email[LANGUAGE_NONE][0]['email'];
+    if($testmode) $receiver = 'feedback@regiomino.de';
+    drupal_mail(
+        'rm_cart',
+        'order_notification',
+        $receiver,
+        NULL,
+        array(
+            'order_number' => $order_number,
+            'user_gender' => $userobject->field_gender[LANGUAGE_NONE][0]['value'],
+            'user_first_name' => $userobject->field_first_name[LANGUAGE_NONE][0]['value'],
+            'user_last_name' => $userobject->field_last_name[LANGUAGE_NONE][0]['value'],
+            'user_number' => $userobject->uid,
+            'order_items' => $order_items,
+            'billing_address' => $order_item->field_billingaddress[LANGUAGE_NONE][0],
+            'shipping_address' => $order_item->field_address[LANGUAGE_NONE][0],
+            'delivery_type' => $order_item->field_deliverytype[LANGUAGE_NONE][0]['value'],
+            'payment_type' => $order_item->field_paymenttype[LANGUAGE_NONE][0]['value'],
+            'pickup_agreement' => ($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) ? node_load($order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id']) : 0,
+            'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
+            'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
+            'seller_user' => user_load($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+            'shop' => rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+        ),
+        variable_get('site_mail', 'support@regiomino.de')
+    );
     if(!empty($shop->field_publicfax[LANGUAGE_NONE][0]['number']) || $testmode) {
         $faxnumber = '0' . ltrim($shop->field_publicfax[LANGUAGE_NONE][0]['number'], '0');
         if($testmode) $faxnumber = '032223943673';
@@ -1030,6 +1055,29 @@ function rm_cart_mail($key, &$message, $params) {
 	global $base_path;
 	switch($key) {
 		//switching on $key lets you create variations of the email based on the $key parameter
+        case 'order_notification':
+            $message['subject'] = 'Neue Bestellung von Regiomino';
+
+			$message['body'][] = theme('rm_cart_theme_order_fax', array(
+                                        'vars' => array(
+                                            'order_number' => $params['order_number'],
+                                            'user_gender' => $params['user_gender'],
+                                            'user_first_name' => $params['user_first_name'],
+                                            'user_last_name' => $params['user_last_name'],
+                                            'user_number' => $params['user_number'],
+                                            'order_items' => $params['order_items'],
+                                            'billing_address' => $params['billing_address'],
+                                            'shipping_address' => $params['shipping_address'],
+                                            'delivery_type' => $params['delivery_type'],
+                                            'payment_type' => $params['payment_type'],
+                                            'pickup_agreement' => $params['pickup_agreement'],
+                                            'delivery_range_from' => $params['delivery_range_from'],
+                                            'delivery_range_to' => $params['delivery_range_to'],
+                                            'seller_user' => $params['seller_user'],
+                                            'shop' => $params['shop'],
+                                        ),
+                                    ));
+        break;
         case 'accepted_order':
             $message['subject'] = 'Vielen Dank für Ihre Bestellung';
 
