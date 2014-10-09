@@ -189,6 +189,17 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
     $order_items = rm_cart_get_order($order_number);
     $order_items_keys = array_keys($order_items);
     $order_item = $order_items[$order_items_keys[0]];
+    
+    $shop = rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+    
+    $testmode = 1;
+    
+    if(!empty($shop->field_publicfax[LANGUAGE_NONE][0]['number']) || $testmode) {
+        $faxnumber = '0' . ltrim($shop->field_publicfax[LANGUAGE_NONE][0]['number'], '0');
+        if($testmode) $faxnumber = '032223943673';
+        $filename = rm_cart_generate_order_fax($order_number);
+        rm_api_send_fax($filename, $faxnumber);
+    }
         
     rm_cart_unpublish_cart($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'], $order_item->uid, FALSE);
 
@@ -196,8 +207,6 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
         $userobject = user_load($order_item->uid);
         drupal_mail('rm_cart', 'incoming_payment', $userobject->mail, NULL, array('order_number' => $order_number, 'totalamount' => $payment_amount, 'provider' => $provider, 'userobject' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
     }
-    
-    //TBD Bestellinfos an Verkäufer faxen
 }
 
 function rm_cart_cron() {
