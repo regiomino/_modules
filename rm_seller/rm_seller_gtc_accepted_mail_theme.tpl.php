@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_seller_theme_gtc_accepted_mail.tpl.php
