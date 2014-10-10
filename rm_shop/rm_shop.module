@@ -2,6 +2,8 @@
 
 function rm_shop_init() {
 
+rm_cart_remove_from_cart_all(NULL, FALSE);
+
 // $item_type = 'product'; //could be "surcharge"
 // $now = time();
 // $order_number = rm_cart_generate_order_number(1, 44, $now);
