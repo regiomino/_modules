@@ -327,7 +327,7 @@ function rm_api_node_validate_required($nid, $lang = LANGUAGE_NONE) {
 }
 
 /**
- * Method for validating if all required fields of a node are filled with values
+ * Method for publishing a node
  *
  * @param $nid
  */

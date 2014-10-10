@@ -178,6 +178,49 @@ function rm_seller_menu() {
 	return $items;
 }
 
+function rm_seller_mail($key, &$message, $params) {
+	global $base_url;
+	global $base_path;
+	switch($key) {
+		//switching on $key lets you create variations of the email based on the $key parameter
+		case 'gtc_accepted':
+			$message['subject'] = 'Vielen Dank für Ihre Registrierung';
+
+			$message['body'][] = theme('rm_seller_theme_gtc_accepted_mail', array(
+                                        'vars' => array(
+                                            'sellerobject' => $params['sellerobject'],
+                                            'selleruser' => $params['selleruser'],
+                                            'password' => $params['password'],
+                                        ),
+                                    ));
+			
+		break;
+	}
+}
+
+function rm_seller_has_accepted_gtc($nid) {
+    $sellerobject = node_load($nid);
+    $sellerobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] == 1;
+    node_save($sellerobject);
+    $password = user_password(5);
+    $edit['pass'] = $password;
+    $userobject = user_load($sellerobject->uid);
+    user_save($userobject, $edit);
+    drupal_mail('rm_seller', 'gtc_accepted', $sellerobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('sellerobject' => $sellerobject, 'selleruser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+}
+
+
+
+function rm_seller_gtc_acceptance($nid) {
+    $sellerobject = node_load($nid);
+    if(!empty($sellerobject->field_gtc_accepted[LANGUAGE_NONE][0]['value']) && $sellerobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] == 1) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
 function rm_seller_user_may_edit_agreement($agreement) {
     if(rm_user_is_admin() || rm_sales_user_is_salesguy()) return TRUE;
     $agreementobject = node_load($agreement);
@@ -210,6 +253,12 @@ function rm_seller_user_owns_node($nid) {
  */
 function rm_seller_theme() {
 	return array(
+        'rm_seller_theme_gtc_accepted_mail' => array(
+			'template' => 'rm_seller_gtc_accepted_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_seller_offer_form' => array(
 			'template' => 'rm_seller_offer_form_theme',
             'arguments' => array('form' => 'form'),
