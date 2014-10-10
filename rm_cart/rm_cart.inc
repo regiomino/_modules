@@ -46,7 +46,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
         ),
         variable_get('site_mail', 'support@regiomino.de')
     );
-    
+
     switch($order_item->field_paymenttype[LANGUAGE_NONE][0]['value']) {
         case 'cash':
         case 'invoice':
