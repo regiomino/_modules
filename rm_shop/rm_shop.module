@@ -267,6 +267,48 @@ function rm_shop_menu() {
     return $items;
 }
 
+function rm_shop_get_commission($user_id, $seller_id) {
+    //Get all shipping agreements that match the given zipcode
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('commission_agreement'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $seller_id)
+        ->fieldCondition('field_user_reference', 'target_id', ($user_id > 0) ? array(0, $user_id) : $user_id)
+        ->execute();
+    $allagreements = array();
+    if(isset($tmp['node'])) $allagreements = entity_load('node', array_keys($tmp['node']));
+    //Extract all uids from agreements
+    $alluids = array();
+    if(!empty($allagreements)) {
+        foreach($allagreements as $agreementobject) {
+            //if an agreement from the same seller of the same type already exists, then check if the current one is more specific or more general
+            if(!empty($alluids[$agreementobject->uid][$agreementobject->type])) {
+                //step through the existing entries -> should be only one
+                foreach($alluids[$agreementobject->uid][$agreementobject->type] as $user_reference_key => $unimportant) {
+                    //if the already written key is smaller than the current one, this means the current one is more specific
+                    if($user_reference_key < $agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']) {
+                        //delete the more general one
+                        unset($alluids[$agreementobject->uid][$agreementobject->type][$user_reference_key]);
+                    }
+                }
+            }
+            //write the current key
+            $alluids[$agreementobject->uid][$agreementobject->type][$agreementobject->field_user_reference[LANGUAGE_NONE][0]['target_id']][] = $agreementobject;
+        }
+    }
+    $thecommission = 0;
+    if(!empty($allagreements)) {
+        foreach($alluids[$seller_id]['commission_agreement'] as $user_reference_key => $agreements) {
+            foreach($agreements as $agreement) {
+                $thecommission = $agreement->field_commission[LANGUAGE_NONE][0]['value'];
+            }
+        }
+    }
+    return $thecommission;
+}
+
 function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
 
     if(isset($zipcode) && !empty($zipcode)) {
