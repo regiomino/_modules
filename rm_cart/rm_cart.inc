@@ -509,6 +509,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
                 ':input[name=delivery]' => array('value' => 'shipping_agreement'),
               ),
             ),
+            '#value' => $_SESSION['regionselect']['zip'],
+            '#disabled' => TRUE,
         );
         $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
