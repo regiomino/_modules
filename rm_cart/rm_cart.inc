@@ -694,10 +694,8 @@ function rm_cart_checkout_submit($form, &$form_state) {
     $longestdelay = 0;
     if(!empty($cart_items)) {
         //Determine commission
-        $commission = rm_shop_get_commission($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id']);
-        
-        
         $cart_item_keys = array_keys($cart_items);
+        $commission = rm_shop_get_commission($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id']);
         $order_number = rm_cart_generate_order_number($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
         $order_status = 'pending';
         $billing_name = $form_state['values']['billing_address_name'];
