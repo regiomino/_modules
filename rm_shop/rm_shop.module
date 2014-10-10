@@ -741,21 +741,21 @@ function rm_shop_smartregionselect_submit($form, &$form_state) {
 
 function rm_shop_regionselect($form, &$form_state) {
 	$form = array();
-    $form['street'] = array(
-        '#type' => 'textfield',
-        '#required' => TRUE,
-        '#title' => t('Street'),
-    );
+    // $form['street'] = array(
+        // '#type' => 'textfield',
+        // '#required' => TRUE,
+        // '#title' => t('Street'),
+    // );
 	$form['zipcode'] = array(
 		'#type' => 'textfield',
 		'#required' => TRUE,
 		'#title' => t('Postal code'),
 	);
-    $form['city'] = array(
-        '#type' => 'textfield',
-        '#required' => TRUE,
-        '#title' => t('City'),
-    );
+    // $form['city'] = array(
+        // '#type' => 'textfield',
+        // '#required' => TRUE,
+        // '#title' => t('City'),
+    // );
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Find vendor'),
