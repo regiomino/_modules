@@ -10,12 +10,10 @@ function rm_shop_suggest() {
     drupal_goto('kontakt', array('query' => array('suggest' => 1)));
 }
 
-function rm_shop_get_shops($city, $zipcode, $street) {
+function rm_shop_get_shops($zipcode) {
 
     $_SESSION['regionselect'] = array(
-        'street' => $street,
         'zip' => $zipcode,
-        'city' => $city,
     );
 
     global $user;

@@ -15,6 +15,16 @@ function rm_api_menu() {
     return $items;
 }
 
+//TBD this should be more complex. Validate against actually existing zipcodes, not just the number range
+function rm_api_validate_zipcode($zipcode) {
+    if(strlen($zipcode) == 5) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
 function rm_api_convert_office_hours($office_hours) {
     $weekdays = rm_api_get_weekdays();
     $convertedtimes = array();
