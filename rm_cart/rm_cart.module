@@ -220,6 +220,7 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
                 'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
                 'seller_user' => user_load($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
                 'shop' => rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                'commission' => $order_item->field_commission[LANGUAGE_NONE][0]['value'],
             ),
             variable_get('site_mail', 'support@regiomino.de')
         );
@@ -376,7 +377,7 @@ function rm_cart_user_owns_order($order_number) {
     }
 }
 
-function rm_cart_generate_order($order_number, $order_status, $item_title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
+function rm_cart_generate_order($order_number, $order_status, $item_title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $commission, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
 
     //Makes it possible to create orders for other users -> useful for support
     if(is_null($uid)) {
@@ -424,6 +425,8 @@ function rm_cart_generate_order($order_number, $order_status, $item_title, $orde
     $order_item->field_paymenttype[LANGUAGE_NONE][0]['value'] = $payment_type;
     
     $order_item->field_iban[LANGUAGE_NONE][0]['value'] = $iban;
+    
+    $order_item->field_commission[LANGUAGE_NONE][0]['value'] = $commission;
     
     $order_item->field_expiration_date[LANGUAGE_NONE][0]['value'] = $expiration_date;
     $order_item->field_use_within[LANGUAGE_NONE][0]['value'] = $use_within;
@@ -1087,6 +1090,7 @@ function rm_cart_mail($key, &$message, $params) {
                                             'delivery_range_to' => $params['delivery_range_to'],
                                             'seller_user' => $params['seller_user'],
                                             'shop' => $params['shop'],
+                                            'commission' => $params['commission'],
                                         ),
                                     ));
         break;

@@ -693,6 +693,10 @@ function rm_cart_checkout_submit($form, &$form_state) {
     $cart_items = rm_cart_get_cart($form_state['values']['chosen_seller'], $user->uid);
     $longestdelay = 0;
     if(!empty($cart_items)) {
+        //Determine commission
+        $commission = rm_shop_get_commission($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id']);
+        
+        
         $cart_item_keys = array_keys($cart_items);
         $order_number = rm_cart_generate_order_number($user->uid, $cart_items[$cart_item_keys[0]]->field_user_reference[LANGUAGE_NONE][0]['target_id'], $now);
         $order_status = 'pending';
@@ -752,7 +756,7 @@ function rm_cart_checkout_submit($form, &$form_state) {
             $trading_unit_reference = $cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'];
             $seller_reference = $cart_item->field_user_reference[LANGUAGE_NONE][0]['target_id'];
         
-            $order_item = rm_cart_generate_order($order_number, $order_status, $cart_item_variation->title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference,$seller_reference, $uid = NULL);
+            $order_item = rm_cart_generate_order($order_number, $order_status, $cart_item_variation->title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $commission, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference,$seller_reference, $uid = NULL);
         }
         drupal_goto('order/' . $order_number);
     }
