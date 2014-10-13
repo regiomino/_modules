@@ -15,6 +15,15 @@ function rm_api_menu() {
     return $items;
 }
 
+function rm_api_generate_random_string($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
 //TBD this should be more complex. Validate against actually existing zipcodes, not just the number range
 function rm_api_validate_zipcode($zipcode) {
     if(strlen($zipcode) == 5) {

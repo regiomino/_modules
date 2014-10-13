@@ -200,12 +200,12 @@ function rm_user_menu() {
         'page arguments' => array(1,3),
         'access callback' => 'rm_user_is_admin',
 	);
-	$items['registration/%'] = array(
+	$items['registration/%/%'] = array(
         'title' => 'Registration',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_user_profile_registration', 1),
-        'access callback' => 'rm_user_gtc_not_accepted',
-		'access arguments' => array(1),
+        'access callback' => 'rm_user_valid_register_link',
+		'access arguments' => array(1,2),
         'file' => 'rm_user.inc',
         'file path' => drupal_get_path('module', 'rm_user'),
         'type' => MENU_NORMAL_ITEM,
@@ -382,6 +382,12 @@ function rm_user_transaction($amount, $reason, $node_type, $entityid = NULL, $en
  */
 function rm_user_theme() {
 	return array(
+        'rm_user_theme_registration_invite_mail' => array(
+			'template' => 'rm_user_registration_invite_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
         'rm_user_theme_gtc_accepted_mail' => array(
 			'template' => 'rm_user_gtc_accepted_mail_theme',
 			'variables' => array(
@@ -420,6 +426,17 @@ function rm_user_mail($key, &$message, $params) {
                                     ));
 			
 		break;
+        case 'registration_invite':
+			$message['subject'] = 'Vielen Dank für Ihr Interesse an Regiomino';
+            
+			$message['body'][] = theme('rm_user_theme_registration_invite_mail', array(
+                                        'vars' => array(
+                                            'profileobject' => $params['profileobject'],
+                                            'profileuser' => $params['profileuser'],
+                                        ),
+                                    ));
+			
+		break;
 	}
 }
 
@@ -436,13 +453,34 @@ function rm_user_has_accepted_gtc($nid) {
     drupal_mail('rm_user', 'gtc_accepted', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
 }
 
-function rm_user_gtc_not_accepted($nid) {
+function rm_user_valid_register_link($nid, $hash) {
+    $profileobject = node_load($nid);
+    if(
+        $profileobject->field_register_hash[LANGUAGE_NONE][0]['value'] == $hash &&
+        empty($profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'])
+    ) {
+        return TRUE;
+    }
+}
+
+function rm_user_send_registration_invite($nid, $goto = TRUE) {
+    $profileobject = node_load($nid);
+    $userobject = user_load($profileobject->uid);
+    $profileobject->field_register_hash[LANGUAGE_NONE][0]['value'] = rm_api_generate_random_string(10);
+    node_save($profileobject);
+    
+    //drupal_mail('rm_user', 'registration_invite', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail('rm_user', 'registration_invite', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
+    if($goto) drupal_goto();
+}
+
+function rm_user_gtc_accepted($nid) {
     $profileobject = node_load($nid);
     if(!empty($profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value']) && $profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] == 1) {
         return TRUE;
     }
     else {
-        return TRUE;
+        return FALSE;
     }
 }
 
