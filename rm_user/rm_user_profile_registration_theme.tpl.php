@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_user_profile_registration.tpl.php
