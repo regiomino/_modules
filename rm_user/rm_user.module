@@ -450,7 +450,7 @@ function rm_user_has_accepted_gtc($nid) {
     user_save($userobject, $edit);
     
     //drupal_mail('rm_user', 'gtc_accepted', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
-    drupal_mail('rm_user', 'gtc_accepted', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail('rm_user', 'gtc_accepted', 'abgefangen@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
 }
 
 function rm_user_valid_register_link($nid, $hash) {
@@ -470,7 +470,7 @@ function rm_user_send_registration_invite($nid, $goto = TRUE) {
     node_save($profileobject);
     
     //drupal_mail('rm_user', 'registration_invite', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
-    drupal_mail('rm_user', 'registration_invite', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail('rm_user', 'registration_invite', 'abgefangen@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
     if($goto) drupal_goto();
 }
 
