@@ -17,7 +17,7 @@ function rm_sales_salesguyactivity() {
 			'specifier' => 'uid',
 		),
         'body' => array(
-			'data' => t('Aktivität'),
+			'data' => t('Activity'),
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'body',
@@ -1390,8 +1390,8 @@ function rm_sales_export_profiles() {
 		t('Locality'),
 		t('Phone'),
 		t('Salesguy'),
-        t('Vorgeschlagen von'),
-        t('Empfehlungen'),
+        t('Suggested by'),
+        t('Suggestions'),
 		t('Shipping agreement'),
 		t('Dispatch agreement'),
 		t('Pickup agreement'),
