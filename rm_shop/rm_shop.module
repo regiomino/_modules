@@ -454,7 +454,7 @@ function rm_shop_filter_sellers_ready_to_sell($uids) {
             $query->fieldCondition('field_shipping_zipcodes', 'value', $_SESSION['regionselect']['zip']);
             $result_temp = $query->execute();
             
-            if(isset($result_temp)) {
+            if(isset($result_temp['node'])) {
                 $moretmp = $result['node'] + $result_temp['node'];
                 $result = array();
                 $result['node'] = $moretmp;
