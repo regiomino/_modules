@@ -1,5 +1,211 @@
 <?php
 
+function rm_user_profile_registration($form, $form_state, $profile) {
+    
+    $profileobject = node_load($profile);
+    $account = user_load($profileobject->uid);
+    
+    $form = array();
+    
+    $form['profileregistration']['gender'] = array(
+        '#type' => 'select',
+        '#title' => t('Salutation'),
+        '#options' => array(
+            'f' => 'Frau',
+            'm' => 'Herr',
+        ),
+        '#required' => TRUE,
+    );
+    if(!empty($account->field_gender[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['gender']['#default_value'] = $account->field_gender[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['first_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('First name'),
+        '#required' => TRUE,
+    );
+    if(!empty($account->field_first_name[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['first_name']['#default_value'] = $account->field_first_name[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['last_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Last name'),
+        '#required' => TRUE,
+    );
+    if(!empty($account->field_last_name[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['last_name']['#default_value'] = $account->field_last_name[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['profile_title'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Profile title'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->title)) {
+        $form['profileregistration']['profile_title']['#default_value'] = $profileobject->title;
+    }
+    
+    $form['profileregistration']['company_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Company name'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_company_name[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['company_name']['#default_value'] = $profileobject->field_company_name[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['phone'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Phone'),
+        '#field_prefix' => '+49',
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_publicphone[LANGUAGE_NONE][0]['number'])) {
+        $form['profileregistration']['phone']['#default_value'] = $profileobject->field_publicphone[LANGUAGE_NONE][0]['number'];
+    }
+    
+    $form['profileregistration']['fax'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Fax'),
+        '#field_prefix' => '+49',
+    );
+    if(!empty($profileobject->field_publicfax[LANGUAGE_NONE][0]['number'])) {
+        $form['profileregistration']['fax']['#default_value'] = $profileobject->field_publicfax[LANGUAGE_NONE][0]['number'];
+    }
+    
+    $form['profileregistration']['email'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Email'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_email[LANGUAGE_NONE][0]['email'])) {
+        $form['profileregistration']['email']['#default_value'] = $profileobject->field_email[LANGUAGE_NONE][0]['email'];
+    }
+    
+    $form['profileregistration']['iban'] = array(
+        '#type' => 'textfield',
+        '#title' => t('IBAN'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_iban[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['iban']['#default_value'] = $profileobject->field_iban[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['bic'] = array(
+        '#type' => 'textfield',
+        '#title' => t('BIC'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_bic[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['bic']['#default_value'] = $profileobject->field_bic[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['accountholder'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Bank account holder'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_bankaccountholder[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['accountholder']['#default_value'] = $profileobject->field_bankaccountholder[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['taxnumber'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Tax ID'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_taxnumber[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['taxnumber']['#default_value'] = $profileobject->field_taxnumber[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['street'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Street'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) {
+        $form['profileregistration']['street']['#default_value'] = $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+    }
+    
+    $form['profileregistration']['zipcode'] = array(
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#title' => t('Postal code'),
+    );
+    if(!empty($profileobject->field_address[LANGUAGE_NONE][0]['postal_code'])) {
+        $form['profileregistration']['zipcode']['#default_value'] = $profileobject->field_address[LANGUAGE_NONE][0]['postal_code'];
+    }
+    
+    $form['profileregistration']['locality'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Locality'),
+        '#required' => TRUE,
+    );
+    if(!empty($profileobject->field_address[LANGUAGE_NONE][0]['locality'])) {
+        $form['profileregistration']['locality']['#default_value'] = $profileobject->field_address[LANGUAGE_NONE][0]['locality'];
+    }
+    
+    $form['profileregistration']['smallbusiness'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('I am not obliged to pay value-added tax according to § 19 UStG.'),
+    );
+    if(!empty($profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['smallbusiness']['#default_value'] = $profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'];
+    }
+    
+    $form['profileregistration']['profile_id'] = array(
+        '#type' => 'value',
+        '#value' => $profileobject->nid,
+    );
+
+    $form['profileregistration']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Register'),
+        '#suffix' => t('By clicking @register I accept the <a href="@url" target="_blank">General Terms and Conditions</a>', array('@register' => t('Register'), '@url' => url('node/4'))),
+    );
+    return $form;
+}
+
+function rm_user_profile_registration_submit($form, $form_state) {
+    $profileobject = node_load($form_state['values']['profile_id']);
+    $account = user_load($profileobject->uid);
+    
+    //Save account field values
+    $account->field_gender[LANGUAGE_NONE][0]['value'] = $form_state['values']['gender'];
+    $account->field_first_name[LANGUAGE_NONE][0]['value'] = $form_state['values']['first_name'];
+    $account->field_last_name[LANGUAGE_NONE][0]['value'] = $form_state['values']['last_name'];
+    $account->mail = $form_state['values']['email'];
+    $account->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['street'];
+    $account->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['zipcode'];
+    $account->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
+    
+    //Save profile field values
+    $profileobject->title = $form_state['values']['profile_title'];
+    $profileobject->field_company_name[LANGUAGE_NONE][0]['value'] = $form_state['values']['company_name'];
+    $profileobject->field_publicphone[LANGUAGE_NONE][0]['number'] = $form_state['values']['phone'];
+    if(!empty($form_state['values']['fax'])) $profileobject->field_publicfax[LANGUAGE_NONE][0]['number'] = $form_state['values']['fax'];
+    $profileobject->field_email[LANGUAGE_NONE][0]['email'] = $form_state['values']['email'];
+    $profileobject->field_iban[LANGUAGE_NONE][0]['value'] = $form_state['values']['iban'];
+    $profileobject->field_bic[LANGUAGE_NONE][0]['value'] = $form_state['values']['bic'];
+    $profileobject->field_bankaccountholder[LANGUAGE_NONE][0]['value'] = $form_state['values']['accountholder'];
+    $profileobject->field_taxnumber[LANGUAGE_NONE][0]['value'] = $form_state['values']['taxnumber'];
+    if(!empty($form_state['values']['smallbusiness'])) $profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'] = $form_state['values']['smallbusiness'];
+    $profileobject->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['street'];
+    $profileobject->field_billingaddress[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['zipcode'];
+    $profileobject->field_billingaddress[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
+    $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['street'];
+    $profileobject->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['zipcode'];
+    $profileobject->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
+    node_save($profileobject);
+    
+    rm_user_has_accepted_gtc($form_state['values']['profile_id']);
+    
+    drupal_set_message(t('Thank you for your registration. You will receive an email shortly with your login details and a summary of your registration information. If you wish to change anything, please log in and use your dashboard to do so.'), 'status');
+    drupal_goto('user/register');
+}
+
 function rm_user_process_applications() {
     watchdog('indeed', print_r($_POST, TRUE));
     watchdog('indeed', print_r($_REQUEST, TRUE));

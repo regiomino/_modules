@@ -200,6 +200,16 @@ function rm_user_menu() {
         'page arguments' => array(1,3),
         'access callback' => 'rm_user_is_admin',
 	);
+	$items['registration/%'] = array(
+        'title' => 'Registration',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_user_profile_registration', 1),
+        'access callback' => 'rm_user_gtc_not_accepted',
+		'access arguments' => array(1),
+        'file' => 'rm_user.inc',
+        'file path' => drupal_get_path('module', 'rm_user'),
+        'type' => MENU_NORMAL_ITEM,
+    );
 	return $items;
 }
 
@@ -367,6 +377,25 @@ function rm_user_transaction($amount, $reason, $node_type, $entityid = NULL, $en
 	node_save($new_node);
 }
 
+/**
+ * Implements hook_theme().
+ */
+function rm_user_theme() {
+	return array(
+        'rm_user_theme_gtc_accepted_mail' => array(
+			'template' => 'rm_user_gtc_accepted_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+		'rm_user_profile_registration' => array(
+			'template' => 'rm_user_profile_registration_theme',
+            'arguments' => array('form' => 'form'),
+			'render element' => 'form',
+		),
+	);
+}
+
 function rm_user_mail($key, &$message, $params) {
 	global $base_url;
 	global $base_path;
@@ -378,7 +407,43 @@ function rm_user_mail($key, &$message, $params) {
 			$message['body'][] = '<p>Hi,</p><p>Ihr Profil auf www.regiomino.de wurde freigeschaltet und es wurde ein neues Benutzerkonto für Sie angelegt. Sie können sich jetzt mit folgenden Daten auf www.regiomino.de anmelden.</p><p>E-Mail: ' . $params['account']->mail . '<br />Passwort: ' . $params['password'] . '</p><p>Viele Grüße,<br />Ihr Regiomino-Team</p>';
 			
 		break;
+        case 'gtc_accepted':
+			$message['subject'] = 'Vielen Dank für Ihre Registrierung';
+            
+			$message['body'][] = theme('rm_user_theme_gtc_accepted_mail', array(
+                                        'vars' => array(
+                                            'profileobject' => $params['profileobject'],
+                                            'profileuser' => $params['profileuser'],
+                                            'password' => $params['password'],
+                                            'gtc' => node_load(4),
+                                        ),
+                                    ));
+			
+		break;
 	}
+}
+
+function rm_user_has_accepted_gtc($nid) {
+    $profileobject = node_load($nid);
+    $profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] = 1;
+    node_save($profileobject);
+    $password = user_password(5);
+    $edit['pass'] = $password;
+    $userobject = user_load($profileobject->uid);
+    user_save($userobject, $edit);
+    
+    //drupal_mail('rm_user', 'gtc_accepted', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail('rm_user', 'gtc_accepted', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+}
+
+function rm_user_gtc_not_accepted($nid) {
+    $profileobject = node_load($nid);
+    if(!empty($profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value']) && $profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] == 1) {
+        return TRUE;
+    }
+    else {
+        return TRUE;
+    }
 }
 
 function rm_user_address_complete($uid) {
