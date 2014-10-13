@@ -440,12 +440,28 @@ function rm_shop_filter_sellers_ready_to_sell($uids) {
     if(!empty($intersecting_uids_two)) {      
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node');
-        $query->entityCondition('bundle', array('shipping_agreement', 'dispatch_agreement', 'pickup_agreement'));
+        $query->entityCondition('bundle', array('dispatch_agreement', 'pickup_agreement'));
         $query->propertyCondition('status', 1);
         $query->propertyCondition('uid', $intersecting_uids_two);
         $result = $query->execute();
+        
+        if(!empty($_SESSION['regionselect']['zip'])) {
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node');
+            $query->entityCondition('bundle', array('shipping_agreement'));
+            $query->propertyCondition('status', 1);
+            $query->propertyCondition('uid', $intersecting_uids_two);
+            $query->fieldCondition('field_shipping_zipcodes', 'value', $_SESSION['regionselect']['zip']);
+            $result_temp = $query->execute();
+            
+            if(isset($result_temp)) {
+                $moretmp = $result['node'] + $result_temp['node'];
+                $result = array();
+                $result['node'] = $moretmp;
+            }
+        }
     }
-    
+
     $intersecting_uids_three = array();
     
     if(isset($result['node'])) {
