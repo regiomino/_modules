@@ -442,6 +442,8 @@ function rm_user_mail($key, &$message, $params) {
                                         ),
                                     ));
 			
+            $message['headers'] += $params['headers'];
+            
 		break;
         case 'registration_invite':
 			$message['subject'] = 'Vielen Dank für Ihr Interesse an Regiomino';
@@ -452,7 +454,9 @@ function rm_user_mail($key, &$message, $params) {
                                             'profileuser' => $params['profileuser'],
                                         ),
                                     ));
-			
+                                    
+			$message['headers'] += $params['headers'];
+            
 		break;
 	}
 }
