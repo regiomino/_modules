@@ -19,7 +19,7 @@ function rm_seller_menu() {
         'weight' => 0,
     );
     $items['manage/seller/%user/orders'] = array(
-        'title' => 'Manage offers',
+        'title' => 'Manage orders',
         'page callback' => 'rm_seller_orders',
         'access callback' => 'rm_seller_user_is_seller',
         'file' => 'rm_seller.inc',
