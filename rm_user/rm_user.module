@@ -19,6 +19,23 @@ function rm_user_has_provided_address() {
     }
 }
 
+function rm_user_get_profile($uid) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid)
+        ->execute();
+    $profile = array();
+    if(isset($tmp['node'])) {
+        $profiles = entity_load('node', array_keys($tmp['node']));
+        $profileskeys = array_keys($profiles);
+        $profile = $profiles[$profileskeys[0]];
+    }
+    return $profile;
+}
+
 function rm_user_get_footer_links() {
     return array(
         array(t('Imprint'), 'node/1', array()),

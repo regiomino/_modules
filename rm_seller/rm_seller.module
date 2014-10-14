@@ -112,6 +112,15 @@ function rm_seller_menu() {
         'file' => 'rm_seller.inc',
         'file path' => drupal_get_path('module', 'rm_seller'),
     );
+    $items['changeorderstatus/%/%'] = array(
+        'title' => 'Seller',
+        'page callback' => 'rm_cart_change_order_status',
+        'page arguments' => array(1, 2),
+        'access callback' => 'rm_seller_user_responsible_for_order',
+        'access arguments' => array(1),
+        'file' => 'rm_cart.module',
+        'file path' => drupal_get_path('module', 'rm_cart'),
+    );
     $items['pauseoffer/%'] = array(
         'title' => 'Seller',
         'page callback' => 'rm_seller_pause_offer',
@@ -176,6 +185,23 @@ function rm_seller_menu() {
         'file path' => drupal_get_path('module', 'rm_seller'),
     );
 	return $items;
+}
+
+function rm_seller_user_responsible_for_order($order_number) {
+    global $user;
+    $order_items = rm_cart_get_order($order_number);
+    $err = array();
+    if(isset($order_items)) {
+        foreach($order_items as $order_item) {
+            if($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id'] != $user->uid) {
+                $err[] = 1;
+            }
+        }
+    }
+    else {
+        return FALSE;
+    }
+    if(empty($err)) return TRUE;
 }
 
 function rm_seller_user_may_edit_agreement($agreement) {
