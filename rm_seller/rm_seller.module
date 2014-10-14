@@ -18,6 +18,15 @@ function rm_seller_menu() {
         'type' => MENU_DEFAULT_LOCAL_TASK,
         'weight' => 0,
     );
+    $items['manage/seller/%user/orders'] = array(
+        'title' => 'Manage offers',
+        'page callback' => 'rm_seller_orders',
+        'access callback' => 'rm_seller_user_is_seller',
+        'file' => 'rm_seller.inc',
+        'file path' => drupal_get_path('module', 'rm_seller'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 0,
+    );
     $items['manage/seller/%user/offers'] = array(
         'title' => 'Manage offers',
         'page callback' => 'drupal_get_form',
@@ -247,6 +256,12 @@ function rm_seller_theme() {
 				'vars' => NULL,
 			)
 		),
+		'rm_seller_theme_orders' => array(
+			'template' => 'rm_seller_orders_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		), 
 		'rm_seller_theme_paymentagreements' => array(
 			'template' => 'rm_seller_paymentagreements_theme',
 			'variables' => array(

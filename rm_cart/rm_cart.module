@@ -496,6 +496,33 @@ function rm_cart_generate_order_surcharge($order_number, $order_status, $item_ti
     return $order_item;
 }
 
+function rm_cart_get_orders_grouped_by_order_number($suid, $status = '', $delay = 0) {
+    $orders = rm_cart_get_order_items_by_seller($suid, $status, $delay);
+    $sortedorders = array();
+    foreach($orders as $order) {
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['date'] = date('d.m.Y H:i', $order->created);
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['customerprofile'] = rm_user_get_profile($order->uid);
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['userobject'] = user_load($order->uid);
+        $field_deliverytypes = list_allowed_values(field_info_field('field_deliverytype'));
+        $field_paymenttypes = list_allowed_values(field_info_field('field_paymenttype'));
+        $field_statustypes = list_allowed_values(field_info_field('field_order_status'));
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['deliveryrange'] = date('d.m.Y H:i', $order->field_delivery_range_from[LANGUAGE_NONE][0]['value']) . ' - ' . date('H:i', $order->field_delivery_range_to[LANGUAGE_NONE][0]['value']);
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['deliverytype'] = $field_deliverytypes[$order->field_deliverytype[LANGUAGE_NONE][0]['value']];
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['paymenttype'] = $field_paymenttypes[$order->field_paymenttype[LANGUAGE_NONE][0]['value']];
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['status'] = $field_statustypes[$order->field_order_status[LANGUAGE_NONE][0]['value']];
+        $field_tu_packaging = list_allowed_values(field_info_field('field_tu_packaging'));
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['products'][] = array(
+            'title' => $order->title,
+            'amount' => $order->field_order_amount[LANGUAGE_NONE][0]['value'],
+            'productunit_first' => $order->field_productunit[LANGUAGE_NONE][0]['first'],
+            'productunit_second' => t($order->field_productunit[LANGUAGE_NONE][0]['second']),
+            'tu_amount' => $order->field_tu_amount[LANGUAGE_NONE][0]['value'],
+            'tu_packaging' => $field_tu_packaging[$order->field_tu_packaging[LANGUAGE_NONE][0]['value']],
+        );
+    }
+    return $sortedorders;
+}
+
 function rm_cart_change_order_status($order_number, $new_status) {
     $query = new EntityFieldQuery();
     $tmp = $query

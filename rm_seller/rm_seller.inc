@@ -1,5 +1,15 @@
 <?php
 
+function rm_seller_orders() {
+    global $user;
+    $orders = rm_cart_get_orders_grouped_by_order_number($user->uid);
+    return theme('rm_seller_theme_orders', array(
+        'vars' => array(
+            'orders' => $orders,
+        ),
+    ));
+}
+
 function rm_seller_agreement_delete($form, &$form_state, $nid) {
 	
 	$nodeobject = node_load($nid);
@@ -203,29 +213,7 @@ function rm_seller_dashboard() {
     $profiles = rm_api_get_nodes_by_properties(array('seller_profile'), 1, -1, -1, -1, -1, $user->uid);
     $profileskeys = array_keys($profiles);
     $profile = $profiles[$profileskeys[0]];
-    $orders = rm_cart_get_order_items_by_seller($user->uid, array('processing', 'accepted', 'delivered'));
-    $sortedorders = array();
-    foreach($orders as $order) {
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['date'] = date('d.m.Y H:i', $order->created);
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['customerprofile'] = rm_user_get_profile($order->uid);
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['userobject'] = user_load($order->uid);
-        $field_deliverytypes = list_allowed_values(field_info_field('field_deliverytype'));
-        $field_paymenttypes = list_allowed_values(field_info_field('field_paymenttype'));
-        $field_statustypes = list_allowed_values(field_info_field('field_order_status'));
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['deliveryrange'] = date('d.m.Y H:i', $order->field_delivery_range_from[LANGUAGE_NONE][0]['value']) . ' - ' . date('H:i', $order->field_delivery_range_to[LANGUAGE_NONE][0]['value']);
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['deliverytype'] = $field_deliverytypes[$order->field_deliverytype[LANGUAGE_NONE][0]['value']];
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['paymenttype'] = $field_paymenttypes[$order->field_paymenttype[LANGUAGE_NONE][0]['value']];
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['status'] = $field_statustypes[$order->field_order_status[LANGUAGE_NONE][0]['value']];
-        $field_tu_packaging = list_allowed_values(field_info_field('field_tu_packaging'));
-        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['products'][] = array(
-            'title' => $order->title,
-            'amount' => $order->field_order_amount[LANGUAGE_NONE][0]['value'],
-            'productunit_first' => $order->field_productunit[LANGUAGE_NONE][0]['first'],
-            'productunit_second' => t($order->field_productunit[LANGUAGE_NONE][0]['second']),
-            'tu_amount' => $order->field_tu_amount[LANGUAGE_NONE][0]['value'],
-            'tu_packaging' => $field_tu_packaging[$order->field_tu_packaging[LANGUAGE_NONE][0]['value']],
-        );
-    }
+    $sortedorders = rm_cart_get_orders_grouped_by_order_number($user->uid, array('processing', 'accepted', 'delivered'));
     //pass to tpl
     return theme('rm_seller_theme_dashboard', array(
         'vars' => array(
