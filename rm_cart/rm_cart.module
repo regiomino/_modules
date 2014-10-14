@@ -511,6 +511,7 @@ function rm_cart_get_orders_grouped_by_order_number($suid, $status = '', $delay 
         $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['paymenttype'] = $field_paymenttypes[$order->field_paymenttype[LANGUAGE_NONE][0]['value']];
         $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['status'] = $field_statustypes[$order->field_order_status[LANGUAGE_NONE][0]['value']];
         $field_tu_packaging = list_allowed_values(field_info_field('field_tu_packaging'));
+        $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['order_items'][] = $order;
         $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['products'][] = array(
             'title' => $order->title,
             'amount' => $order->field_order_amount[LANGUAGE_NONE][0]['value'],
