@@ -496,8 +496,13 @@ function rm_cart_generate_order_surcharge($order_number, $order_status, $item_ti
     return $order_item;
 }
 
-function rm_cart_get_orders_grouped_by_order_number($suid, $status = '', $delay = 0) {
-    $orders = rm_cart_get_order_items_by_seller($suid, $status, $delay);
+function rm_cart_get_orders_grouped_by_order_number($suid, $status = '', $delay = 0, $profiletype = 'seller') {
+    if($profiletype == 'seller') {
+        $orders = rm_cart_get_order_items_by_seller($suid, $status, $delay);
+    }
+    else {
+        $orders = rm_cart_get_order_items_by_customer($suid, $status, $delay);
+    }
     $sortedorders = array();
     foreach($orders as $order) {
         $sortedorders[$order->field_order_number[LANGUAGE_NONE][0]['value']]['date'] = date('d.m.Y H:i', $order->created);
@@ -567,6 +572,25 @@ function rm_cart_get_order_items_by_seller($suid, $status = '', $delay = 0) {
         ->propertyCondition('status', 1)
         ->propertyCondition('created', $agestamp, '<=')
         ->fieldCondition('field_user_reference', 'target_id', $suid);
+    if(!empty($status)) $query->fieldCondition('field_order_status', 'value', $status);
+    $tmp = $query->execute();
+    $order_items = array();
+    if(isset($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+    }
+    return $order_items;
+}
+
+function rm_cart_get_order_items_by_customer($uid, $status = '', $delay = 0) {
+    $query = new EntityFieldQuery();
+    $timestamp = time();
+    $agestamp = $timestamp - $delay;
+    $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'order_item')
+        ->propertyCondition('status', 1)
+        ->propertyCondition('created', $agestamp, '<=')
+        ->propertyCondition('uid', $uid);
     if(!empty($status)) $query->fieldCondition('field_order_status', 'value', $status);
     $tmp = $query->execute();
     $order_items = array();

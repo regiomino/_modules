@@ -1,5 +1,39 @@
 <?php
 
+function rm_user_orders() {
+    global $user;
+    $orders = rm_cart_get_orders_grouped_by_order_number($user->uid, array(), 0, 'customer');
+    return theme('rm_user_theme_orders', array(
+        'vars' => array(
+            'orders' => $orders,
+        ),
+    ));
+}
+
+function rm_user_dashboard() {
+    global $user;
+    $profiles = rm_api_get_nodes_by_properties(array('customer_profile'), 1, -1, -1, -1, -1, $user->uid);
+    $profile = array();
+    $profilecompleteness = 0;
+    if(!empty($profiles)) {
+        $profileskeys = array_keys($profiles);
+        $profile = $profiles[$profileskeys[0]];
+        $profilecompleteness = rm_user_get_profile_completeness($profile->nid, 'seller_profile');
+    }
+    $sortedorders = rm_cart_get_orders_grouped_by_order_number($user->uid, array('processing', 'accepted', 'delivered'), 0, 'customer');
+    //pass to tpl
+    return theme('rm_user_theme_dashboard', array(
+        'vars' => array(
+            'profile' => $profile,
+            'profilecompleteness' => $profilecompleteness,
+            'accountcompleteness' => rm_user_get_account_completeness($user->uid),
+            'orders' => $sortedorders,
+            'ordercount' => count($sortedorders),
+        ),
+    ));
+}
+
+
 function rm_user_profile_registration($form, $form_state, $profile) {
     
     $profileobject = node_load($profile);
