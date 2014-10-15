@@ -42,7 +42,9 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             'pickup_agreement' => $order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id'],
             'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
             'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
-            'seller_title' => $shop->title
+            'seller_title' => $shop->title,
+            'seller_object' => $shop,
+            'seller_user' => user_load($shop->uid)
         ),
         variable_get('site_mail', 'support@regiomino.de')
     );

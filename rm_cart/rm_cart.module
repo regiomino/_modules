@@ -1206,6 +1206,8 @@ function rm_cart_mail($key, &$message, $params) {
                                             'delivery_range_from' => $params['delivery_range_from'],
                                             'delivery_range_to' => $params['delivery_range_to'],
                                             'seller_title' => $params['seller_title'],
+                                            'seller_object' => $params['seller_object'],
+                                            'seller_user' => $params['seller_user'],
                                             'gtc' => node_load(4),
                                         ),
                                     ));

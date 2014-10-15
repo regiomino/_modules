@@ -626,6 +626,11 @@ function rm_api_mailchimp_unsubscribe($email, $delete_member = FALSE, $send_good
     }
 }
 
+function rm_api_format_phone($number) {
+    $number = '+49 (0) ' . ltrim($number, '0');
+    return $number;
+}
+
 /**
  * Method for sending a fax via simple-fax.de
  *
