@@ -562,12 +562,12 @@ function rm_api_libraries_info() {
  *        [leid] => 225234741
  *      )
  */
-function rm_api_mailchimp_subscribe($email, $merge_vars, $double_optin = FALSE, $update_existing = TRUE, $replace_interests = TRUE, $send_welcome = FALSE) {
+function rm_api_mailchimp_subscribe($email, $merge_vars, $double_optin = FALSE, $update_existing = TRUE, $replace_interests = TRUE, $send_welcome = FALSE, $list_id = '793255dd46') {
     if (($library = libraries_load('MailChimp')) && !empty($library['loaded'])) {
         $mcapikey = variable_get('mailchimp_api_key', 'b8efb78313eadea0afdae0793d86fdef-us8');
         $MailChimp = new \Drewm\MailChimp($mcapikey);
         $result = $MailChimp->call('lists/subscribe', array(
-            'id'                => '793255dd46',
+            'id'                => $list_id,
             'email'             => array('email'=>$email),
             'merge_vars'        => $merge_vars,
             'double_optin'      => $double_optin,

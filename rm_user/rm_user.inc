@@ -90,6 +90,14 @@ function rm_user_profile_registration($form, $form_state, $profile) {
         $form['profileregistration']['company_name']['#default_value'] = $profileobject->field_company_name[LANGUAGE_NONE][0]['value'];
     }
     
+    $form['profileregistration']['smallbusiness'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('I am not obliged to pay value-added tax according to § 19 UStG.'),
+    );
+    if(!empty($profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'])) {
+        $form['profileregistration']['smallbusiness']['#default_value'] = $profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'];
+    }
+    
     $form['profileregistration']['phone'] = array(
         '#type' => 'textfield',
         '#title' => t('Phone'),
@@ -181,13 +189,10 @@ function rm_user_profile_registration($form, $form_state, $profile) {
         $form['profileregistration']['locality']['#default_value'] = $profileobject->field_address[LANGUAGE_NONE][0]['locality'];
     }
     
-    $form['profileregistration']['smallbusiness'] = array(
+    $form['profileregistration']['newsletter'] = array(
         '#type' => 'checkbox',
-        '#title' => t('I am not obliged to pay value-added tax according to § 19 UStG.'),
+        '#title' => '<strong>' . t('I would like to subscribe to the Regiomino Newsletter') . '</strong>',
     );
-    if(!empty($profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'])) {
-        $form['profileregistration']['smallbusiness']['#default_value'] = $profileobject->field_kleinunternehmer[LANGUAGE_NONE][0]['value'];
-    }
     
     $form['profileregistration']['profile_id'] = array(
         '#type' => 'value',
@@ -235,6 +240,23 @@ function rm_user_profile_registration_submit($form, $form_state) {
     node_save($profileobject);
     
     rm_user_has_accepted_gtc($form_state['values']['profile_id']);
+    
+    if(!empty($form_state['values']['newsletter'])) {
+        $result = rm_api_mailchimp_subscribe(
+            $form_state['values']['email'],
+            array(
+                'FNAME' => $form_state['values']['first_name'],
+                'LNAME' => $form_state['values']['last_name'],
+                'SALUTATION' => ($form_state['values']['gender'] == 'f') ? 'Frau' : 'Herr',
+                'ROLES' => 'authenticated user'
+            ),
+            FALSE,
+            TRUE,
+            TRUE,
+            FALSE,
+            '042acaef72'
+        );
+    }
     
     drupal_set_message(t('Thank you for your registration. You will receive an email shortly with your login details and a summary of your registration information. If you wish to change anything, please log in and use your dashboard to do so.'), 'status');
     drupal_goto('user/register');
