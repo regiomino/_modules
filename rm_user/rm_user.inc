@@ -197,7 +197,7 @@ function rm_user_profile_registration($form, $form_state, $profile) {
     $form['profileregistration']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Register'),
-        '#suffix' => t('By clicking @register I accept the <a href="@url" target="_blank">General Terms and Conditions</a>', array('@register' => t('Register'), '@url' => url('node/4'))),
+        '#suffix' => t('By clicking @register I accept the <a href="@url" target="_blank">General Terms and Conditions</a>', array('@register' => t('Register'), '@url' => url('node/4'))) . ' ' . t('Our newsletter is included in our service and can be unsubscribed from any time.'),
     );
     return $form;
 }
