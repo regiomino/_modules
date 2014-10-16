@@ -314,7 +314,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             for($i=0; $i<7; $i++) {
                 $now = time();
                 $oneday = 86400;
-                $earliestorder = date('Y-m-d', $now + $longestdelay + $oneday);
+                $earliestorder = date('Y-m-d', $now + ($longestdelay * 3600) + $oneday);
                 $strtotime = strtotime($earliestorder . ' +' . $i . ' days');
                 if(!empty($regular_times[date('N', $strtotime)])) {
                     foreach($regular_times[date('N', $strtotime)] as $dateval) {
