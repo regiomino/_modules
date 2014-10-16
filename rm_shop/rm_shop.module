@@ -111,6 +111,68 @@ function rm_shop_init() {
     }
 }
 
+
+function rm_shop_add_filterparams_to_settings($queryparams) {
+        //Map Center
+    if(empty($queryparams['map_center'])) {
+        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_center' => $opengeodbinfo['main_region']['lat'] . ',' . $opengeodbinfo['main_region']['lon'])), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_center' => $queryparams['map_center'])), 'setting');
+    }
+    
+    //Map Bounds Southwest
+    if(empty($queryparams['map_bounds_sw'])) {
+        if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $opengeodbinfo['main_region']['lat'] - 5 . ',' . $opengeodbinfo['main_region']['lon'] - 5)), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $queryparams['map_bounds_sw'])), 'setting');
+    }
+    
+    //Map Bounds Northeast
+    if(empty($queryparams['map_bounds_ne'])) {
+        if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $opengeodbinfo['main_region']['lat'] + 5 . ',' . $opengeodbinfo['main_region']['lon'] + 5)), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $queryparams['map_bounds_ne'])), 'setting');
+    }
+    
+    //Seller name
+    if(empty($queryparams['seller_name'])) {
+        drupal_add_js(array('rm_shop' => array('seller_name' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_name' => $queryparams['seller_name'])), 'setting');
+    }
+    
+    //Seller type
+    if(empty($queryparams['seller_type'])) {
+        drupal_add_js(array('rm_shop' => array('seller_type' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_type' => $queryparams['seller_type'])), 'setting');
+    }
+    
+    //Delivery options
+    if(empty($queryparams['delivery_options'])) {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => $queryparams['delivery_options'])), 'setting');
+    }
+    
+    //Payment types
+    if(empty($queryparams['payment_types'])) {
+        drupal_add_js(array('rm_shop' => array('payment_types' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('payment_types' => $queryparams['payment_types'])), 'setting');
+    }
+}
+
 function rm_shop_node_access($node, $op, $account) {
     if($op == 'view') {
         if(!rm_user_is_admin()) {
@@ -275,43 +337,30 @@ function rm_shop_get_filteredshops() {
     global $user;
     $zipcode = 0;
     if(isset($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode);
     
-    $map_bounds_sw = explode(',', $_GET['map_bounds_sw']);
-    $map_bounds_ne = explode(',', $_GET['map_bounds_ne']);
+    $rectangle['map_bounds_sw'] = explode(',', $_GET['map_bounds_sw']);
+    $rectangle['map_bounds_ne'] = explode(',', $_GET['map_bounds_ne']);
     
-    $map_bounds_sw[0] = '45.272603';
-    $map_bounds_sw[1] = '3.951820';
-    $map_bounds_ne[0] = '55.327298';
-    $map_bounds_ne[1] = '16.783851';
+    // $rectangle['map_bounds_sw'][0] = '45.272603';
+    // $rectangle['map_bounds_sw'][1] = '3.951820';
+    // $rectangle['map_bounds_ne'][0] = '55.327298';
+    // $rectangle['map_bounds_ne'][1] = '16.783851';
     
-    $seller_name = $_GET['seller_name'];
-    $seller_type = $_GET['seller_type'];
-    $delivery_options = $_GET['delivery_options'];
-    $payment_types = $_GET['payment_types'];
+    $filterparams = drupal_get_query_parameters();
     
-    //Find sellers that have
-    //"latitude" larger than $map_bounds_sw[0] and smaller than $map_bounds_ne[0]
-    //"longitude" larger than $map_bounds_sw[1] and smaller $map_bounds_ne[1]
-    if(isset($shops)) {
-        foreach($shops as $shop_nid => $shop) {
-            $lat = $shop->field_location[LANGUAGE_NONE][0]['lat'];
-            $lon = $shop->field_location[LANGUAGE_NONE][0]['lon'];
-            if($lat > $map_bounds_sw[0] && $lat < $map_bounds_ne[0] && $lon > $map_bounds_sw[1] && $lon < $map_bounds_ne[1]) {
-                //Everything alright
-            }
-            else {
-                unset($shops[$shop_nid]);
-            }
-        }
-    }
+    rm_shop_add_filterparams_to_settings($filterparams);
+    
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
+
     $html = theme('rm_shop_theme_filteredshops', array(
                     'vars' => array(
                         'shops' => $shops,
                     ),
                  ));
-    var_dump($html); die();
+       
+    $returnarray['html'] = $html;
     
+    print json_encode($returnarray);
 }
 
 function rm_shop_get_commission($user_id, $seller_id) {
@@ -356,7 +405,12 @@ function rm_shop_get_commission($user_id, $seller_id) {
     return $thecommission;
 }
 
-function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
+function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rectangle = NULL, $filterparams = NULL) {
+
+    // $seller_name = $filterparams['seller_name'];
+    // $seller_type = $filterparams['seller_type'];
+    // $delivery_options = $filterparams['delivery_options'];
+    // $payment_types = $filterparams['payment_types'];
 
     if(isset($zipcode) && !empty($zipcode)) {
         //Get all shipping agreements that match the given zipcode
@@ -422,12 +476,17 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
             $query->entityCondition('bundle', array('seller_profile'));
             $query->propertyCondition('status', 1);
             $query->propertyCondition('uid', $relevantuids);
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_sw'][0], '>');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_ne'][0], '<');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_sw'][1], '>');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_ne'][1], '<');
             $result = $query->execute();
             if(isset($result['node'])) {
                 $shops = entity_load('node', array_keys($result['node']));
             }
         }
-    }
+    }    
+    
     //add all agreement infos to the shop profile
     foreach($shops as $nid => $shop) {
         $shops[$nid]->agreements = $alluids[$shop->uid];

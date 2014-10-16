@@ -17,76 +17,19 @@ function rm_shop_get_shops($zipcode) {
     );
 
     global $user;
-    //rm_shop_get_filteredshops();
-    //map_center
-    //map_bounds_sw
-    //map_bounds_ne
-    //seller_name
-    //seller_type
-    //delivery_options
-    //payment_types
-    $queryparams = drupal_get_query_parameters();
-        
-    //Map Center
-    if(empty($queryparams['map_center'])) {
-        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_center' => $opengeodbinfo['main_region']['lon'] . ',' . $opengeodbinfo['main_region']['lat'])), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('map_center' => $queryparams['map_center'])), 'setting');
-    }
     
-    //Map Bounds Southwest
-    if(empty($queryparams['map_bounds_sw'])) {
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $queryparams['map_bounds_sw'])), 'setting');
-    }
+    $filterparams = drupal_get_query_parameters();
     
-    //Map Bounds Northeast
-    if(empty($queryparams['map_bounds_ne'])) {
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $queryparams['map_bounds_ne'])), 'setting');
-    }
+    rm_shop_add_filterparams_to_settings($filterparams);
     
-    //Seller name
-    if(empty($queryparams['seller_name'])) {
-        drupal_add_js(array('rm_shop' => array('seller_name' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('seller_name' => $queryparams['seller_name'])), 'setting');
-    }
+    $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+    $spread = 1;
+    $rectangle['map_bounds_sw'][0] = $opengeodbinfo['main_region']['lat'] - $spread;
+    $rectangle['map_bounds_sw'][1] = $opengeodbinfo['main_region']['lon'] - $spread;
+    $rectangle['map_bounds_ne'][0] = $opengeodbinfo['main_region']['lat'] + $spread;
+    $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
     
-    //Seller type
-    if(empty($queryparams['seller_type'])) {
-        drupal_add_js(array('rm_shop' => array('seller_type' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('seller_type' => $queryparams['seller_type'])), 'setting');
-    }
-    
-    //Delivery options
-    if(empty($queryparams['delivery_options'])) {
-        drupal_add_js(array('rm_shop' => array('delivery_options' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('delivery_options' => $queryparams['delivery_options'])), 'setting');
-    }
-    
-    //Payment types
-    if(empty($queryparams['payment_types'])) {
-        drupal_add_js(array('rm_shop' => array('payment_types' => '')), 'setting');
-    }
-    else {
-        drupal_add_js(array('rm_shop' => array('payment_types' => $queryparams['payment_types'])), 'setting');
-    }
-    
-    
-
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL);
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(
