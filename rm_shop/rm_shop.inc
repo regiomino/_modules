@@ -30,8 +30,11 @@ function rm_shop_get_shops($zipcode) {
     
     //Map Bounds Southwest
     if(empty($queryparams['map_bounds_sw'])) {
+        $lat = $opengeodbinfo['main_region']['lat'] - 5;
+        $lon = $opengeodbinfo['main_region']['lon'] - 5;
+        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $opengeodbinfo['main_region']['lat'] - 5 . ',' . $opengeodbinfo['main_region']['lon'] - 5)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $string)), 'setting');
     }
     else {
         drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $queryparams['map_bounds_sw'])), 'setting');
@@ -39,8 +42,11 @@ function rm_shop_get_shops($zipcode) {
     
     //Map Bounds Northeast
     if(empty($queryparams['map_bounds_ne'])) {
+        $lat = $opengeodbinfo['main_region']['lat'] + 5;
+        $lon = $opengeodbinfo['main_region']['lon'] + 5;
+        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $opengeodbinfo['main_region']['lat'] + 5 . ',' . $opengeodbinfo['main_region']['lon'] + 5)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $string)), 'setting');
     }
     else {
         drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $queryparams['map_bounds_ne'])), 'setting');
