@@ -189,6 +189,10 @@ function rm_shop_menu() {
         'page callback' => 'rm_shop_get_participantxml',
         'access arguments' => array('access content'),
     );
+    $items['rm-shop-filter'] = array(
+        'page callback' => 'rm_shop_get_filteredshops',
+        'access arguments' => array('access content'),
+    );
     $items['rm-shop-spotxml/%'] = array(
         'page callback' => 'rm_shop_get_spotxml',
         'page arguments' => array(1),
@@ -265,6 +269,49 @@ function rm_shop_menu() {
         'file path' => drupal_get_path('module', 'rm_cart'),
     );
     return $items;
+}
+
+function rm_shop_get_filteredshops() {
+    global $user;
+    $zipcode = 0;
+    if(isset($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode);
+    
+    $map_bounds_sw = explode(',', $_GET['map_bounds_sw']);
+    $map_bounds_ne = explode(',', $_GET['map_bounds_ne']);
+    
+    $map_bounds_sw[0] = '45.272603';
+    $map_bounds_sw[1] = '3.951820';
+    $map_bounds_ne[0] = '55.327298';
+    $map_bounds_ne[1] = '16.783851';
+    
+    $seller_name = $_GET['seller_name'];
+    $seller_type = $_GET['seller_type'];
+    $delivery_options = $_GET['delivery_options'];
+    $payment_types = $_GET['payment_types'];
+    
+    //Find sellers that have
+    //"latitude" larger than $map_bounds_sw[0] and smaller than $map_bounds_ne[0]
+    //"longitude" larger than $map_bounds_sw[1] and smaller $map_bounds_ne[1]
+    if(isset($shops)) {
+        foreach($shops as $shop_nid => $shop) {
+            $lat = $shop->field_location[LANGUAGE_NONE][0]['lat'];
+            $lon = $shop->field_location[LANGUAGE_NONE][0]['lon'];
+            if($lat > $map_bounds_sw[0] && $lat < $map_bounds_ne[0] && $lon > $map_bounds_sw[1] && $lon < $map_bounds_ne[1]) {
+                //Everything alright
+            }
+            else {
+                unset($shops[$shop_nid]);
+            }
+        }
+    }
+    $html = theme('rm_shop_theme_filteredshops', array(
+                    'vars' => array(
+                        'shops' => $shops,
+                    ),
+                 ));
+    var_dump($html); die();
+    
 }
 
 function rm_shop_get_commission($user_id, $seller_id) {
@@ -375,7 +422,6 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
             $query->entityCondition('bundle', array('seller_profile'));
             $query->propertyCondition('status', 1);
             $query->propertyCondition('uid', $relevantuids);
-            $query->pager(15);
             $result = $query->execute();
             if(isset($result['node'])) {
                 $shops = entity_load('node', array_keys($result['node']));
@@ -574,6 +620,12 @@ function rm_shop_validate_address($zipcode) {
  */
 function rm_shop_theme() {
 	return array(
+		'rm_shop_theme_filteredshops' => array(
+			'template' => 'rm_shop_filteredshops_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_shop_theme_entry_header' => array(
 			'template' => 'rm_shop_entry_header_theme',
 			'variables' => array(
