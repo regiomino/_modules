@@ -18,6 +18,63 @@ function rm_shop_get_shops($zipcode) {
 
     global $user;
    
+    //start_lnglat
+    //radius
+    //seller_name
+    //seller_type
+    //delivery_options
+    //payment_types
+    $queryparams = drupal_get_query_parameters();
+    
+    //Start LngLat
+    if(empty($queryparams['start_lnglat'])) {
+        drupal_add_js(array('rm_shop' => array('start_lnglat' => '14.000393983,54.111223232')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('start_lnglat' => $queryparams['start_lnglat'])), 'setting');
+    }
+    
+    //Radius
+    if(empty($queryparams['radius'])) {
+        drupal_add_js(array('rm_shop' => array('radius' => '50')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('radius' => $queryparams['radius'])), 'setting');
+    }
+    
+    //Seller name
+    if(empty($queryparams['seller_name'])) {
+        drupal_add_js(array('rm_shop' => array('seller_name' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_name' => $queryparams['seller_name'])), 'setting');
+    }
+    
+    //Seller type
+    if(empty($queryparams['seller_type'])) {
+        drupal_add_js(array('rm_shop' => array('seller_type' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_type' => $queryparams['seller_type'])), 'setting');
+    }
+    
+    //Delivery options
+    if(empty($queryparams['delivery_options'])) {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => $queryparams['delivery_options'])), 'setting');
+    }
+    
+    //Payment types
+    if(empty($queryparams['payment_types'])) {
+        drupal_add_js(array('rm_shop' => array('payment_types' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('payment_types' => $queryparams['payment_types'])), 'setting');
+    }
+    
+    
 
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL);
 
