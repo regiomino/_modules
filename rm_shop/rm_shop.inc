@@ -30,6 +30,32 @@ function rm_shop_get_shops($zipcode) {
     $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
     
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
+    
+    //Add marker to settings
+    if(!empty($shops)) {
+        foreach($shops as $shop) {
+            $address = '';
+            if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+                !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
+                $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+                if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
+                    $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+                }
+                if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
+                $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
+            }
+            $markerarray[] = array(
+                'name' => l($shop->title, 'node/' . $shop->nid),
+                'address' => $address,
+                'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
+                'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
+                'type' => $shop->type,
+            );
+        }
+        drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
+    }
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(

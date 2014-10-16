@@ -363,7 +363,6 @@ function rm_shop_get_filteredshops() {
     //Get marker
     
     foreach($shops as $shop) {
-    
         $address = '';
         if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
             !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
@@ -376,8 +375,6 @@ function rm_shop_get_filteredshops() {
             if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
             $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
         }
-    
-    
         $returnarray['marker'][] = array(
             'name' => l($shop->title, 'node/' . $shop->nid),
             'address' => $address,
