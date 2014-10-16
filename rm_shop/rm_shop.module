@@ -112,8 +112,8 @@ function rm_shop_init() {
 }
 
 
-function rm_shop_add_filterparams_to_settings($queryparams) {
-        //Map Center
+function rm_shop_add_filterparams_to_settings($queryparams, $zipcode) {
+    //Map Center
     if(empty($queryparams['map_center'])) {
         $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
         drupal_add_js(array('rm_shop' => array('map_center' => $opengeodbinfo['main_region']['lat'] . ',' . $opengeodbinfo['main_region']['lon'])), 'setting');
@@ -348,7 +348,7 @@ function rm_shop_get_filteredshops() {
     
     $filterparams = drupal_get_query_parameters();
     
-    rm_shop_add_filterparams_to_settings($filterparams);
+    rm_shop_add_filterparams_to_settings($filterparams, $zipcode);
     
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
 

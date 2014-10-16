@@ -20,7 +20,7 @@ function rm_shop_get_shops($zipcode) {
     
     $filterparams = drupal_get_query_parameters();
     
-    rm_shop_add_filterparams_to_settings($filterparams);
+    rm_shop_add_filterparams_to_settings($filterparams, $zipcode);
     
     $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
     $spread = 1;
