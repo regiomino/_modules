@@ -25,10 +25,11 @@ function rm_shop_get_shops($zipcode) {
     //delivery_options
     //payment_types
     $queryparams = drupal_get_query_parameters();
-    
+        
     //Start LngLat
     if(empty($queryparams['start_lnglat'])) {
-        drupal_add_js(array('rm_shop' => array('start_lnglat' => '14.000393983,54.111223232')), 'setting');
+        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('start_lnglat' => $opengeodbinfo['main_region']['lon'] . ',' . $opengeodbinfo['main_region']['lat'])), 'setting');
     }
     else {
         drupal_add_js(array('rm_shop' => array('start_lnglat' => $queryparams['start_lnglat'])), 'setting');

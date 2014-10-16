@@ -1082,3 +1082,32 @@ function rm_api_initialize_pdf($author = 'Regiomino GmbH', $title = 'Neue Bestel
     
     return $tcpdf;
 }
+
+function rm_api_opengeodb_queryinfobyzip($zip) {
+	db_set_active('opengeodb');
+	$query = db_query("SELECT local.text_val as region_name, plz.text_val as plz, hierarchy.level as level, coords.lat, coords.lon FROM geodb_textdata plz, geodb_textdata local, geodb_coordinates coords, geodb_hierarchies hierarchy WHERE plz.text_val = :plz AND plz.text_type = 500300000 AND plz.loc_id = local.loc_id AND local.text_type = 500100000 AND local.loc_id = hierarchy.loc_id AND local.loc_id = coords.loc_id", array(':plz' => $zip));
+	
+	$results = array();
+	foreach($query as $value) {
+		$results[] = $value;
+	}
+	db_set_active();
+	$locinfo = array();
+	$row = 0;
+	foreach($results as $key=>$value) {
+
+		if($value->level == 6) {
+			$locinfo['main_region']['name'] = $value->region_name;
+			$locinfo['main_region']['lat'] = $value->lat;
+			$locinfo['main_region']['lon'] = $value->lon;
+		}
+ 		elseif($value->level == 8) {
+			$locinfo['sub_regions'][$row]['name'] = $value->region_name;
+			$locinfo['sub_regions'][$row]['lat'] = $value->lat;
+			$locinfo['sub_regions'][$row]['lon'] = $value->lon;
+			$row++;
+		}
+	}
+
+	return $locinfo;
+}
