@@ -360,6 +360,33 @@ function rm_shop_get_filteredshops() {
        
     $returnarray['html'] = $html;
     
+    //Get marker
+    
+    foreach($shops as $shop) {
+    
+        $address = '';
+        if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+            !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
+            !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
+            !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
+            $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
+                $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+            }
+            if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
+            $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
+        }
+    
+    
+        $returnarray['marker'][] = array(
+            'name' => l($shop->title, 'node/' . $shop->nid),
+            'address' => $address,
+            'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
+            'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
+            'type' => $shop->type,
+        );
+    }
+
     print json_encode($returnarray);
 }
 
