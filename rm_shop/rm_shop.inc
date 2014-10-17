@@ -18,6 +18,7 @@ function rm_shop_get_shops($zipcode) {
 
     global $user;
     
+    $queryparams = drupal_get_query_parameters();
     
     //Map Center
     if(empty($queryparams['map_center'])) {
@@ -91,7 +92,7 @@ function rm_shop_get_shops($zipcode) {
     $rectangle['map_bounds_ne'][0] = $opengeodbinfo['main_region']['lat'] + $spread;
     $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
     
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $queryparams);
     
     //Add marker to settings
     if(!empty($shops)) {
