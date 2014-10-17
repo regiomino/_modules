@@ -114,6 +114,7 @@ function rm_shop_get_shops($zipcode) {
                 'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
                 'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
                 'type' => $shop->type,
+                'marker_id' => $shop->nid,
             );
         }
         drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
