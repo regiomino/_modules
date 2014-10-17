@@ -67,8 +67,8 @@ function rm_cart_thankyou() {
 		$result = rm_cart_novalnet_checkHash($_REQUEST, $pw);
 		watchdog('thankyou', $result);
 	}
-	$output = t('You will now receive an email with further information about your order.');
-	//$output .= '<div id="trustedShopsCheckout" style="display:none;"></div>';
+
+	$output = '<div id="trustedShopsCheckout" style="display:none;">' . t('You will now receive an email with further information about your order.') . '</div>';
 	return $output;
 }
 
