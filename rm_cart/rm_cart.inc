@@ -55,12 +55,12 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             global $base_url;
             global $base_path;
             rm_cart_successfulpayment($form_state['values']['order_number'], 'external', 0);
-            drupal_goto('thankyou');
+            drupal_goto('thankyou/' . $form_state['values']['order_number']);
             break;
         case 'pp':
             global $base_url;
             global $base_path;
-            $return_url = $base_url . $base_path . 'thankyou';
+            $return_url = $base_url . $base_path . 'thankyou/' . $form_state['values']['order_number'];
             $cancel_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
             $notify_url = $base_url . $base_path . 'internal/confirmation';
             $cmd = '_cart';
@@ -123,7 +123,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
         
             global $base_url;
             global $base_path;
-            $return_url = $base_url . $base_path . 'thankyou';
+            $return_url = $base_url . $base_path . 'thankyou/' . $form_state['values']['order_number'];
             $error_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
 
             $pw = variable_get('regiomino_payment_novalnet_password', 'eb1e78328c46506b46a4ac4a1e378b91');
