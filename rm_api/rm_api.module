@@ -405,6 +405,36 @@ function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return 
   }
 }
 
+function rm_api_init() {
+    // $dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
+    // $filename = 'importfile.xls';
+    // $path = "$dir/$filename";
+    // rm_api_excel_import($path);
+    
+}
+
+/**
+ * Method for importing an xls file
+ *
+ * @param $header
+ * @param rows
+ * @param $filename
+ * @param $return
+ */
+function rm_api_excel_import($path) {
+  module_load_include('inc', 'phpexcel');
+  // The path to the excel file
+  //$path = 'sites/default/files/export.xls';
+  $result = phpexcel_import($path);
+
+  if (is_array($result)) {
+    drupal_set_message(t("We did it !"));
+  }
+  else {
+    drupal_set_message(t("Oops ! An error occured !"), 'error');
+  }
+}
+
 /**
  * Method for determining if a given timestamp is a holiday
  *
