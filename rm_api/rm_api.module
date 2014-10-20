@@ -406,16 +406,7 @@ function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return 
 }
 
 function rm_api_init() {
-    // $dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
-    // $filename = 'importfile.xls';
-    // $path = "$dir/$filename";
-    // $result = rm_api_excel_import($path);
-    // foreach($result as $sheet) {
-        // foreach($sheet as $line) {
-            // var_dump($line);
-        // }
-    // }
-    // die();
+
 }
 
 /**
