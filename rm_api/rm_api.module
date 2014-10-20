@@ -416,23 +416,14 @@ function rm_api_init() {
 /**
  * Method for importing an xls file
  *
- * @param $header
- * @param rows
- * @param $filename
- * @param $return
+ * @param $path
  */
 function rm_api_excel_import($path) {
-  module_load_include('inc', 'phpexcel');
-  // The path to the excel file
-  //$path = 'sites/default/files/export.xls';
-  $result = phpexcel_import($path);
-
-  if (is_array($result)) {
-    drupal_set_message(t("We did it !"));
-  }
-  else {
-    drupal_set_message(t("Oops ! An error occured !"), 'error');
-  }
+    module_load_include('inc', 'phpexcel');
+    // The path to the excel file
+    //$path = 'sites/default/files/export.xls';
+    $result = phpexcel_import($path);
+    return $result;
 }
 
 /**
