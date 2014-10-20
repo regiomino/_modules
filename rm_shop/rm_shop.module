@@ -281,8 +281,13 @@ function rm_shop_get_filteredshops() {
     $zipcode = 0;
     if(isset($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
     
-    $rectangle['map_bounds_sw'] = explode(',', $_GET['map_bounds_sw']);
-    $rectangle['map_bounds_ne'] = explode(',', $_GET['map_bounds_ne']);
+    // $rectangle['map_bounds_sw'] = explode(',', $_GET['map_bounds_sw']);
+    // $rectangle['map_bounds_ne'] = explode(',', $_GET['map_bounds_ne']);
+    
+    $rectangle['map_bounds_sw'][0] = $_GET['map_bounds_sw_lat'];
+    $rectangle['map_bounds_sw'][1] = $_GET['map_bounds_sw_lng'];
+    $rectangle['map_bounds_ne'][0] = $_GET['map_bounds_ne_lat'];
+    $rectangle['map_bounds_ne'][1] = $_GET['map_bounds_ne_lng'];
     
     // $rectangle['map_bounds_sw'][0] = '45.272603';
     // $rectangle['map_bounds_sw'][1] = '3.951820';
@@ -326,6 +331,7 @@ function rm_shop_get_filteredshops() {
         );
     }
 
+    watchdog('testjson', print_r($returnarray, TRUE));
     print json_encode($returnarray);
 }
 
