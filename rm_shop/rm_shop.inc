@@ -109,7 +109,8 @@ function rm_shop_get_shops($zipcode) {
                 $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
             }
             $markerarray[] = array(
-                'name' => l($shop->title, 'node/' . $shop->nid),
+                'name' => $shop->title,
+                'url' => url('node/' . $shop->nid),
                 'address' => $address,
                 'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
                 'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
