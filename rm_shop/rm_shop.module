@@ -293,7 +293,7 @@ function rm_shop_get_filteredshops() {
     // $rectangle['map_bounds_ne'][1] = '16.783851';
     
     $filterparams = drupal_get_query_parameters();
-    
+
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
 
     $html = theme('rm_shop_theme_filteredshops', array(
@@ -328,7 +328,7 @@ function rm_shop_get_filteredshops() {
             'marker_id' => $shop->nid,
         );
     }
-
+    watchdog('testjson', print_r(array_keys($returnarray), TRUE));
     
     print json_encode($returnarray);
 }
@@ -376,9 +376,6 @@ function rm_shop_get_commission($user_id, $seller_id) {
 }
 
 function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rectangle = NULL, $filterparams = NULL) {
-
-    // $delivery_option = $filterparams['delivery_option'];
-    // $payment_type = $filterparams['payment_type'];
 
     if(isset($zipcode) && !empty($zipcode)) {
         //Get all shipping agreements that match the given zipcode
@@ -433,6 +430,47 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
     $shops = array();
     
     if(!empty($alluids)) {
+        
+        //Filter out uids that don't have filtered agreements
+        if(!empty($filterparams['delivery_option']) || !empty($filterparams['payment_type'])) {
+            foreach($alluids as $seller_uid => $agreement_type) {
+                if(!empty($filterparams['delivery_option'])) {
+                    $delivery_option_filters = explode(',', $filterparams['delivery_option']);
+                    foreach($delivery_option_filters as $delivery_option_filter) {
+                        if(empty($agreement_type[$delivery_option_filter][0]) && empty($agreement_type[$delivery_option_filter][$user_id])) {
+                            unset($alluids[$seller_uid]);
+                        }
+                    }
+                }
+                if(!empty($filterparams['payment_type'])) {
+                    $payment_type_filters = explode(',', $filterparams['payment_type']);
+                    foreach($payment_type_filters as $payment_type_filter) {
+                        if(empty($agreement_type['payment_agreement'][0]) && empty($agreement_type['payment_agreement'][$user_id])) {
+                            unset($alluids[$seller_uid]);
+                        }
+                        else {
+                            $is_there = FALSE;
+                            foreach($agreement_type['payment_agreement'] as $user_reference => $agreements) {
+                                foreach($agreements as $agreement) {
+                                    if(!empty($agreement->field_payment_types[LANGUAGE_NONE])) {
+                                        foreach($agreement->field_payment_types[LANGUAGE_NONE] as $payment_type) {
+                                            if($payment_type['value'] == $payment_type_filter) {
+                                                $is_there = TRUE;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if(!$is_there) {
+                                unset($alluids[$seller_uid]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         //Filter out all uids that do not have active trading units
         $alluidkeys = array_keys($alluids);
         $relevantuids = rm_shop_filter_sellers_ready_to_sell($alluidkeys);
@@ -455,11 +493,10 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
                 $shops = entity_load('node', array_keys($result['node']));
             }
         }
-    }
-    
-    //add all agreement infos to the shop profile
-    foreach($shops as $nid => $shop) {
-        $shops[$nid]->agreements = $alluids[$shop->uid];
+        //add all agreement infos to the shop profile
+        foreach($shops as $nid => $shop) {
+            $shops[$nid]->agreements = $alluids[$shop->uid];
+        }
     }
     
     return $shops;
