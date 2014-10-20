@@ -377,10 +377,8 @@ function rm_shop_get_commission($user_id, $seller_id) {
 
 function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rectangle = NULL, $filterparams = NULL) {
 
-    // $seller_name = $filterparams['seller_name'];
-    // $seller_type = $filterparams['seller_type'];
-    // $delivery_options = $filterparams['delivery_options'];
-    // $payment_types = $filterparams['payment_types'];
+    // $delivery_option = $filterparams['delivery_option'];
+    // $payment_type = $filterparams['payment_type'];
 
     if(isset($zipcode) && !empty($zipcode)) {
         //Get all shipping agreements that match the given zipcode
@@ -446,16 +444,18 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
             $query->entityCondition('bundle', array('seller_profile'));
             $query->propertyCondition('status', 1);
             $query->propertyCondition('uid', $relevantuids);
+            if(!empty($filterparams['seller_name'])) $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_sw'][0], '>');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_ne'][0], '<');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_sw'][1], '>');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_ne'][1], '<');
+            if(!empty($filterparams['seller_type'])) $query->fieldCondition('field_sellercategories', 'tid', $filterparams['seller_type']);
             $result = $query->execute();
             if(isset($result['node'])) {
                 $shops = entity_load('node', array_keys($result['node']));
             }
         }
-    }    
+    }
     
     //add all agreement infos to the shop profile
     foreach($shops as $nid => $shop) {
