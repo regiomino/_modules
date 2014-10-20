@@ -328,7 +328,6 @@ function rm_shop_get_filteredshops() {
             'marker_id' => $shop->nid,
         );
     }
-    watchdog('testjson', print_r(array_keys($returnarray), TRUE));
     
     print json_encode($returnarray);
 }
@@ -487,7 +486,10 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_ne'][0], '<');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_sw'][1], '>');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_ne'][1], '<');
-            if(!empty($filterparams['seller_type'])) $query->fieldCondition('field_sellercategories', 'tid', $filterparams['seller_type']);
+            if(!empty($filterparams['seller_type'])) {
+                $seller_type_explode = explode(',', $filterparams['seller_type']);
+                $query->fieldCondition('field_sellercategories', 'tid', $seller_type_explode);
+            }
             $result = $query->execute();
             if(isset($result['node'])) {
                 $shops = entity_load('node', array_keys($result['node']));
@@ -500,6 +502,14 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
     }
     
     return $shops;
+}
+
+// Vergleichsfunktion
+function rm_shop_sort_seller_categories($a, $b) {
+    if ($a->name == $b->name) {
+        return 0;
+    }
+    return ($a->name < $b->name) ? -1 : 1;
 }
 
 function rm_shop_filter_sellers_ready_to_sell($uids) {
