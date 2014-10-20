@@ -33,24 +33,26 @@ function rm_shop_get_shops($zipcode) {
     if(empty($queryparams['map_bounds_sw'])) {
         $lat = $opengeodbinfo['main_region']['lat'] - 5;
         $lon = $opengeodbinfo['main_region']['lon'] - 5;
-        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $string)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $lon)), 'setting');
     }
     else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $queryparams['map_bounds_sw'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $queryparams['map_bounds_sw_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $queryparams['map_bounds_sw_lng'])), 'setting');
     }
     
     //Map Bounds Northeast
     if(empty($queryparams['map_bounds_ne'])) {
         $lat = $opengeodbinfo['main_region']['lat'] + 5;
         $lon = $opengeodbinfo['main_region']['lon'] + 5;
-        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $string)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $lon)), 'setting');
     }
     else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $queryparams['map_bounds_ne'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $queryparams['map_bounds_ne_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $queryparams['map_bounds_ne_lng'])), 'setting');
     }
     
     //Seller name
