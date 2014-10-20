@@ -18,6 +18,7 @@ function rm_shop_get_shops($zipcode) {
 
     global $user;
     
+    $queryparams = drupal_get_query_parameters();
     
     //Map Center
     if(empty($queryparams['map_center'])) {
@@ -32,24 +33,26 @@ function rm_shop_get_shops($zipcode) {
     if(empty($queryparams['map_bounds_sw'])) {
         $lat = $opengeodbinfo['main_region']['lat'] - 5;
         $lon = $opengeodbinfo['main_region']['lon'] - 5;
-        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $string)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $lon)), 'setting');
     }
     else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_sw' => $queryparams['map_bounds_sw'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $queryparams['map_bounds_sw_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $queryparams['map_bounds_sw_lng'])), 'setting');
     }
     
     //Map Bounds Northeast
     if(empty($queryparams['map_bounds_ne'])) {
         $lat = $opengeodbinfo['main_region']['lat'] + 5;
         $lon = $opengeodbinfo['main_region']['lon'] + 5;
-        $string = $lat . ',' . $lon;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $string)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $lon)), 'setting');
     }
     else {
-        drupal_add_js(array('rm_shop' => array('map_bounds_ne' => $queryparams['map_bounds_ne'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $queryparams['map_bounds_ne_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $queryparams['map_bounds_ne_lng'])), 'setting');
     }
     
     //Seller name
@@ -91,7 +94,7 @@ function rm_shop_get_shops($zipcode) {
     $rectangle['map_bounds_ne'][0] = $opengeodbinfo['main_region']['lat'] + $spread;
     $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
     
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $queryparams);
     
     //Add marker to settings
     if(!empty($shops)) {
@@ -120,6 +123,13 @@ function rm_shop_get_shops($zipcode) {
         }
         drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
     }
+    
+    $categorytids = array();
+    foreach($shops as $shop) {
+        foreach($shop->field_sellercategories[LANGUAGE_NONE] as $tids) {
+            $categorytids[$tids['tid']] = TRUE;
+        }
+    }
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(
@@ -127,6 +137,7 @@ function rm_shop_get_shops($zipcode) {
             'title' => t('Vendors in @region', array('@region' => arg(1))),
             'shops' => $shops,
             'pager' => theme('pager'),
+            'categories' => taxonomy_term_load_multiple(array_keys($categorytids)),
         ),
     ));
 }
