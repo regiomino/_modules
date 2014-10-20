@@ -504,6 +504,14 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
     return $shops;
 }
 
+// Vergleichsfunktion
+function rm_shop_sort_seller_categories($a, $b) {
+    if ($a->name == $b->name) {
+        return 0;
+    }
+    return ($a->name < $b->name) ? -1 : 1;
+}
+
 function rm_shop_filter_sellers_ready_to_sell($uids) {
 
     //first filter out sellers that have no active offers
