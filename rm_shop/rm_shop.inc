@@ -122,6 +122,13 @@ function rm_shop_get_shops($zipcode) {
         }
         drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
     }
+    
+    $categorytids = array();
+    foreach($shops as $shop) {
+        foreach($shop->field_sellercategories[LANGUAGE_NONE] as $tids) {
+            $categorytids[$tids['tid']] = TRUE;
+        }
+    }
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(
@@ -129,6 +136,7 @@ function rm_shop_get_shops($zipcode) {
             'title' => t('Vendors in @region', array('@region' => arg(1))),
             'shops' => $shops,
             'pager' => theme('pager'),
+            'categories' => taxonomy_term_load_multiple(array_keys($categorytids)),
         ),
     ));
 }
