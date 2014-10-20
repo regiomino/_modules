@@ -277,6 +277,7 @@ function rm_shop_menu() {
 }
 
 function rm_shop_get_filteredshops() {
+
     global $user;
     $zipcode = 0;
     if(isset($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
@@ -328,7 +329,7 @@ function rm_shop_get_filteredshops() {
         );
     }
 
-    watchdog('testjson', print_r($returnarray, TRUE));
+    
     print json_encode($returnarray);
 }
 
