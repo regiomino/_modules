@@ -1,5 +1,39 @@
 <?php
 
+function rm_shop_get_next_possible_deliverydate($variation_id, $zipcode, $seller_id, $user_id) {
+    $variation = node_load($variation_id);
+    $shops = rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id);
+    $returnvalues = array();
+    if(!empty($shops) && !empty($variation)) {
+        $shopskeys = array_keys($shops);
+        $shop = $shops[$shopskeys[0]];
+        if(!empty($shop->agreements)) {
+            foreach($shop->agreements as $type => $typevals) {
+                foreach($typevals as $user_reference=>$agreements) {
+                    foreach($agreements as $agreement) {
+                        $regular_times = rm_api_convert_office_hours($agreement->field_regular_times[LANGUAGE_NONE]);
+                        for($i=0; $i<7; $i++) {
+                            $now = time();
+                            $oneday = 86400;
+                            $earliestorder = date('Y-m-d', $now + ($variation->field_leadtime[LANGUAGE_NONE][0]['value'] * 3600) + $oneday);
+                            $deadline = strtotime($earliestorder) - ($variation->field_leadtime[LANGUAGE_NONE][0]['value'] * 3600) - 1;
+                            $strtotime = strtotime($earliestorder . ' +' . $i . ' days');
+                            if(!empty($regular_times[date('N', $strtotime)])) {
+                                $dateval = $regular_times[date('N', $strtotime)][0];
+                                $begin_time = strtotime($earliestorder . ' ' . $dateval['starthours'] . ' +' . $i . ' day');
+                                $end_time = strtotime($earliestorder . ' ' . $dateval['endhours'] . ' +' . $i . ' day');
+                                $returnvalues[$type] = array('begin_time' => $begin_time, 'end_time' => $end_time, 'deadline' => $deadline);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $returnvalues;
+}
+
 function rm_shop_init() {
 
 // $item_type = 'product'; //could be "surcharge"
@@ -230,7 +264,7 @@ function rm_shop_menu() {
         'file path' => drupal_get_path('module', 'rm_shop'),
     );
     $items['vorschlagen'] = array(
-        'title' => 'Vorschlagen',
+        'title' => 'Suggest',
         'page callback' => 'rm_shop_suggest',
         'access arguments' => array('access content'),
         'file' => 'rm_shop.inc',

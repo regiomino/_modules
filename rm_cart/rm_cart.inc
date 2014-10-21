@@ -42,7 +42,9 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             'pickup_agreement' => $order_item->field_pickup_agreement_ref[LANGUAGE_NONE][0]['target_id'],
             'delivery_range_from' => $order_item->field_delivery_range_from[LANGUAGE_NONE][0]['value'],
             'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
-            'seller_title' => $shop->title
+            'seller_title' => $shop->title,
+            'seller_object' => $shop,
+            'seller_user' => user_load($shop->uid)
         ),
         variable_get('site_mail', 'support@regiomino.de')
     );
@@ -53,12 +55,12 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
             global $base_url;
             global $base_path;
             rm_cart_successfulpayment($form_state['values']['order_number'], 'external', 0);
-            drupal_goto('thankyou');
+            drupal_goto('thankyou/' . $form_state['values']['order_number']);
             break;
         case 'pp':
             global $base_url;
             global $base_path;
-            $return_url = $base_url . $base_path . 'thankyou';
+            $return_url = $base_url . $base_path . 'thankyou/' . $form_state['values']['order_number'];
             $cancel_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
             $notify_url = $base_url . $base_path . 'internal/confirmation';
             $cmd = '_cart';
@@ -121,7 +123,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
         
             global $base_url;
             global $base_path;
-            $return_url = $base_url . $base_path . 'thankyou';
+            $return_url = $base_url . $base_path . 'thankyou/' . $form_state['values']['order_number'];
             $error_return = $base_url . $base_path . 'order/' . $form_state['values']['order_number'];
 
             $pw = variable_get('regiomino_payment_novalnet_password', 'eb1e78328c46506b46a4ac4a1e378b91');
@@ -312,7 +314,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             for($i=0; $i<7; $i++) {
                 $now = time();
                 $oneday = 86400;
-                $earliestorder = date('Y-m-d', $now + $longestdelay + $oneday);
+                $earliestorder = date('Y-m-d', $now + ($longestdelay * 3600) + $oneday);
                 $strtotime = strtotime($earliestorder . ' +' . $i . ' days');
                 if(!empty($regular_times[date('N', $strtotime)])) {
                     foreach($regular_times[date('N', $strtotime)] as $dateval) {

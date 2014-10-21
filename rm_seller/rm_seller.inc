@@ -1,5 +1,15 @@
 <?php
 
+function rm_seller_orders() {
+    global $user;
+    $orders = rm_cart_get_orders_grouped_by_order_number($user->uid);
+    return theme('rm_seller_theme_orders', array(
+        'vars' => array(
+            'orders' => $orders,
+        ),
+    ));
+}
+
 function rm_seller_agreement_delete($form, &$form_state, $nid) {
 	
 	$nodeobject = node_load($nid);
@@ -198,10 +208,25 @@ function rm_seller_commissionagreements() {
 }
 
 function rm_seller_dashboard() {
+    global $user;
+    $offers = rm_shop_get_structured_seller_offers($user->uid, array(0,1));
+    $profiles = rm_api_get_nodes_by_properties(array('seller_profile'), 1, -1, -1, -1, -1, $user->uid);
+    $profileskeys = array_keys($profiles);
+    $profile = $profiles[$profileskeys[0]];
+    $sortedorders = rm_cart_get_orders_grouped_by_order_number($user->uid, array('processing', 'accepted', 'delivered'));
     //pass to tpl
     return theme('rm_seller_theme_dashboard', array(
         'vars' => array(
-            'dashboard' => NULL,
+            'offers' => $offers,
+            'offercount' => count($offers),
+            'profile' => $profile,
+            'profilecompleteness' => rm_user_get_profile_completeness($profile->nid, 'seller_profile'),
+            'accountcompleteness' => rm_user_get_account_completeness($user->uid),
+            'paymentagreements' => rm_api_get_nodes_by_properties(array('payment_agreement'), 1, -1, -1, -1, -1, $user->uid),
+            'shippingagreements' => rm_api_get_nodes_by_properties(array('shipping_agreement'), 1, -1, -1, -1, -1, $user->uid),
+            'pickupagreements' => rm_api_get_nodes_by_properties(array('pickup_agreement'), 1, -1, -1, -1, -1, $user->uid),
+            'orders' => $sortedorders,
+            'ordercount' => count($sortedorders),
         ),
     ));
 }
@@ -230,7 +255,7 @@ function rm_seller_offer_form($form, &$form_state) {
                 '#attributes' => array(
                     'placeholder' => t('Offer description'),
                     'class' => array('form-control'),
-                    'required' => NULL,
+                    
                 ),
             );
             if(!empty($offer->title)) $form['offers']['offer_' . $offer->nid]['these_fields']['field_description_title-' . $offer->nid]['#default_value'] = $offer->title;
@@ -281,10 +306,19 @@ function rm_seller_offer_form($form, &$form_state) {
                 '#attributes' => array(
                     'placeholder' => t('Country'),
                     'class' => array('form-control'),
-                    'required' => NULL,
+                    
                 ),
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['country'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_country-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['country'];
+            
+            $form['offers']['offer_' . $offer->nid]['these_fields']['add_variation_button-' . $offer->nid] = array(
+                '#type' => 'button',
+                '#value' => t('Add offer variation'),
+                '#name' => 'add_variation_to-' . $offer->nid,
+                '#executes_submit_callback' => TRUE,
+            );
+            $form['offers']['offer_' . $offer->nid]['these_fields']['add_variation_button-' . $offer->nid]['#attributes']['class'][] = 'btn-success';
+            $form['offers']['offer_' . $offer->nid]['these_fields']['add_variation_button-' . $offer->nid]['#attributes']['class'][] = 'btn';
             
             
             foreach($offer->offer_variations as $variation) {
@@ -299,7 +333,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#attributes' => array(
                         'placeholder' => t('SKU'),
                         'class' => array('form-control'),
-                        'required' => NULL,
+                        
                     ),
                 );
                 if(!empty($variation->field_sku[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_sku-' . $variation->nid]['#default_value'] = $variation->field_sku[LANGUAGE_NONE][0]['value'];
@@ -314,7 +348,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#attributes' => array(
                         'placeholder' => t('Variation title'),
                         'class' => array('form-control'),
-                        'required' => NULL,
+                        
                     ),
                 );
                 if(!empty($variation->title)) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_variation_title-' . $variation->nid]['#default_value'] = $variation->title;
@@ -328,7 +362,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#attributes' => array(
                         'placeholder' => t('Description'),
                         'class' => array('form-control'),
-                        'required' => NULL,
+                        
                     ),
                 );
                 if(!empty($variation->body[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['body-' . $variation->nid]['#default_value'] = strip_tags($variation->body[LANGUAGE_NONE][0]['value']);
@@ -351,7 +385,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#attributes' => array(
                         'placeholder' => t('Quantity'),
                         'class' => array('form-control'),
-                        'required' => NULL,
+                        
                     ),
                 );
                 if(!empty($variation->field_productunit[LANGUAGE_NONE][0]['first'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_amount-' . $variation->nid]['#default_value'] = $variation->field_productunit[LANGUAGE_NONE][0]['first'];
@@ -373,7 +407,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     '#attributes' => array(
                         'placeholder' => t('Unit'),
                         'class' => array('form-control'),
-                        'required' => NULL,
+                        
                     ),
                 );
                 if(!empty($variation->field_productunit[LANGUAGE_NONE][0]['second'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_productunit_unit-' . $variation->nid]['#default_value'] = $variation->field_productunit[LANGUAGE_NONE][0]['second'];
@@ -445,6 +479,15 @@ function rm_seller_offer_form($form, &$form_state) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['field_expiration_date-' . $variation->nid]['#default_value']['year'] = date('Y', $variation->field_expiration_date[LANGUAGE_NONE][0]['value']);
                 }
                 
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['add_tu_button-' . $variation->nid] = array(
+                    '#type' => 'button',
+                    '#value' => t('Add trading unit'),
+                    '#name' => 'add_tu_to-' . $variation->nid,
+                    '#executes_submit_callback' => TRUE,
+                );
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['add_tu_button-' . $variation->nid]['#attributes']['class'][] = 'btn-success';
+                $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['these_fields']['add_tu_button-' . $variation->nid]['#attributes']['class'][] = 'btn';
+                
                 foreach($variation->trading_units as $tradingunit) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields'] = array();
                     
@@ -457,7 +500,7 @@ function rm_seller_offer_form($form, &$form_state) {
                         '#attributes' => array(
                             'placeholder' => t('Quantity'),
                             'class' => array('form-control'),
-                            'required' => NULL,
+                            
                         ),
                     );
                     if(!empty($tradingunit->field_tu_amount[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_amount-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_amount[LANGUAGE_NONE][0]['value'];
@@ -471,10 +514,10 @@ function rm_seller_offer_form($form, &$form_state) {
                         '#attributes' => array(
                             'placeholder' => t('Price'),
                             'class' => array('form-control'),
-                            'required' => NULL,
+                            
                         ),
                     );
-                    if(!empty($tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_price-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'];
+                    if(!empty($tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_price-' . $tradingunit->nid]['#default_value'] = str_replace('.', ',', $tradingunit->field_tu_price[LANGUAGE_NONE][0]['value']);
                     
                     //TU VAT
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_vat-' . $tradingunit->nid] = array(
@@ -491,7 +534,7 @@ function rm_seller_offer_form($form, &$form_state) {
                         '#attributes' => array(
                             'placeholder' => t('VAT'),
                             'class' => array('form-control'),
-                            'required' => NULL,
+                            
                         ),
                     );
                     if(!empty($tradingunit->field_tu_vat[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_vat-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_vat[LANGUAGE_NONE][0]['value'];
@@ -505,10 +548,10 @@ function rm_seller_offer_form($form, &$form_state) {
                         '#attributes' => array(
                             'placeholder' => t('Deposit'),
                             'class' => array('form-control'),
-                            'required' => NULL,
+                            
                         ),
                     );
-                    if(!empty($tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_deposit-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value'];
+                    if(!empty($tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_deposit-' . $tradingunit->nid]['#default_value'] = str_replace('.', ',', $tradingunit->field_tu_deposit[LANGUAGE_NONE][0]['value']);
                     
                     //TU Packaging
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_packaging-' . $tradingunit->nid] = array(
@@ -522,6 +565,7 @@ function rm_seller_offer_form($form, &$form_state) {
                             'single' => t('Single item'),
                             'bouquet' => t('Bouquet'),
                             'basket' => t('Basket'),
+                            'bag' => t('Bag'),
                         ),
                         '#title' => t('Trading unit type'),
                         '#required' => TRUE,
@@ -529,7 +573,7 @@ function rm_seller_offer_form($form, &$form_state) {
                         '#attributes' => array(
                             'placeholder' => t('Trading unit type'),
                             'class' => array('form-control'),
-                            'required' => NULL,
+                            
                         ),
                     );
                     if(!empty($tradingunit->field_tu_packaging[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_packaging-' . $tradingunit->nid]['#default_value'] = $tradingunit->field_tu_packaging[LANGUAGE_NONE][0]['value'];
@@ -545,6 +589,41 @@ function rm_seller_offer_form($form, &$form_state) {
 		'#suffix' => ' ' . l(t('Add another offer'), 'addofferdescription/' . $uid, array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('btn', 'btn-info', 'btn-lg')))),
     );
     return $form;
+}
+
+function rm_seller_offer_form_validate($form, &$form_state) {
+    foreach($form_state['values'] as $form_key => $form_value) {
+        //Validate productunit amount
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_productunit_amount-') !== false) {
+            if(!is_numeric($form_value)) form_set_error($form_key, t('Please enter a numeric value as "Productunit Amount"'));
+        }
+        //Validate stock
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_stock-') !== false) {
+            if(isset($form_state['values'][$form_key]) && !is_numeric($form_value)) form_set_error($form_key, t('Please enter a numeric value as stock'));
+        }
+        //Validate lead time
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_leadtime-') !== false) {
+            if(!is_numeric($form_value)) form_set_error($form_key, t('Please enter a numeric value as lead time'));
+        }
+        //Validate use within
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_use_within-') !== false) {
+            if(!is_numeric($form_value)) form_set_error($form_key, t('Please enter a numeric value as use within'));
+        }
+        //Validate TU Amount
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_tu_amount-') !== false) {
+            if(!is_numeric($form_value)) form_set_error($form_key, t('Please enter a numeric value as trading unit amount'));
+        }
+        //Validate TU Price
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_tu_price-') !== false) {
+            $form_state['values'][$form_key] = str_replace(',', '.', $form_value);
+            if(!is_numeric($form_state['values'][$form_key])) form_set_error($form_key, t('Please enter a numeric value as trading unit price'));
+        }
+        //Validate TU Deposit
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_tu_deposit-') !== false) {
+            $form_state['values'][$form_key] = str_replace(',', '.', $form_value);
+            if(!is_numeric($form_state['values'][$form_key])) form_set_error($form_key, t('Please enter a numeric value as trading unit deposit'));
+        }
+    }
 }
 
 function rm_seller_validate_date_empty($element, &$form_state, $form) {
@@ -591,6 +670,7 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_description_title':
                         case 'field_variation_title':
                             $nodeobject->title = $field_value;
+                            node_save($nodeobject);
                             break;
                             
                         //Value fields with identical names
@@ -607,28 +687,35 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_tu_vat':
                         case 'body':
                             $nodeobject->{$tmp[0]}[LANGUAGE_NONE][0]['value'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         
                         //Origin fields
                         case 'field_origin_company':
                             $nodeobject->field_origin[LANGUAGE_NONE][0]['organisation_name'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         case 'field_origin_zip':
                             $nodeobject->field_origin[LANGUAGE_NONE][0]['postal_code'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         case 'field_origin_locality':
                             $nodeobject->field_origin[LANGUAGE_NONE][0]['locality'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         case 'field_origin_country':
                             $nodeobject->field_origin[LANGUAGE_NONE][0]['country'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         
                         //Product unit
                         case 'field_productunit_amount':
                             $nodeobject->field_productunit[LANGUAGE_NONE][0]['first'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         case 'field_productunit_unit':
                             $nodeobject->field_productunit[LANGUAGE_NONE][0]['second'] = $field_value;
+                            node_save($nodeobject);
                             break;
                         
                         //Image
@@ -638,19 +725,33 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                             file_save($file);
                             $filearray = (array) $file;
                             $nodeobject->{$tmp[0]}[LANGUAGE_NONE][] = (array) $file;
+                            node_save($nodeobject);
                             break;
                         
                         //Expiration date
                         case 'field_expiration_date':
                             $timestamp = strtotime($field_value['year'] . '-' . $field_value['month'] . '-' . $field_value['day']);
                             $nodeobject->{$tmp[0]}[LANGUAGE_NONE][0]['value'] = $timestamp;
+                            node_save($nodeobject);
+                            break;
+                        
+                        //Add variation button
+                        case 'add_variation_to':
+                            drupal_goto('addoffervariation/' . $tmp[1], array('query' => drupal_get_destination()));
+                            break;
+                        
+                        //Add tu button
+                        case 'add_tu_to':
+                            drupal_goto('addtradingunit/' . $tmp[1], array('query' => drupal_get_destination()));
                             break;
                     }
-                    node_save($nodeobject);
                 }
             }
         }
     }
+    
+    var_dump($form_state['values']); die();
+    
     drupal_set_message(t('All offers have been updated with the given values'), 'status');
 }
 

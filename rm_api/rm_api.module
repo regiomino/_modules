@@ -15,6 +15,15 @@ function rm_api_menu() {
     return $items;
 }
 
+function rm_api_generate_random_string($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
 //TBD this should be more complex. Validate against actually existing zipcodes, not just the number range
 function rm_api_validate_zipcode($zipcode) {
     if(strlen($zipcode) == 5) {
@@ -396,6 +405,32 @@ function rm_api_excel_export($header, $rows, $filename = 'exports.xls', $return 
   }
 }
 
+function rm_api_init() {
+    // $dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
+    // $filename = 'importfile.xls';
+    // $path = "$dir/$filename";
+    // $result = rm_api_excel_import($path);
+    // foreach($result as $sheet) {
+        // foreach($sheet as $line) {
+            // var_dump($line);
+        // }
+    // }
+    // die();
+}
+
+/**
+ * Method for importing an xls file
+ *
+ * @param $path
+ */
+function rm_api_excel_import($path) {
+    module_load_include('inc', 'phpexcel');
+    // The path to the excel file
+    //$path = 'sites/default/files/export.xls';
+    $result = phpexcel_import($path);
+    return $result;
+}
+
 /**
  * Method for determining if a given timestamp is a holiday
  *
@@ -553,12 +588,12 @@ function rm_api_libraries_info() {
  *        [leid] => 225234741
  *      )
  */
-function rm_api_mailchimp_subscribe($email, $merge_vars, $double_optin = FALSE, $update_existing = TRUE, $replace_interests = TRUE, $send_welcome = FALSE) {
+function rm_api_mailchimp_subscribe($email, $merge_vars, $double_optin = FALSE, $update_existing = TRUE, $replace_interests = TRUE, $send_welcome = FALSE, $list_id = '793255dd46') {
     if (($library = libraries_load('MailChimp')) && !empty($library['loaded'])) {
         $mcapikey = variable_get('mailchimp_api_key', 'b8efb78313eadea0afdae0793d86fdef-us8');
         $MailChimp = new \Drewm\MailChimp($mcapikey);
         $result = $MailChimp->call('lists/subscribe', array(
-            'id'                => '793255dd46',
+            'id'                => $list_id,
             'email'             => array('email'=>$email),
             'merge_vars'        => $merge_vars,
             'double_optin'      => $double_optin,
@@ -615,6 +650,11 @@ function rm_api_mailchimp_unsubscribe($email, $delete_member = FALSE, $send_good
     else {
         drupal_set_message(t('MailChimp API could not be loaded'), 'error');
     }
+}
+
+function rm_api_format_phone($number) {
+    $number = '+49 (0) ' . ltrim($number, '0');
+    return $number;
 }
 
 /**

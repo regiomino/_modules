@@ -19,6 +19,23 @@ function rm_user_has_provided_address() {
     }
 }
 
+function rm_user_get_profile($uid) {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+        ->propertyCondition('status', 1)
+        ->propertyCondition('uid', $uid)
+        ->execute();
+    $profile = array();
+    if(isset($tmp['node'])) {
+        $profiles = entity_load('node', array_keys($tmp['node']));
+        $profileskeys = array_keys($profiles);
+        $profile = $profiles[$profileskeys[0]];
+    }
+    return $profile;
+}
+
 function rm_user_get_footer_links() {
     return array(
         array(t('Imprint'), 'node/1', array()),
@@ -51,7 +68,7 @@ function rm_user_get_navbar() {
         }
         //Verwaltungs-Link für Gastronomen/Kunden
         else {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/customer', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/customer/' . $user->uid, array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
         }
         
         $html .= l(t('@linktitle', array('@linktitle' => t('Log out'))), 'user/logout', array('html' => TRUE, 'attributes' => array('class' => array('navi-link'))));
@@ -88,17 +105,24 @@ function rm_user_get_account_completeness($uid) {
 }
 
 function rm_user_get_profile_completeness($profileid, $bundle) {
-    $sellerfields = field_info_instances('node', $bundle);
-    unset($sellerfields['field_next_action']);
-    unset($sellerfields['field_priority']);
-    unset($sellerfields['field_salesguy']);
-    unset($sellerfields['field_suggester']);
-    unset($sellerfields['field_salescomment']);
-    $allfields = count($sellerfields);
+    $profilefields = field_info_instances('node', $bundle);
+    unset($profilefields['field_next_action']);
+    unset($profilefields['field_priority']);
+    unset($profilefields['field_salesguy']);
+    unset($profilefields['field_suggester']);
+    unset($profilefields['field_salescomment']);
+    unset($profilefields['field_register_hash']);
+    unset($profilefields['field_gtc_accepted']);
+    unset($profilefields['field_kleinunternehmer']);
+    unset($profilefields['field_publicfax']);
     $nodeobject = node_load($profileid);
+    if($nodeobject->type != 'seller_profile') unset($profilefields['field_sellercategories']);
+    $allfields = count($profilefields);
     $filledfields = 0;
-    foreach($sellerfields as $field_name => $field_value) {
-        if(!empty($nodeobject->{$field_name})) $filledfields++;
+    foreach($profilefields as $field_name => $field_value) {
+        if(!empty($nodeobject->{$field_name})) {
+            $filledfields++;
+        }
     }
     return round($filledfields/$allfields, 2);
 }
@@ -161,6 +185,51 @@ function rm_user_menu() {
     'type' => MENU_NORMAL_ITEM,
   ); 
   
+    $items['manage/customer/%user'] = array(
+        'title' => 'Customer',
+        'page callback' => 'rm_user_dashboard',
+        'access callback' => 'rm_user_user_is_customer',
+        'file' => 'rm_user.inc',
+        'file path' => drupal_get_path('module', 'rm_user'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+	$items['manage/customer/%user/dashboard'] = array(
+        'title' => 'Dashboard',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => 0,
+    );
+    $items['manage/customer/%user/orders'] = array(
+        'title' => 'Manage orders',
+        'page callback' => 'rm_user_orders',
+        'access callback' => 'rm_user_user_is_customer',
+        'file' => 'rm_user.inc',
+        'file path' => drupal_get_path('module', 'rm_user'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 0,
+    );
+	$items['manage/customer/%user/profile'] = array(
+        'title' => 'Manage profile',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_user_editprofile', 2),
+        'access callback' => 'rm_user_editprofile_access',
+		'access arguments' => array(2),
+        'file' => 'rm_user.inc',
+        'file path' => drupal_get_path('module', 'rm_user'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 2,
+    );
+	$items['manage/customer/%user/account'] = array(
+        'title' => 'Manage account',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('user_profile_form', 2),
+        'access callback' => 'user_edit_access',
+        'access arguments' => array(2),
+        'file' => 'user.pages.inc',
+        'file path' => drupal_get_path('module', 'user'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 3,
+    );
+  
   $items['manage/myaccount'] = array(
     'title' => 'Transactions',
     'page callback' => 'drupal_get_form',
@@ -200,17 +269,24 @@ function rm_user_menu() {
         'page arguments' => array(1,3),
         'access callback' => 'rm_user_is_admin',
 	);
-	$items['registration/%'] = array(
+	$items['registration/%/%'] = array(
         'title' => 'Registration',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('rm_user_profile_registration', 1),
-        'access callback' => 'rm_user_gtc_not_accepted',
-		'access arguments' => array(1),
+        'access callback' => 'rm_user_valid_register_link',
+		'access arguments' => array(1,2),
         'file' => 'rm_user.inc',
         'file path' => drupal_get_path('module', 'rm_user'),
         'type' => MENU_NORMAL_ITEM,
     );
 	return $items;
+}
+
+function rm_user_user_is_customer() {
+    if(rm_user_is_admin()) return TRUE;
+    global $user;
+    $account = user_load($user->uid);
+    if(in_array('authenticated user', $account->roles)) return TRUE;
 }
 
 function rm_user_may_be_shadowed($cuid, $tuid) {
@@ -382,6 +458,24 @@ function rm_user_transaction($amount, $reason, $node_type, $entityid = NULL, $en
  */
 function rm_user_theme() {
 	return array(
+        'rm_user_theme_orders' => array(
+			'template' => 'rm_user_orders_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+        'rm_user_theme_dashboard' => array(
+			'template' => 'rm_user_dashboard_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
+        'rm_user_theme_registration_invite_mail' => array(
+			'template' => 'rm_user_registration_invite_mail_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
         'rm_user_theme_gtc_accepted_mail' => array(
 			'template' => 'rm_user_gtc_accepted_mail_theme',
 			'variables' => array(
@@ -419,6 +513,21 @@ function rm_user_mail($key, &$message, $params) {
                                         ),
                                     ));
 			
+            $message['headers'] += $params['headers'];
+            
+		break;
+        case 'registration_invite':
+			$message['subject'] = 'Vielen Dank für Ihr Interesse an Regiomino';
+            
+			$message['body'][] = theme('rm_user_theme_registration_invite_mail', array(
+                                        'vars' => array(
+                                            'profileobject' => $params['profileobject'],
+                                            'profileuser' => $params['profileuser'],
+                                        ),
+                                    ));
+                                    
+			$message['headers'] += $params['headers'];
+            
 		break;
 	}
 }
@@ -432,17 +541,38 @@ function rm_user_has_accepted_gtc($nid) {
     $userobject = user_load($profileobject->uid);
     user_save($userobject, $edit);
     
-    //drupal_mail('rm_user', 'gtc_accepted', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
-    drupal_mail('rm_user', 'gtc_accepted', 'feedback@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+    drupal_mail('rm_user', 'gtc_accepted', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password, 'headers' => array('Bcc' => 'registrations@regiomino.de')), variable_get('site_mail', 'support@regiomino.de'));
+    //drupal_mail('rm_user', 'gtc_accepted', 'abgefangen@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
 }
 
-function rm_user_gtc_not_accepted($nid) {
+function rm_user_valid_register_link($nid, $hash) {
+    $profileobject = node_load($nid);
+    if(
+        $profileobject->field_register_hash[LANGUAGE_NONE][0]['value'] == $hash &&
+        empty($profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'])
+    ) {
+        return TRUE;
+    }
+}
+
+function rm_user_send_registration_invite($nid, $goto = TRUE) {
+    $profileobject = node_load($nid);
+    $userobject = user_load($profileobject->uid);
+    $profileobject->field_register_hash[LANGUAGE_NONE][0]['value'] = rm_api_generate_random_string(10);
+    node_save($profileobject);
+    
+    drupal_mail('rm_user', 'registration_invite', $profileobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject, 'headers' => array('Bcc' => 'invites@regiomino.de')), variable_get('site_mail', 'support@regiomino.de'));
+    //drupal_mail('rm_user', 'registration_invite', 'abgefangen@regiomino.de', NULL, array('profileobject' => $profileobject, 'profileuser' => $userobject), variable_get('site_mail', 'support@regiomino.de'));
+    if($goto) drupal_goto();
+}
+
+function rm_user_gtc_accepted($nid) {
     $profileobject = node_load($nid);
     if(!empty($profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value']) && $profileobject->field_gtc_accepted[LANGUAGE_NONE][0]['value'] == 1) {
         return TRUE;
     }
     else {
-        return TRUE;
+        return FALSE;
     }
 }
 
@@ -461,7 +591,7 @@ function rm_user_address_complete($uid) {
 
 function rm_user_editprofile_access($account) {
 	global $user;
-    $profilenodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'), -1, -1, -1, -1, -1, $user->uid);
+    $profilenodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'), -1, -1, -1, -1, -1, $user->uid);
     $profilekeys = array_keys($profilenodes);
 	$profileobject = $profilenodes[$profilekeys[0]];
     if(rm_user_is_admin()) return TRUE;

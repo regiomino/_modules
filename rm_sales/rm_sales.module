@@ -97,6 +97,14 @@ function rm_sales_menu() {
     'file' => 'rm_sales.inc',
     'file path' => drupal_get_path('module', 'rm_sales'),
   );
+  $items['manage/sales/sendinvite/%'] = array(
+    'title' => 'Sales',
+    'page callback' => 'rm_user_send_registration_invite',
+    'page arguments' => array(3),
+    'access callback' => 'rm_sales_user_is_salesguy',
+    'file' => 'rm_user.module',
+    'file path' => drupal_get_path('module', 'rm_user'),
+  );
 
   $items['manage/sales/assignprofile/%/%'] = array(
     'title' => 'Sales',

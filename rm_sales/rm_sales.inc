@@ -17,7 +17,7 @@ function rm_sales_salesguyactivity() {
 			'specifier' => 'uid',
 		),
         'body' => array(
-			'data' => t('Aktivität'),
+			'data' => t('Activity'),
 			'type' => 'field',
 			'specifier' => array(
 				'field' => 'body',
@@ -843,13 +843,13 @@ function rm_sales_profilecare_form() {
             
             $publishingpossiblestring = '';
 			$publishingpossible = rm_api_node_validate_required($profileobject->nid);
-			if(empty($publishingpossible) && $profileobject->status == 0) $publishingpossiblestring = ' ' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+			if(empty($publishingpossible) && $profileobject->status == 0) $publishingpossiblestring = '<br>' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             
             $deletepossiblestring = '';
             if($profileobject->status == 0) $deletepossiblestring = l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
             
             $shadowpossiblestring = '';
-            if($profileobject->uid > 0) $shadowpossiblestring = l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info'))));
+            if($profileobject->uid > 0) $shadowpossiblestring = '<br>' . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info'))));
             
             switch($profileobject->type) {
 				case "customer_profile": $nodetypename = 'seller_profile'; break;
@@ -869,7 +869,21 @@ function rm_sales_profilecare_form() {
             
             $suggestedcount = ($suggestedcount) ? '<span class="label label-success suggester-tooltip" data-toggle="tooltip" data-placement="top" title="' . $suggestedby . '">' . $suggestedcount . '</span>' : '<span class="label label-danger suggester-tooltip" data-toggle="tooltip" data-placement="top" title="von Regiomino vorgeschlagen">0</span>';
             
-            $addsuggesterlink = '(' . l(t('More suggesters') . '?', 'manage/addsuggesters/' . $profileobject->nid, array('query' => drupal_get_destination())) . ')';
+            $addsuggesterlink = '<br>(' . l(t('More suggesters') . '?', 'manage/addsuggesters/' . $profileobject->nid, array('query' => drupal_get_destination())) . ')';
+            
+            if($profileobject->status) {
+                if(!rm_user_gtc_accepted($profileobject->nid)) {
+                    if(empty($profileobject->field_register_hash[LANGUAGE_NONE][0]['value'])) {
+                        $invitelabel = t('Send invite');
+                        $invitebtntype = 'btn-success';
+                    }
+                    else {
+                        $invitelabel = t('Send invite again');
+                        $invitebtntype = 'btn-warning';
+                    }
+                    $addsuggesterlink .= '<br>' . l($invitelabel, 'manage/sales/sendinvite/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', $invitebtntype))));
+                }
+            }
             
             if($profileobject->sticky) {
                 $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
@@ -1376,8 +1390,8 @@ function rm_sales_export_profiles() {
 		t('Locality'),
 		t('Phone'),
 		t('Salesguy'),
-        t('Vorgeschlagen von'),
-        t('Empfehlungen'),
+        t('Suggested by'),
+        t('Suggestions'),
 		t('Shipping agreement'),
 		t('Dispatch agreement'),
 		t('Pickup agreement'),
