@@ -17,9 +17,122 @@ function rm_shop_get_shops($zipcode) {
     );
 
     global $user;
-    drupal_add_js(drupal_get_path('module', 'rm_shop') . '/js/rm_shop.js');
-
-    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL);
+    
+    $queryparams = drupal_get_query_parameters();
+    
+    //Map Center
+    if(empty($queryparams['map_center'])) {
+        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_center' => $opengeodbinfo['main_region']['lat'] . ',' . $opengeodbinfo['main_region']['lon'])), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_center' => $queryparams['map_center'])), 'setting');
+    }
+    
+    //Map Bounds Southwest
+    if(empty($queryparams['map_bounds_sw'])) {
+        $lat = $opengeodbinfo['main_region']['lat'] - 5;
+        $lon = $opengeodbinfo['main_region']['lon'] - 5;
+        if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $lon)), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lat' => $queryparams['map_bounds_sw_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_sw_lng' => $queryparams['map_bounds_sw_lng'])), 'setting');
+    }
+    
+    //Map Bounds Northeast
+    if(empty($queryparams['map_bounds_ne'])) {
+        $lat = $opengeodbinfo['main_region']['lat'] + 5;
+        $lon = $opengeodbinfo['main_region']['lon'] + 5;
+        if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $lat)), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $lon)), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lat' => $queryparams['map_bounds_ne_lat'])), 'setting');
+        drupal_add_js(array('rm_shop' => array('map_bounds_ne_lng' => $queryparams['map_bounds_ne_lng'])), 'setting');
+    }
+    
+    //Seller name
+    if(empty($queryparams['seller_name'])) {
+        drupal_add_js(array('rm_shop' => array('seller_name' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_name' => $queryparams['seller_name'])), 'setting');
+    }
+    
+    //Seller type
+    if(empty($queryparams['seller_type'])) {
+        drupal_add_js(array('rm_shop' => array('seller_type' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('seller_type' => $queryparams['seller_type'])), 'setting');
+    }
+    
+    //Delivery options
+    if(empty($queryparams['delivery_options'])) {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('delivery_options' => $queryparams['delivery_options'])), 'setting');
+    }
+    
+    //Payment types
+    if(empty($queryparams['payment_types'])) {
+        drupal_add_js(array('rm_shop' => array('payment_types' => '')), 'setting');
+    }
+    else {
+        drupal_add_js(array('rm_shop' => array('payment_types' => $queryparams['payment_types'])), 'setting');
+    }
+    
+    $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+    $spread = 1;
+    $rectangle['map_bounds_sw'][0] = $opengeodbinfo['main_region']['lat'] - $spread;
+    $rectangle['map_bounds_sw'][1] = $opengeodbinfo['main_region']['lon'] - $spread;
+    $rectangle['map_bounds_ne'][0] = $opengeodbinfo['main_region']['lat'] + $spread;
+    $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
+    
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $queryparams);
+    
+    //Add marker to settings
+    if(!empty($shops)) {
+        foreach($shops as $shop) {
+            $address = '';
+            if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+                !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
+                $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+                if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
+                    $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+                }
+                if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
+                $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
+            }
+            $markerarray[] = array(
+                'name' => $shop->title,
+                'url' => url('node/' . $shop->nid),
+                'address' => $address,
+                'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
+                'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
+                'type' => $shop->type,
+                'marker_id' => $shop->nid,
+            );
+        }
+        drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
+    }
+    
+    $categorytids = array();
+    foreach($shops as $shop) {
+        foreach($shop->field_sellercategories[LANGUAGE_NONE] as $tids) {
+            $categorytids[$tids['tid']] = TRUE;
+        }
+    }
+    
+    $categories = taxonomy_term_load_multiple(array_keys($categorytids));
+    usort($categories, 'rm_shop_sort_seller_categories');
 
     //pass to tpl
     return theme('rm_shop_theme_shops', array(
@@ -27,6 +140,7 @@ function rm_shop_get_shops($zipcode) {
             'title' => t('Vendors in @region', array('@region' => arg(1))),
             'shops' => $shops,
             'pager' => theme('pager'),
+            'categories' => $categories,
         ),
     ));
 }

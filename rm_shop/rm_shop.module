@@ -145,6 +145,11 @@ function rm_shop_init() {
     }
 }
 
+
+function rm_shop_add_filterparams_to_settings($queryparams, $zipcode) {
+
+}
+
 function rm_shop_node_access($node, $op, $account) {
     if($op == 'view') {
         if(!rm_user_is_admin()) {
@@ -221,6 +226,10 @@ function rm_shop_menu() {
     $items = array();
     $items['rm-shop-participantxml'] = array(
         'page callback' => 'rm_shop_get_participantxml',
+        'access arguments' => array('access content'),
+    );
+    $items['rm-shop-filter'] = array(
+        'page callback' => 'rm_shop_get_filteredshops',
         'access arguments' => array('access content'),
     );
     $items['rm-shop-spotxml/%'] = array(
@@ -301,6 +310,62 @@ function rm_shop_menu() {
     return $items;
 }
 
+function rm_shop_get_filteredshops() {
+
+    global $user;
+    $zipcode = 0;
+    if(isset($_SESSION['regionselect']['zip'])) $zipcode = $_SESSION['regionselect']['zip'];
+    
+    $rectangle['map_bounds_sw'][0] = $_GET['map_bounds_sw_lat'];
+    $rectangle['map_bounds_sw'][1] = $_GET['map_bounds_sw_lng'];
+    $rectangle['map_bounds_ne'][0] = $_GET['map_bounds_ne_lat'];
+    $rectangle['map_bounds_ne'][1] = $_GET['map_bounds_ne_lng'];
+    
+    // $rectangle['map_bounds_sw'][0] = '45.272603';
+    // $rectangle['map_bounds_sw'][1] = '3.951820';
+    // $rectangle['map_bounds_ne'][0] = '55.327298';
+    // $rectangle['map_bounds_ne'][1] = '16.783851';
+    
+    $filterparams = drupal_get_query_parameters();
+
+    $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $filterparams);
+
+    $html = theme('rm_shop_theme_filteredshops', array(
+                    'vars' => array(
+                        'shops' => $shops,
+                    ),
+                 ));
+       
+    $returnarray['html'] = $html;
+    
+    //Get marker
+    
+    foreach($shops as $shop) {
+        $address = '';
+        if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+            !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
+            !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
+            !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
+            $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+            if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
+                $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+            }
+            if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
+            $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
+        }
+        $returnarray['marker'][] = array(
+            'name' => l($shop->title, 'node/' . $shop->nid),
+            'address' => $address,
+            'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
+            'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
+            'type' => $shop->type,
+            'marker_id' => $shop->nid,
+        );
+    }
+    
+    print json_encode($returnarray);
+}
+
 function rm_shop_get_commission($user_id, $seller_id) {
     //Get all shipping agreements that match the given zipcode
     $query = new EntityFieldQuery();
@@ -343,7 +408,7 @@ function rm_shop_get_commission($user_id, $seller_id) {
     return $thecommission;
 }
 
-function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
+function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rectangle = NULL, $filterparams = NULL) {
 
     if(isset($zipcode) && !empty($zipcode)) {
         //Get all shipping agreements that match the given zipcode
@@ -398,6 +463,47 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
     $shops = array();
     
     if(!empty($alluids)) {
+        
+        //Filter out uids that don't have filtered agreements
+        if(!empty($filterparams['delivery_option']) || !empty($filterparams['payment_type'])) {
+            foreach($alluids as $seller_uid => $agreement_type) {
+                if(!empty($filterparams['delivery_option'])) {
+                    $delivery_option_filters = explode(',', $filterparams['delivery_option']);
+                    foreach($delivery_option_filters as $delivery_option_filter) {
+                        if(empty($agreement_type[$delivery_option_filter][0]) && empty($agreement_type[$delivery_option_filter][$user_id])) {
+                            unset($alluids[$seller_uid]);
+                        }
+                    }
+                }
+                if(!empty($filterparams['payment_type'])) {
+                    $payment_type_filters = explode(',', $filterparams['payment_type']);
+                    foreach($payment_type_filters as $payment_type_filter) {
+                        if(empty($agreement_type['payment_agreement'][0]) && empty($agreement_type['payment_agreement'][$user_id])) {
+                            unset($alluids[$seller_uid]);
+                        }
+                        else {
+                            $is_there = FALSE;
+                            foreach($agreement_type['payment_agreement'] as $user_reference => $agreements) {
+                                foreach($agreements as $agreement) {
+                                    if(!empty($agreement->field_payment_types[LANGUAGE_NONE])) {
+                                        foreach($agreement->field_payment_types[LANGUAGE_NONE] as $payment_type) {
+                                            if($payment_type['value'] == $payment_type_filter) {
+                                                $is_there = TRUE;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if(!$is_there) {
+                                unset($alluids[$seller_uid]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         //Filter out all uids that do not have active trading units
         $alluidkeys = array_keys($alluids);
         $relevantuids = rm_shop_filter_sellers_ready_to_sell($alluidkeys);
@@ -409,19 +515,35 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL) {
             $query->entityCondition('bundle', array('seller_profile'));
             $query->propertyCondition('status', 1);
             $query->propertyCondition('uid', $relevantuids);
-            $query->pager(15);
+            if(!empty($filterparams['seller_name'])) $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_sw'][0], '>');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_ne'][0], '<');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_sw'][1], '>');
+            if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_ne'][1], '<');
+            if(!empty($filterparams['seller_type'])) {
+                $seller_type_explode = explode(',', $filterparams['seller_type']);
+                $query->fieldCondition('field_sellercategories', 'tid', $seller_type_explode);
+            }
             $result = $query->execute();
             if(isset($result['node'])) {
                 $shops = entity_load('node', array_keys($result['node']));
             }
         }
-    }
-    //add all agreement infos to the shop profile
-    foreach($shops as $nid => $shop) {
-        $shops[$nid]->agreements = $alluids[$shop->uid];
+        //add all agreement infos to the shop profile
+        foreach($shops as $nid => $shop) {
+            $shops[$nid]->agreements = $alluids[$shop->uid];
+        }
     }
     
     return $shops;
+}
+
+// Vergleichsfunktion
+function rm_shop_sort_seller_categories($a, $b) {
+    if ($a->name == $b->name) {
+        return 0;
+    }
+    return ($a->name < $b->name) ? -1 : 1;
 }
 
 function rm_shop_filter_sellers_ready_to_sell($uids) {
@@ -608,6 +730,12 @@ function rm_shop_validate_address($zipcode) {
  */
 function rm_shop_theme() {
 	return array(
+		'rm_shop_theme_filteredshops' => array(
+			'template' => 'rm_shop_filteredshops_theme',
+			'variables' => array(
+				'vars' => NULL,
+			)
+		),
 		'rm_shop_theme_entry_header' => array(
 			'template' => 'rm_shop_entry_header_theme',
 			'variables' => array(
