@@ -717,25 +717,28 @@ function rm_sales_init() {
     $result = rm_api_excel_import($path);
     foreach($result as $sheet) {
         foreach($sheet as $line) {
-            rm_sales_create_profile_from_import($line);
+            //var_dump(strlen(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr'])));
+            //var_dump(str_replace('Â', '', str_replace('-', '', preg_replace('/\s/', '', preg_replace('~\x{00a0}~','',$line['UStID / StNr'])))));
+            //rm_sales_create_profile_from_import($line);
         }
     }
-
+//die();
 }
 
 function rm_sales_create_profile_from_import($line) {
 
-    /* $owner = (!empty($form_state['values']['owner'])) ? 1 : 0;
+    $type = ($line['Status'] == 'Verkäufer') ? 'seller_profile' : 'customer_profile';
+    
 	$new_node = rm_api_create_new_node(
-		$form_state['values']['type'], //Type
-		$form_state['values']['title'], //Title
+		$type, //Type
+		$line['Profiltitel'], //Title
 		'de', //Language
 		0, //Uid of author
 		0, //Status
 		0, //Suppressed
 		0, //Sticky
 		0, //Promote
-        $owner //Prospect
+        0 //Prospect
 	);
 	
 	//Store fields
@@ -755,79 +758,87 @@ function rm_sales_create_profile_from_import($line) {
 		'last_name' => NULL,
 		'data' => NULL,
 	);
-	if(!empty($form_state['values']['locality'])) $new_node->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['locality'];
-	if(!empty($form_state['values']['thoroughfare'])) $new_node->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['thoroughfare'];
-	if(!empty($form_state['values']['postal_code'])) $new_node->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['postal_code'];
-	if(!empty($form_state['values']['phone'])) {
-		$new_node->field_publicphone[LANGUAGE_NONE][0]['number'] = $form_state['values']['phone'];
+	if(!empty($line['Ort']) && $line['Ort'] != 'x') $new_node->field_address[LANGUAGE_NONE][0]['locality'] = $line['Ort'];
+	if(!empty($line['Strasse Hausnummer']) && $line['Strasse Hausnummer'] != 'x') $new_node->field_address[LANGUAGE_NONE][0]['thoroughfare'] = trim($line['Strasse Hausnummer']);
+	if(!empty($line['PLZ']) && $line['PLZ'] != 'x') $new_node->field_address[LANGUAGE_NONE][0]['postal_code'] = $line['PLZ'];
+	if(!empty($line['Telefon-Nummer']) && $line['Telefon-Nummer'] != 'x') {
+		$new_node->field_publicphone[LANGUAGE_NONE][0]['number'] = preg_replace("/[^0-9]/","",$line['Telefon-Nummer']);
 		$new_node->field_publicphone[LANGUAGE_NONE][0]['country_codes'] = 'de';
 	}
-	
-	if(!empty($form_state['values']['suggester'])) $new_node->field_suggester[LANGUAGE_NONE][0]['value'] = $form_state['values']['suggester'];
-	
-	//if suggester is sales person, then store him in field_salesguy
-	$suggester = user_load_by_mail($form_state['values']['suggester']);
-	$enteredbysales = FALSE;
-	
-    if(!empty($suggester)) {
-        if(in_array('salesguy', $suggester->roles)) {
-            $new_node->field_salesguy[LANGUAGE_NONE][0]['target_id'] = $suggester->uid;
-            $enteredbysales = TRUE;
-            $new_node->sticky = 1;
-        }
-    }
+    if(!empty($line['Fax']) && $line['Fax'] != 'x') {
+		$new_node->field_publicfax[LANGUAGE_NONE][0]['number'] = preg_replace("/[^0-9]/","",$line['Fax']);
+		$new_node->field_publicfax[LANGUAGE_NONE][0]['country_codes'] = 'de';
+	}
+    if(!empty($line['Exakte Firmenbezeichnung lt. Impressum']) && $line['Exakte Firmenbezeichnung lt. Impressum'] != 'x') {
+		$new_node->field_company_name[LANGUAGE_NONE][0]['value'] = trim($line['Exakte Firmenbezeichnung lt. Impressum']);
+	}
+    $new_node->field_salescomment[LANGUAGE_NONE][0]['value'] = '';
     
+    if(!empty($line['Quelle']) && $line['Quelle'] != 'x') {
+		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'Quelle: ' . trim($line['Quelle']) . '<br>';
+	}
+    if(!empty($line['URL']) && $line['URL'] != 'x') {
+		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'URL: ' . trim($line['URL']) . '<br>';
+	}
+    if(!empty($line['E-Mail']) && $line['E-Mail'] != 'x') {
+		$new_node->field_email[LANGUAGE_NONE][0]['value'] = trim($line['E-Mail']);
+	}
+    
+    
+    if(!empty($line['Kurzbeschreibung des Profils']) && $line['Kurzbeschreibung des Profils'] != 'x') {
+		$new_node->body[LANGUAGE_NONE][0]['value'] = trim($line['Kurzbeschreibung des Profils']);
+	}
+    
+    
+    if(!empty($line['Kontoinhaber']) && $line['Kontoinhaber'] != 'x') {
+		$new_node->field_bankaccountholder[LANGUAGE_NONE][0]['value'] = trim($line['Kontoinhaber']);
+	}
+    if(!empty($line['IBAN']) && $line['IBAN'] != 'x') {
+		$new_node->field_iban[LANGUAGE_NONE][0]['value'] = trim($line['IBAN']);
+	}
+    if(!empty($line['BIC']) && $line['BIC'] != 'x') {
+		$new_node->field_iban[LANGUAGE_NONE][0]['value'] = trim($line['BIC']);
+	}
+    if(!empty($line['UStID / StNr']) && $line['UStID / StNr'] != 'x') {
+		$new_node->field_taxnumber[LANGUAGE_NONE][0]['value'] = strlen(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr']));
+	}
+    if(!empty($line['URL zu Angebotsdaten']) && $line['URL zu Angebotsdaten'] != 'x') {
+		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'Angebote: ' . $line['URL zu Angebotsdaten'];
+	}
+    
+    if(!empty($line['Rechnungsadresse = Lieferanschrift']) && $line['Rechnungsadresse = Lieferanschrift'] == 'x') {
+        $new_node->field_billingaddress[LANGUAGE_NONE][0] = array(
+            'country' => 'de',
+            'administrative_area' => NULL,
+            'sub_administrative_area' => NULL,
+            'locality' => '',
+            'dependent_locality' => '',
+            'postal_code' => '',
+            'thoroughfare' => '',
+            'premise' => '',
+            'sub_premise' => NULL,
+            'organisation_name' => '',
+            'name_line' => NULL,
+            'first_name' => NULL,
+            'last_name' => NULL,
+            'data' => NULL,
+        );
+        if(!empty($line['Ort']) && $line['Ort'] != 'x') $new_node->field_billingaddress[LANGUAGE_NONE][0]['locality'] = trim($line['Ort']);
+        if(!empty($line['Strasse Hausnummer']) && $line['Strasse Hausnummer'] != 'x') $new_node->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'] = trim($line['Strasse Hausnummer']);
+        if(!empty($line['PLZ']) && $line['PLZ'] != 'x') $new_node->field_billingaddress[LANGUAGE_NONE][0]['postal_code'] = trim($line['PLZ']);
+	}
+    
+    
+    
+	
+	// if(!empty($form_state['values']['suggester'])) $new_node->field_suggester[LANGUAGE_NONE][0]['value'] = $form_state['values']['suggester'];
+	
     $new_node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
     $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
 
 	node_save($new_node);
 	
-	if(!$enteredbysales) {
-		if(!empty($form_state['values']['suggester'])) {
-			drupal_set_message(t('Thank you very much! We will contact @name as soon as possible and let you know when he/she joins us.', array('@name' => $form_state['values']['title'])), 'status');
-		}
-		else {
-			drupal_set_message(t('Thank you very much! We will contact @name as soon as possible.', array('@name' => $form_state['values']['title'])), 'status');
-		}
-	}
-	else {
-		drupal_set_message(t('Thank you very much! @name has been entered and assigned to your <a href="@url">sales</a> account.', array('@name' => $form_state['values']['title'], '@url' => 'user/register?destination=manage/sales/assigned')), 'status');
-	}
 	
-	//Log activity
-	global $user;
-	if($user->uid > 0 && !empty($suggester) && $suggester->uid > 0 && $user->uid != $suggester->uid) {
-		rm_user_activity(
-			t('Suggested profile <a href="@url">@profile</a> but entered user @targetuser as the suggester', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title, '@targetuser' => $suggester->mail)),
-			$new_node->nid,
-			'node',
-			$user->uid
-		);
-	}
-	elseif($user->uid > 0 && !empty($suggester) && $suggester->uid > 0 && $user->uid == $suggester->uid) {
-		rm_user_activity(
-			t('Suggested profile <a href="@url">@profile</a>', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
-			$new_node->nid,
-			'node',
-			$user->uid
-		);
-	}
-	elseif($user->uid > 0 && (empty($suggester) || $suggester->uid == 0)) {
-		rm_user_activity(
-			t('Suggested profile <a href="@url">@profile</a> but did not enter himself as suggester', array('@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
-			$new_node->nid,
-			'node',
-			$user->uid
-		);	
-	}
-	elseif($user->uid == 0 && !empty($suggester) && $suggester->uid > 0) {
-		rm_user_activity(
-			t('An anonymous user suggested a profile <a href="@url">@profile</a> and set user @triggeruser as the suggester', array('@triggeruser' => $suggester->mail, '@url' => url('node/' . $new_node->nid), '@profile' => $new_node->title)),
-			$new_node->nid,
-			'node',
-			$suggester->uid
-		);	
-	} */
 	
 }
 
