@@ -780,7 +780,7 @@ function rm_sales_init() {
     foreach($result as $sheet) {
         foreach($sheet as $line) {            
             if($user->uid == 1) {
-                //$new_node = rm_sales_create_profile_from_import($line);
+                //$new_node = rm_sales_create_profile_from_import($line, 2);
                 //rm_sales_publishprofile($new_node->nid, FALSE);
             }
         }
@@ -838,9 +838,12 @@ function rm_sales_create_profile_from_import($line, $tid) {
     if(!empty($line['Exakte Firmenbezeichnung lt. Impressum']) && $line['Exakte Firmenbezeichnung lt. Impressum'] != 'x') {
 		$new_node->field_company_name[LANGUAGE_NONE][0]['value'] = trim($line['Exakte Firmenbezeichnung lt. Impressum']);
 	}
+    else {
+        $new_node->field_company_name[LANGUAGE_NONE][0]['value'] = trim($line['Profiltitel']);
+    }
     
     if(!empty($line['Quelle']) && $line['Quelle'] != 'x') {
-		$new_node->field_source_url[LANGUAGE_NONE][0]['value'] .= trim($line['Quelle']);
+		$new_node->field_source_url[LANGUAGE_NONE][0]['value'] = trim($line['Quelle']);
 	}
     $new_node->field_salescomment[LANGUAGE_NONE][0]['value'] = '';
 

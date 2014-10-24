@@ -30,7 +30,7 @@ function rm_shop_get_shops($zipcode) {
     }
     
     //Map Bounds Southwest
-    if(empty($queryparams['map_bounds_sw'])) {
+    if(empty($queryparams['map_bounds_sw_lat']) || empty($queryparams['map_bounds_sw_lng'])) {
         $lat = $opengeodbinfo['main_region']['lat'] - 5;
         $lon = $opengeodbinfo['main_region']['lon'] - 5;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
@@ -43,7 +43,7 @@ function rm_shop_get_shops($zipcode) {
     }
     
     //Map Bounds Northeast
-    if(empty($queryparams['map_bounds_ne'])) {
+    if(empty($queryparams['map_bounds_ne_lat']) || empty($queryparams['map_bounds_ne_lng'])) {
         $lat = $opengeodbinfo['main_region']['lat'] + 5;
         $lon = $opengeodbinfo['main_region']['lon'] + 5;
         if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
@@ -125,8 +125,16 @@ function rm_shop_get_shops($zipcode) {
     }
     
     $categorytids = array();
-    foreach($shops as $shop) {
-        foreach($shop->field_sellercategories[LANGUAGE_NONE] as $tids) {
+    
+    if(!empty($queryparams['map_bounds_sw_lng']) || !empty($queryparams['map_bounds_sw_lat']) || !empty($queryparams['map_bounds_ne_lng']) || !empty($queryparams['map_bounds_ne_lat']) || !empty($queryparams['seller_name']) || !empty($queryparams['seller_type']) || !empty($queryparams['delivery_options']) || !empty($queryparams['payment_types'])) {
+        $catshops = rm_shop_get_shop_agreements($user->uid, $zipcode);
+    }
+    else {
+        $catshops = $shops;
+    }
+    
+    foreach($catshops as $catshop) {
+        foreach($catshop->field_sellercategories[LANGUAGE_NONE] as $tids) {
             $categorytids[$tids['tid']] = TRUE;
         }
     }
