@@ -1322,6 +1322,7 @@ function rm_sales_export_profiles() {
         t('Status'),
         t('Completed profile'),
 		t('Name'),
+		t('E-Mail'),
 		t('Street'),
 		t('Zip'),
 		t('Locality'),
@@ -1410,8 +1411,14 @@ function rm_sales_export_profiles() {
         if($profileobject->suppressed) {
             $currentstatus = 'Sleep';
         }
+        else if(rm_user_gtc_accepted($profileobject->nid)) {
+            $currentstatus = 'AGB akzeptiert';
+        }
+        else if(!empty($profileobject->field_register_hash[LANGUAGE_NONE][0]['value'])) {
+            $currentstatus = 'Eingeladen';
+        }
         else if($profileobject->status) {
-            $currentstatus = 'Registriert';
+            $currentstatus = 'Veröffentlicht';
         }
         else if($profileobject->prospect) {
             $currentstatus = 'Prospect';
@@ -1426,6 +1433,7 @@ function rm_sales_export_profiles() {
             $currentstatus,
             (empty($valid)) ? t('Yes') : t('No'),
 			$profileobject->title,
+            (isset($profileobject->field_email[LANGUAGE_NONE][0]['email'])) ? $profileobject->field_email[LANGUAGE_NONE][0]['email'] : '',
 			(isset($profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] : '',
 			$zip,
 			(isset($profileobject->field_address[LANGUAGE_NONE][0]['locality'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['locality'] : '',
