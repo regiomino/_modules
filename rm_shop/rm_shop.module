@@ -341,7 +341,7 @@ function rm_shop_get_filteredshops() {
                  ));
        
     $returnarray['html'] = $html;
-    
+    $returnarray['marker'] = array();
     //Get marker
     
     foreach($shops as $shop) {
