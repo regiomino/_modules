@@ -780,7 +780,7 @@ function rm_sales_init() {
     foreach($result as $sheet) {
         foreach($sheet as $line) {            
             if($user->uid == 1) {
-                //$new_node = rm_sales_create_profile_from_import($line, 2);
+                //$new_node = rm_sales_create_profile_from_import($line, 42);
                 //rm_sales_publishprofile($new_node->nid, FALSE);
             }
         }
