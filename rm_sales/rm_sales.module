@@ -211,10 +211,71 @@ function rm_sales_menu() {
 		'page arguments' => array(2),
 		'access callback' => 'rm_sales_publishprofile_access',
 		'access arguments' => array(2),
-    'file' => 'rm_sales.inc',
-    'file path' => drupal_get_path('module', 'rm_sales'),
   );
 	return $items;
+}
+
+function rm_sales_publishprofile($nid, $goto = TRUE) {
+    $validation = rm_api_node_validate_required($nid);
+    $nodeobject = node_load($nid);
+    
+	if(empty($validation)) {
+		$userexists = user_load_by_mail($nodeobject->field_email[LANGUAGE_NONE][0]['email']);
+		if(!$userexists) {
+			//create user for registree
+			$password = user_password(8);
+			//set up the user fields
+			$fields = array(
+				'name' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
+				'mail' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
+				'pass' => $password,
+				'status' => 1,
+				'init' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
+				'roles' => array(
+					DRUPAL_AUTHENTICATED_RID => 'authenticated user',
+				),
+			);
+            if($nodeobject->type == 'seller_profile') $fields['roles'][4] = 'seller';
+			//the first parameter is left blank so a new user is created
+			$account = user_save('', $fields);
+			$account->password = $fields['pass'];
+			$uid = $account->uid;
+            $result = rm_api_mailchimp_subscribe(
+                $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
+                array(
+                    'FNAME' => $nodeobject->title,
+                    'LNAME' => $nodeobject->field_address[LANGUAGE_NONE][0]['locality'],
+                    'SALUTATION' => 'Herr',
+                    'ROLES' => 'authenticated user, seller'
+                )
+            );
+			//drupal_mail('rm_user', 'profile_published_user_registered', $nodeobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('account' => $account, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
+            
+            $nodeobject->uid = $uid;
+            $nodeobject->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $uid;
+            node_save($nodeobject);
+            
+            rm_api_node_publish($nid);
+            
+            global $user;
+            rm_user_activity(
+                t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
+                $nodeobject->nid,
+                'node',
+                $user->uid
+            );
+            
+            drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
+		}
+		else {
+			drupal_set_message(t('A user already exists with an identical email address as set in the profile. Please make sure you are not trying to publish a duplicate.'), 'status');
+		}
+    }
+    else {
+        drupal_set_message(t('Profile <a href="@url">@profile</a> has not been published due to a validation error', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'error');
+        drupal_set_message(print_r($validation, TRUE), 'error');
+    }
+	if($goto) drupal_goto();
 }
 
 function rm_sales_profilecare_filter_form($form, &$form_state) {
@@ -717,19 +778,16 @@ function rm_sales_init() {
     $result = rm_api_excel_import($path);
     global $user;
     foreach($result as $sheet) {
-        foreach($sheet as $line) {
-            //var_dump(strlen(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr'])));
-            //var_dump(str_replace('Â', '', str_replace('-', '', preg_replace('/\s/', '', preg_replace('~\x{00a0}~','',$line['UStID / StNr'])))));
-            
+        foreach($sheet as $line) {            
             if($user->uid == 1) {
-                //rm_sales_create_profile_from_import($line);
+                //$new_node = rm_sales_create_profile_from_import($line);
+                //rm_sales_publishprofile($new_node->nid, FALSE);
             }
         }
     }
-//die();
 }
 
-function rm_sales_create_profile_from_import($line) {
+function rm_sales_create_profile_from_import($line, $tid) {
 
     $type = ($line['Status'] == 'Verkäufer') ? 'seller_profile' : 'customer_profile';
     
@@ -744,6 +802,10 @@ function rm_sales_create_profile_from_import($line) {
 		0, //Promote
         0 //Prospect
 	);
+    
+    if($type == 'seller_profile') {
+        $new_node->field_sellercategories[LANGUAGE_NONE][0]['tid'] = $tid;
+    }
 	
 	//Store fields
 	$new_node->field_address[LANGUAGE_NONE][0] = array(
@@ -776,11 +838,12 @@ function rm_sales_create_profile_from_import($line) {
     if(!empty($line['Exakte Firmenbezeichnung lt. Impressum']) && $line['Exakte Firmenbezeichnung lt. Impressum'] != 'x') {
 		$new_node->field_company_name[LANGUAGE_NONE][0]['value'] = trim($line['Exakte Firmenbezeichnung lt. Impressum']);
 	}
-    $new_node->field_salescomment[LANGUAGE_NONE][0]['value'] = '';
     
     if(!empty($line['Quelle']) && $line['Quelle'] != 'x') {
-		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'Quelle: ' . trim($line['Quelle']) . '<br>';
+		$new_node->field_source_url[LANGUAGE_NONE][0]['value'] .= trim($line['Quelle']);
 	}
+    $new_node->field_salescomment[LANGUAGE_NONE][0]['value'] = '';
+
     if(!empty($line['URL']) && $line['URL'] != 'x') {
 		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'URL: ' . trim($line['URL']) . '<br>';
 	}
@@ -797,14 +860,39 @@ function rm_sales_create_profile_from_import($line) {
     if(!empty($line['Kontoinhaber']) && $line['Kontoinhaber'] != 'x') {
 		$new_node->field_bankaccountholder[LANGUAGE_NONE][0]['value'] = trim($line['Kontoinhaber']);
 	}
+    else {
+        $new_node->field_bankaccountholder[LANGUAGE_NONE][0]['value'] = trim($line['Profiltitel']);
+    }
+    
     if(!empty($line['IBAN']) && $line['IBAN'] != 'x') {
 		$new_node->field_iban[LANGUAGE_NONE][0]['value'] = trim($line['IBAN']);
 	}
-    if(!empty($line['BIC']) && $line['BIC'] != 'x') {
-		$new_node->field_iban[LANGUAGE_NONE][0]['value'] = trim($line['BIC']);
+    else {
+		$new_node->field_iban[LANGUAGE_NONE][0]['value'] = 0;
 	}
+    
+    if(!empty($line['BIC']) && $line['BIC'] != 'x') {
+		$new_node->field_bic[LANGUAGE_NONE][0]['value'] = trim($line['BIC']);
+	}
+    else {
+		$new_node->field_bic[LANGUAGE_NONE][0]['value'] = 0;
+	}
+    
+    
+    $filepath = drupal_realpath(drupal_get_path('module', 'rm_sales') . '/no-image.png');
+    $file = (object) array(
+        'uid' => 1,
+        'uri' => $filepath,
+        'filemime' => file_get_mimetype($filepath),
+        'status' => 1,
+    );
+    $file = file_copy($file, 'public://');
+    $new_node->field_image[LANGUAGE_NONE][0] = (array)$file;
+    
+    
+    
     if(!empty($line['UStID / StNr']) && $line['UStID / StNr'] != 'x') {
-		$new_node->field_taxnumber[LANGUAGE_NONE][0]['value'] = strlen(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr']));
+		$new_node->field_taxnumber[LANGUAGE_NONE][0]['value'] = substr(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr']), 0, 14);
 	}
     if(!empty($line['URL zu Angebotsdaten']) && $line['URL zu Angebotsdaten'] != 'x') {
 		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'Angebote: ' . $line['URL zu Angebotsdaten'];
@@ -835,14 +923,58 @@ function rm_sales_create_profile_from_import($line) {
     
     
 	
-	// if(!empty($form_state['values']['suggester'])) $new_node->field_suggester[LANGUAGE_NONE][0]['value'] = $form_state['values']['suggester'];
+	if(!empty($line['Empfehler 1']) && $line['Empfehler 1'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 1'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 2']) && $line['Empfehler 2'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 2'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 3']) && $line['Empfehler 3'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 3'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 4']) && $line['Empfehler 4'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 4'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 5']) && $line['Empfehler 5'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 5'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 6']) && $line['Empfehler 6'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 6'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 7']) && $line['Empfehler 7'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 7'])
+        );
+    }
+    
+    if(!empty($line['Empfehler 8']) && $line['Empfehler 8'] != 'x') {
+        $new_node->field_suggester[LANGUAGE_NONE][] = array(
+            'value' => trim($line['Empfehler 8'])
+        );
+    }
 	
     $new_node->field_priority[LANGUAGE_NONE][0]['value'] = 9;
     $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
-
 	node_save($new_node);
-	
-	
+	return $new_node;
 	
 }
 

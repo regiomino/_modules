@@ -373,69 +373,6 @@ function rm_sales_useraccounts_form($form, &$form_state) {
     return $form;
 }
 
-function rm_sales_publishprofile($nid) {
-    $validation = rm_api_node_validate_required($nid);
-    $nodeobject = node_load($nid);
-    
-	if(empty($validation)) {
-		$userexists = user_load_by_mail($nodeobject->field_email[LANGUAGE_NONE][0]['email']);
-		if(!$userexists) {
-			//create user for registree
-			$password = user_password(8);
-			//set up the user fields
-			$fields = array(
-				'name' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
-				'mail' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
-				'pass' => $password,
-				'status' => 1,
-				'init' => $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
-				'roles' => array(
-					DRUPAL_AUTHENTICATED_RID => 'authenticated user',
-				),
-			);
-            if($nodeobject->type == 'seller_profile') $fields['roles'][4] = 'seller';
-			//the first parameter is left blank so a new user is created
-			$account = user_save('', $fields);
-			$account->password = $fields['pass'];
-			$uid = $account->uid;
-            $result = rm_api_mailchimp_subscribe(
-                $nodeobject->field_email[LANGUAGE_NONE][0]['email'],
-                array(
-                    'FNAME' => $nodeobject->title,
-                    'LNAME' => $nodeobject->field_address[LANGUAGE_NONE][0]['locality'],
-                    'SALUTATION' => 'Herr',
-                    'ROLES' => 'authenticated user, seller'
-                )
-            );
-			//drupal_mail('rm_user', 'profile_published_user_registered', $nodeobject->field_email[LANGUAGE_NONE][0]['email'], NULL, array('account' => $account, 'password' => $password), variable_get('site_mail', 'support@regiomino.de'));
-            
-            $nodeobject->uid = $uid;
-            $nodeobject->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $uid;
-            node_save($nodeobject);
-            
-            rm_api_node_publish($nid);
-            
-            global $user;
-            rm_user_activity(
-                t('Published profile <a href="@url">@profile</a>', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)),
-                $nodeobject->nid,
-                'node',
-                $user->uid
-            );
-            
-            drupal_set_message(t('Profile <a href="@url">@profile</a> has been published', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'status');
-		}
-		else {
-			drupal_set_message(t('A user already exists with an identical email address as set in the profile. Please make sure you are not trying to publish a duplicate.'), 'status');
-		}
-    }
-    else {
-        drupal_set_message(t('Profile <a href="@url">@profile</a> has not been published due to a validation error', array('@url' => url('node/' . $nodeobject->nid), '@profile' => $nodeobject->title)), 'error');
-        drupal_set_message(print_r($validation, TRUE), 'error');
-    }
-	drupal_goto();
-}
-
 function rm_sales_profilecare_form() {
 
     drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales.js');
