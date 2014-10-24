@@ -715,11 +715,15 @@ function rm_sales_init() {
     $filename = 'importfile.xls';
     $path = "$dir/$filename";
     $result = rm_api_excel_import($path);
+    global $user;
     foreach($result as $sheet) {
         foreach($sheet as $line) {
             //var_dump(strlen(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr'])));
             //var_dump(str_replace('Â', '', str_replace('-', '', preg_replace('/\s/', '', preg_replace('~\x{00a0}~','',$line['UStID / StNr'])))));
-            //rm_sales_create_profile_from_import($line);
+            
+            if($user->uid == 1) {
+                //rm_sales_create_profile_from_import($line);
+            }
         }
     }
 //die();
@@ -781,7 +785,7 @@ function rm_sales_create_profile_from_import($line) {
 		$new_node->field_salescomment[LANGUAGE_NONE][0]['value'] .= 'URL: ' . trim($line['URL']) . '<br>';
 	}
     if(!empty($line['E-Mail']) && $line['E-Mail'] != 'x') {
-		$new_node->field_email[LANGUAGE_NONE][0]['value'] = trim($line['E-Mail']);
+		$new_node->field_email[LANGUAGE_NONE][0]['email'] = trim($line['E-Mail']);
 	}
     
     
