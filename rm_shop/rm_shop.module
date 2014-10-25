@@ -281,36 +281,6 @@ function rm_shop_menu() {
         'file' => 'rm_shop.inc',
         'file path' => drupal_get_path('module', 'rm_shop'),
     );
-    
-    $items['admin/config/rmshop'] = array(
-        'title' => 'Regiomino Shop',
-        'description' => 'Regiomino admin settings',
-        'position' => 'left',
-        'weight' => -100,
-        'page callback' => 'system_admin_menu_block_page',
-        'access arguments' => array('administer site configuration'),
-        'file' => 'system.admin.inc',
-        'file path' => drupal_get_path('module', 'system'),
-    );
-	$items['admin/config/rmshop/cartpreservation'] = array(
-        'title' => 'Regiomino cart preservation',
-        'description' => 'Set the cart preservation.',
-        'page callback' => 'drupal_get_form', // function called when path is requested
-        'page arguments' => array('rm_shop_admin_cart_preservation'), // form id passed to the function
-        'access arguments' => array('administer site configuration'),
-        'type' => MENU_NORMAL_ITEM,
-        'file' => 'rm_shop.admin.inc', // look for a function describing this form in this file
-        'file path' => drupal_get_path('module', 'rm_shop'),
-    );
-	$items['admin/config/rmshop/cartremove'] = array(
-        'title' => 'Remove all cart items',
-        'description' => 'Remove all active cart items.',
-        'page callback' => 'rm_cart_remove_from_cart_all', // function called when path is requested
-        'access arguments' => array('administer site configuration'),
-        'type' => MENU_NORMAL_ITEM,
-        'file' => 'rm_cart.module', // look for a function describing this form in this file
-        'file path' => drupal_get_path('module', 'rm_cart'),
-    );
     return $items;
 }
 

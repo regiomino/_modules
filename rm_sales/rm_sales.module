@@ -5,6 +5,26 @@
 */
 function rm_sales_menu() {
     $items = array();
+    $items['admin/config/rmsales'] = array(
+        'title' => 'Regiomino Sales',
+        'description' => 'Regiomino sales settings',
+        'position' => 'left',
+        'weight' => -100,
+        'page callback' => 'system_admin_menu_block_page',
+        'access arguments' => array('administer site configuration'),
+        'file' => 'system.admin.inc',
+        'file path' => drupal_get_path('module', 'system'),
+    );
+	$items['admin/config/rmsales/profileimport'] = array(
+        'title' => 'Regiomino profile import',
+        'description' => 'Import profiles from xls files.',
+        'page callback' => 'drupal_get_form', // function called when path is requested
+        'page arguments' => array('rm_sales_admin_profile_import'), // form id passed to the function
+        'access arguments' => array('administer site configuration'),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'rm_sales.admin.inc', // look for a function describing this form in this file
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
     $items['presse'] = array(
         'title' => 'Press',
         'page callback' => 'rm_sales_press',
@@ -772,19 +792,7 @@ function rm_sales_suggest_form_submit($form, &$form_state) {
 }
 
 function rm_sales_init() {
-    $dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
-    $filename = 'importfile.xls';
-    $path = "$dir/$filename";
-    $result = rm_api_excel_import($path);
-    global $user;
-    foreach($result as $sheet) {
-        foreach($sheet as $line) {            
-            if($user->uid == 1) {
-                //$new_node = rm_sales_create_profile_from_import($line, 42);
-                //rm_sales_publishprofile($new_node->nid, FALSE);
-            }
-        }
-    }
+    
 }
 
 function rm_sales_create_profile_from_import($line, $tid) {
