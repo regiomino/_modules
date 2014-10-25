@@ -1,0 +1,1 @@
+theme this in [themefolder]/templates/rm_shop_smartregionselect.tpl.php

@@ -722,6 +722,11 @@ function rm_shop_theme() {
 				'vars' => NULL,
 			)
 		),
+		'rm_shop_smartregionselect' => array(
+			'template' => 'rm_shop_smartregionselect_theme',
+            'arguments' => array('form' => 'form'),
+			'render element' => 'form',
+		),
         'rm_shop_theme_get_in_touch' => array(
             'template' => 'rm_shop_get_in_touch_theme',
             'variables' => array(
@@ -783,12 +788,14 @@ function rm_shop_block_view($delta = '') {
         case 'regiomino_smart_entry_header':
 			$block['subject'] = '';
 			if(user_access('access content')) {
-                $regionselect = drupal_get_form('rm_shop_smartregionselect');
-				$block['content'] = theme('rm_shop_theme_smart_entry_header', array(
-                    'vars' => array(
-                        'regionselect' => $regionselect,
-                    ),
-                ));
+                // $regionselect = drupal_get_form('rm_shop_smartregionselect');
+				// $block['content'] = theme('rm_shop_theme_smart_entry_header', array(
+                    // 'vars' => array(
+                        // 'regionselect' => $regionselect,
+                    // ),
+                // ));
+                
+				$block['content'] = render(drupal_get_form('rm_shop_smartregionselect'));
 			}
 			return $block;
 	}
@@ -801,34 +808,9 @@ function rm_shop_smartregionselect($form, &$form_state) {
         '#required' => TRUE,
         '#title' => t('Address'),
     );
-
     
-    $form['street_number'] = array(
-        '#type' => 'hidden',
-        '#attributes' => array('id' => 'street_number'),
-    );
-    $form['route'] = array(
-        '#type' => 'hidden',
-        '#attributes' => array('id' => 'route'),
-    );
-    $form['thoroughfare'] = array(
-        '#type' => 'hidden',
-        '#attributes' => array('id' => 'thoroughfare'),
-    );
-    $form['locality'] = array(
-        '#type' => 'hidden',
-        '#attributes' => array('id' => 'locality'),
-    );
-    $form['postal_code'] = array(
-        '#type' => 'hidden',
-        '#attributes' => array('id' => 'postal_code'),
-    );
-    
-    if(rm_user_has_provided_address()) {
-        $form['address']['#default_value'] = $_SESSION['regionselect']['street'] . ', ' . $_SESSION['regionselect']['zip'] . ' ' . $_SESSION['regionselect']['city'];
-        $form['thoroughfare']['#default_value'] = $_SESSION['regionselect']['street'];
-        $form['locality']['#default_value'] = $_SESSION['regionselect']['city'];
-        $form['postal_code']['#default_value'] = $_SESSION['regionselect']['zip'];
+    if(!empty($_SESSION['regionselect']['zip'])) {
+        $form['address']['#default_value'] = $_SESSION['regionselect']['zip'];
     }
 
 	$form['submit'] = array(
@@ -839,56 +821,11 @@ function rm_shop_smartregionselect($form, &$form_state) {
 }
 
 function rm_shop_smartregionselect_validate($form, &$form_state) {
-    if(empty($form_state['values']['thoroughfare']) || empty($form_state['values']['postal_code']) || empty($form_state['values']['locality'])) {
-        $result = rm_api_google_address_check_fulltext($form_state['values']['address']);
-        $valid = rm_api_validate_google_address($result);
-        if(empty($valid)) {
-            $counter = 0;
-            if(isset($result->results[0]->address_components)) {
-                foreach($result->results[0]->address_components as $component) {
-                    switch($component->types[0]) {
-                        case "street_number": $counter++; $form_state['values']['street_number'] = $component->long_name; break;
-                        case "locality": $counter++; $form_state['values']['locality'] = $component->long_name; break;
-                        case "route": $counter++; $form_state['values']['thoroughfare'] = $component->long_name; break;
-                        case "postal_code": $counter++; $form_state['values']['thoroughfare'] = $component->long_name; break;
-                    }
-                }
-            }
-            if($counter >= 4) {
-                $form_state['values']['gmapsdata'] = $result;
-            }
-            else {
-                form_set_error('address', t('We cannot confirm your address. Please check if you entered it alright.'));
-            }
-        }
-        else {
-            foreach($valid as $error) {
-                form_set_error('address', $error);
-            }
-        }
-    }
-    else {
-        $result = rm_api_google_address_check($form_state['values']['thoroughfare'], $form_state['values']['postal_code'], $form_state['values']['locality']);
-        $valid = rm_api_validate_google_address($result);
-        if(!empty($valid)) {
-            form_set_error('address', $valid[0]);
-        }
-        else {
-            $form_state['values']['gmapsdata'] = $result;
-        }
-    }
+    if(!rm_api_validate_zipcode($form_state['values']['address'])) form_set_error('zipcode', t('Please enter a valid zipcode'));
 }
 
 function rm_shop_smartregionselect_submit($form, &$form_state) {
-    $street = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'route');
-    $house_no = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'street_number');
-    $zip = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'postal_code');
-    $city = rm_api_gmapsdata_get_element($form_state['values']['gmapsdata'], 'locality', 'long_name');
-    $_SESSION['regionselect'] = array(
-        'street' => $street . ' ' . $house_no,
-        'zip' => $zip,
-        'city' => $city,
-    );
+    drupal_goto('lieferanten/' . $form_state['values']['address']);
 }
 
 function rm_shop_regionselect($form, &$form_state) {
