@@ -500,6 +500,10 @@ function rm_sales_profilecare_form() {
         $query->propertyCondition('title', $queryparams['title'], 'CONTAINS');
 	}
     
+    if(!empty($queryparams['source_url'])) {
+        $query->fieldCondition('field_source_url', 'value', $queryparams['source_url'], 'CONTAINS');
+	}
+    
     if(!empty($queryparams['street'])) {
         $query->fieldCondition('field_address', 'thoroughfare', $queryparams['street'], 'CONTAINS');
 	}
@@ -829,12 +833,14 @@ function rm_sales_profilecare_form() {
                 $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             }
 			$profiletitle = ($profileobject->status) ? l($profileobject->title, 'node/' . $profileobject->nid) : $profileobject->title;
+            
+            $source_url_string = (!empty($profileobject->field_source_url[LANGUAGE_NONE][0]['value'])) ? $profileobject->field_source_url[LANGUAGE_NONE][0]['value'] : '';
 			$options[$nid] = array(
 				'created' => date('d.m.Y H:i', $profileobject->created) . $addsuggesterlink,
 				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
                 'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_offerinfo_url' => ($profileobject->type == 'seller_profile') ? '<div class="offerinfourl"><input type="text" id="offerinfourl_' . $nid . '" class="form-control" value="' . $offerinfourl . '"></div>' : '',
-                'field_salescomment' => $salescomment . '<br>' . $notes,
+                'field_salescomment' => '<small>Quelle: ' . $source_url_string . '</small><br><br>' . $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
 				// 'field_address_locality' => $locality,
 				// 'field_address_zip' => $zip,
@@ -1322,6 +1328,8 @@ function rm_sales_export_profiles() {
         t('Status'),
         t('Completed profile'),
 		t('Name'),
+        t('Source URL'),
+		t('E-Mail'),
 		t('Street'),
 		t('Zip'),
 		t('Locality'),
@@ -1410,8 +1418,14 @@ function rm_sales_export_profiles() {
         if($profileobject->suppressed) {
             $currentstatus = 'Sleep';
         }
+        else if(rm_user_gtc_accepted($profileobject->nid)) {
+            $currentstatus = 'AGB akzeptiert';
+        }
+        else if(!empty($profileobject->field_register_hash[LANGUAGE_NONE][0]['value'])) {
+            $currentstatus = 'Eingeladen';
+        }
         else if($profileobject->status) {
-            $currentstatus = 'Registriert';
+            $currentstatus = 'Veröffentlicht';
         }
         else if($profileobject->prospect) {
             $currentstatus = 'Prospect';
@@ -1426,6 +1440,8 @@ function rm_sales_export_profiles() {
             $currentstatus,
             (empty($valid)) ? t('Yes') : t('No'),
 			$profileobject->title,
+            (isset($profileobject->field_source_url[LANGUAGE_NONE][0]['value'])) ? $profileobject->field_source_url[LANGUAGE_NONE][0]['value'] : '',
+            (isset($profileobject->field_email[LANGUAGE_NONE][0]['email'])) ? $profileobject->field_email[LANGUAGE_NONE][0]['email'] : '',
 			(isset($profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['thoroughfare'] : '',
 			$zip,
 			(isset($profileobject->field_address[LANGUAGE_NONE][0]['locality'])) ? $profileobject->field_address[LANGUAGE_NONE][0]['locality'] : '',

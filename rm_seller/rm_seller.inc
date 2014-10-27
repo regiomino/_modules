@@ -519,6 +519,20 @@ function rm_seller_offer_form($form, &$form_state) {
                     );
                     if(!empty($tradingunit->field_tu_price[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_price-' . $tradingunit->nid]['#default_value'] = str_replace('.', ',', $tradingunit->field_tu_price[LANGUAGE_NONE][0]['value']);
                     
+                    //TU RRP
+                    $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_rrp-' . $tradingunit->nid] = array(
+                        '#type' => 'textfield',
+                        '#title' => t('RRP'),
+                        '#required' => TRUE,
+                        '#title_display' => 'none',
+                        '#attributes' => array(
+                            'placeholder' => t('RRP'),
+                            'class' => array('form-control'),
+                            
+                        ),
+                    );
+                    if(!empty($tradingunit->field_tu_rrp[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_rrp-' . $tradingunit->nid]['#default_value'] = str_replace('.', ',', $tradingunit->field_tu_rrp[LANGUAGE_NONE][0]['value']);
+                    
                     //TU VAT
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_vat-' . $tradingunit->nid] = array(
                         '#type' => 'select',
@@ -618,6 +632,11 @@ function rm_seller_offer_form_validate($form, &$form_state) {
             $form_state['values'][$form_key] = str_replace(',', '.', $form_value);
             if(!is_numeric($form_state['values'][$form_key])) form_set_error($form_key, t('Please enter a numeric value as trading unit price'));
         }
+        //Validate TU RRP
+        if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_tu_rrp-') !== false) {
+            $form_state['values'][$form_key] = str_replace(',', '.', $form_value);
+            if(!is_numeric($form_state['values'][$form_key])) form_set_error($form_key, t('Please enter a numeric value as recommended retail price'));
+        }
         //Validate TU Deposit
         if (!empty($form_state['values'][$form_key]) && strpos($form_key, 'field_tu_deposit-') !== false) {
             $form_state['values'][$form_key] = str_replace(',', '.', $form_value);
@@ -681,6 +700,7 @@ function rm_seller_offer_form_submit($form, &$form_state) {
                         case 'field_use_within':
                         case 'field_tu_amount':
                         case 'field_tu_price':
+                        case 'field_tu_rrp':
                         case 'field_tu_vat':
                         case 'field_tu_deposit':
                         case 'field_tu_packaging':
@@ -749,8 +769,6 @@ function rm_seller_offer_form_submit($form, &$form_state) {
             }
         }
     }
-    
-    var_dump($form_state['values']); die();
     
     drupal_set_message(t('All offers have been updated with the given values'), 'status');
 }

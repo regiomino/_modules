@@ -6,7 +6,7 @@
  * @see system_settings_form()
  */
  
-function rm_shop_admin_cart_preservation() {
+function rm_cart_admin_cart_preservation() {
 
 	//Cart preservation. Maximum number of days, inactive cart items should be preserved
 	$form['cart_values']['regiomino_max_cart_days'] = array(

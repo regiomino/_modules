@@ -5,7 +5,35 @@
 */
 function rm_cart_menu() {
 	$items = array();
-
+    $items['admin/config/rmcart'] = array(
+        'title' => 'Regiomino Cart',
+        'description' => 'Regiomino admin settings',
+        'position' => 'left',
+        'weight' => -100,
+        'page callback' => 'system_admin_menu_block_page',
+        'access arguments' => array('administer site configuration'),
+        'file' => 'system.admin.inc',
+        'file path' => drupal_get_path('module', 'system'),
+    );
+	$items['admin/config/rmcart/cartpreservation'] = array(
+        'title' => 'Regiomino cart preservation',
+        'description' => 'Set the cart preservation.',
+        'page callback' => 'drupal_get_form', // function called when path is requested
+        'page arguments' => array('rm_cart_admin_cart_preservation'), // form id passed to the function
+        'access arguments' => array('administer site configuration'),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'rm_cart.admin.inc', // look for a function describing this form in this file
+        'file path' => drupal_get_path('module', 'rm_cart'),
+    );
+	$items['admin/config/rmcart/cartremove'] = array(
+        'title' => 'Remove all cart items',
+        'description' => 'Remove all active cart items.',
+        'page callback' => 'rm_cart_remove_from_cart_all', // function called when path is requested
+        'access arguments' => array('administer site configuration'),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'rm_cart.module', // look for a function describing this form in this file
+        'file path' => drupal_get_path('module', 'rm_cart'),
+    );
     $items['addtocart/%/%/%/%/%'] = array(
         'page callback' => 'rm_cart_add_to_cart',
         'page arguments' => array(1,2,3,4,5),
@@ -198,7 +226,7 @@ function rm_cart_successfulpayment($order_number, $provider, $payment_amount) {
         $userobject = user_load($order_item->uid);
         $shop = rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']);
         
-        $testmode = 1;
+        $testmode = (rm_user_gtc_accepted($shop->nid)) ? FALSE : TRUE;
         $receiver = $shop->field_email[LANGUAGE_NONE][0]['email'];
         if($testmode) $receiver = 'abgefangen@regiomino.de';
         drupal_mail(
@@ -379,7 +407,7 @@ function rm_cart_user_owns_order($order_number) {
     }
 }
 
-function rm_cart_generate_order($order_number, $order_status, $item_title, $order_amount, $tu_amount, $tu_price, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $commission, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
+function rm_cart_generate_order($order_number, $order_status, $item_title, $order_amount, $tu_amount, $tu_price, $tu_rrp, $tu_deposit, $tu_vat, $tu_packaging, $billing_name, $billing_street, $billing_zip, $billing_city, $shipping_name, $shipping_street, $shipping_zip, $shipping_city, $delivery_type, $pickup_spot, $delivery_range_from, $delivery_range_to, $payment_type, $iban, $commission, $expiration_date, $use_within, $leadtime, $gtin, $productunit_first, $productunit_second, $sku, $description, $offer_desc_reference, $offer_variation_reference, $trading_unit_reference, $seller_reference, $uid = NULL) {
 
     //Makes it possible to create orders for other users -> useful for support
     if(is_null($uid)) {
@@ -403,6 +431,7 @@ function rm_cart_generate_order($order_number, $order_status, $item_title, $orde
     
     $order_item->field_tu_amount[LANGUAGE_NONE][0]['value'] = $tu_amount;
     $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] = $tu_price;
+    $order_item->field_tu_rrp[LANGUAGE_NONE][0]['value'] = $tu_rrp;
     $order_item->field_tu_deposit[LANGUAGE_NONE][0]['value'] = $tu_deposit;
     $order_item->field_tu_vat[LANGUAGE_NONE][0]['value'] = $tu_vat;
     $order_item->field_tu_packaging[LANGUAGE_NONE][0]['value'] = $tu_packaging;
