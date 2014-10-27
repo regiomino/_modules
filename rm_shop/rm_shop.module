@@ -469,18 +469,18 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
     if(!empty($alluids)) {
         
         //Filter out uids that don't have filtered agreements
-        if(!empty($filterparams['delivery_option']) || !empty($filterparams['payment_type'])) {
+        if(!empty($filterparams['delivery_options']) || !empty($filterparams['payment_types'])) {
             foreach($alluids as $seller_uid => $agreement_type) {
-                if(!empty($filterparams['delivery_option'])) {
-                    $delivery_option_filters = explode(',', $filterparams['delivery_option']);
+                if(!empty($filterparams['delivery_options'])) {
+                    $delivery_option_filters = explode(',', $filterparams['delivery_options']);
                     foreach($delivery_option_filters as $delivery_option_filter) {
                         if(empty($agreement_type[$delivery_option_filter][0]) && empty($agreement_type[$delivery_option_filter][$user_id])) {
                             unset($alluids[$seller_uid]);
                         }
                     }
                 }
-                if(!empty($filterparams['payment_type'])) {
-                    $payment_type_filters = explode(',', $filterparams['payment_type']);
+                if(!empty($filterparams['payment_types'])) {
+                    $payment_type_filters = explode(',', $filterparams['payment_types']);
                     foreach($payment_type_filters as $payment_type_filter) {
                         if(empty($agreement_type['payment_agreement'][0]) && empty($agreement_type['payment_agreement'][$user_id])) {
                             unset($alluids[$seller_uid]);
