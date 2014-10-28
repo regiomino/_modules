@@ -100,6 +100,7 @@ function rm_shop_get_shops($zipcode) {
     if(!empty($shops)) {
         foreach($shops as $shop) {
             $address = '';
+            $image_path = '';
             if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
                 !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
                 !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
@@ -111,6 +112,11 @@ function rm_shop_get_shops($zipcode) {
                 if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
                 $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
             }
+            
+            if( !empty($shop->field_image[LANGUAGE_NONE][0]['uri']) ) {
+                $image_path = image_style_url('mappopup_thumb', $shop->field_image[LANGUAGE_NONE][0]['uri']);
+            }
+            
             $markerarray[] = array(
                 'name' => $shop->title,
                 'url' => url('node/' . $shop->nid),
@@ -119,6 +125,7 @@ function rm_shop_get_shops($zipcode) {
                 'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
                 'type' => $shop->type,
                 'marker_id' => $shop->nid,
+                'image_path' => $image_path 
             );
         }
         drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
