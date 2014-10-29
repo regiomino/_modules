@@ -490,6 +490,42 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
         $alluidkeys = array_keys($alluids);
         $relevantuids = rm_shop_filter_sellers_ready_to_sell($alluidkeys);
         
+        //Filter out all uids that do not have the keyword in their product titles or profile titles
+        if(!empty($filterparams['seller_name'])) {
+            $orclausearray = array();
+            //first find all products that have the keyword in their title
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node');
+            $query->entityCondition('bundle', array('offer_variation'));
+            $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
+            $query->propertyCondition('status', 1);
+            $query->propertyCondition('uid', $alluidkeys);
+            $result = $query->execute();
+            $matchingproducts = array();
+            if(isset($result['node'])) {
+                $matchingproducts = entity_load('node', array_keys($result['node']));
+            }
+            foreach($matchingproducts as $matchingproduct) {
+                $orclausearray[$matchingproduct->uid] = TRUE;
+            }
+            //now find all products that have the keyword in their profile
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node');
+            $query->entityCondition('bundle', array('seller_profile'));
+            $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
+            $query->propertyCondition('status', 1);
+            $query->propertyCondition('uid', $alluidkeys);
+            $result = $query->execute();
+            $matchingprofiles = array();
+            if(isset($result['node'])) {
+                $matchingprofiles = entity_load('node', array_keys($result['node']));
+            }
+            foreach($matchingprofiles as $matchingprofile) {
+                $orclausearray[$matchingprofile->uid] = TRUE;
+            }
+            $relevantuids = array_intersect($relevantuids, array_keys($orclausearray));
+        }
+        
         //then select all seller profiles that match the relevant uids
         if(!empty($relevantuids)) {
             $query = new EntityFieldQuery();
@@ -497,7 +533,7 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
             $query->entityCondition('bundle', array('seller_profile'));
             $query->propertyCondition('status', 1);
             $query->propertyCondition('uid', $relevantuids);
-            if(!empty($filterparams['seller_name'])) $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
+            //if(!empty($filterparams['seller_name'])) $query->propertyCondition('title', $filterparams['seller_name'], 'CONTAINS');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_sw'][0], '>');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lat', $rectangle['map_bounds_ne'][0], '<');
             if(!empty($rectangle)) $query->fieldCondition('field_location', 'lon', $rectangle['map_bounds_sw'][1], '>');
