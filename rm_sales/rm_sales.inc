@@ -780,7 +780,7 @@ function rm_sales_profilecare_form() {
             $salescomment .= '</textarea></div>';
             
             $nextaction = '';
-            if(!empty($profileobject->field_next_action[LANGUAGE_NONE][0]['value']) && $profileobject->field_next_action[LANGUAGE_NONE][0]['value'] < 1924988399) $nextaction = date('Y-m-d', $profileobject->field_next_action[LANGUAGE_NONE][0]['value']);
+            if(!empty($profileobject->field_next_action[LANGUAGE_NONE][0]['value']) && $profileobject->field_next_action[LANGUAGE_NONE][0]['value'] < 1924988399) $nextaction = substr(date('c', $profileobject->field_next_action[LANGUAGE_NONE][0]['value']), 0, 16);
             
             $publishingpossiblestring = '';
 			$publishingpossible = rm_api_node_validate_required($profileobject->nid);
@@ -838,7 +838,7 @@ function rm_sales_profilecare_form() {
 			$options[$nid] = array(
 				'created' => date('d.m.Y H:i', $profileobject->created) . $addsuggesterlink,
 				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
-                'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
+                'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="datetime-local" value="' . $nextaction . '" /></div>',
                 'field_offerinfo_url' => ($profileobject->type == 'seller_profile') ? '<div class="offerinfourl"><input type="text" id="offerinfourl_' . $nid . '" class="form-control" value="' . $offerinfourl . '"></div>' : '',
                 'field_salescomment' => '<small>Quelle: ' . $source_url_string . '</small><br><br>' . $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
