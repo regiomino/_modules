@@ -838,7 +838,7 @@ function rm_sales_profilecare_form() {
 			$options[$nid] = array(
 				'created' => date('d.m.Y H:i', $profileobject->created) . $addsuggesterlink,
 				'title' => $profiletitle . $publishingpossiblestring . $shadowpossiblestring . '<br>' . $street . '<br>' . $zip . ' ' . $locality . '<br>' . $publicphone . '<br />Vorgeschlagen von: ' . $suggestedcount,
-                'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="datetime-local" value="' . $nextaction . '" /></div>',
+                'field_next_action' => '<div class="nextactions"><input id="nextaction_' . $nid . '" class="form-control" type="date" value="' . $nextaction . '" /></div>',
                 'field_offerinfo_url' => ($profileobject->type == 'seller_profile') ? '<div class="offerinfourl"><input type="text" id="offerinfourl_' . $nid . '" class="form-control" value="' . $offerinfourl . '"></div>' : '',
                 'field_salescomment' => '<small>Quelle: ' . $source_url_string . '</small><br><br>' . $salescomment . '<br>' . $notes,
                 'field_priority' => $prionid,
