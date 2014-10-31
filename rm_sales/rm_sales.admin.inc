@@ -140,7 +140,7 @@ function rm_sales_create_profile_from_import($line, $tid) {
     $file = file_copy($file, 'public://');
     $new_node->field_image[LANGUAGE_NONE][0] = (array)$file;
     
-    
+    $new_node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
     
     if(!empty($line['UStID / StNr']) && $line['UStID / StNr'] != 'x') {
 		$new_node->field_taxnumber[LANGUAGE_NONE][0]['value'] = substr(preg_replace('/[^A-Za-z0-9-.\/]/', '', $line['UStID / StNr']), 0, 14);
