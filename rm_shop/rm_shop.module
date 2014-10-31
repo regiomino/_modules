@@ -88,14 +88,14 @@ function rm_shop_init() {
     
     //rm_cart_change_order_status('20141001-44-1', 'completed');
 
-    $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
+    // $nodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'));
     
-    foreach($nodes as $nid => $node) {
-        if(empty($node->field_next_action[LANGUAGE_NONE][0]['value'])) {
-            $node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
-            node_save($node);
-        }
-    }
+    // foreach($nodes as $nid => $node) {
+        // if(empty($node->field_next_action[LANGUAGE_NONE][0]['value'])) {
+            // $node->field_next_action[LANGUAGE_NONE][0]['value'] = 1924988399;
+            // node_save($node);
+        // }
+    // }
     
     // $query = new EntityFieldQuery();
     // $tmp = $query
