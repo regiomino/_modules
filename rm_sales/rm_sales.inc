@@ -42,11 +42,19 @@ function rm_sales_salesperformance() {
         $participants = entity_load('node', array_keys($tmp['node']));
     }
     
-    //Determine amount of participants per month
+    /**
+     * Determine amount of created profiles per month
+     */
     $createdProfilesPerMonth = array();
+    $createdCustomerProfilesPerMonth = array();
+    $createdSellerProfilesPerMonth = array();
+    $createdTraderProfilesPerMonth = array();
     if(!empty($participants)) {
         foreach($participants as $participant) {
             $createdProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
+            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
+            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
+            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
         }
     }
     
@@ -61,10 +69,45 @@ function rm_sales_salesperformance() {
         }
     }
     
+    $flotCreatedCustomerProfiles = array();
+    if(!empty($createdCustomerProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdCustomerProfilesPerMonth);
+        foreach($createdCustomerProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedCustomerProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $flotCreatedSellerProfiles = array();
+    if(!empty($createdSellerProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdSellerProfilesPerMonth);
+        foreach($createdSellerProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedSellerProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $flotCreatedTraderProfiles = array();
+    if(!empty($createdTraderProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdTraderProfilesPerMonth);
+        foreach($createdTraderProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedTraderProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    
+    
     //pass to tpl
     return theme('rm_sales_theme_salesperformance', array(
         'vars' => array(
             'createdProfiles' => $flotCreatedProfiles,
+            'createdCustomerProfiles' => $flotCreatedCustomerProfiles,
+            'createdSellerProfiles' => $flotCreatedSellerProfiles,
+            'createdTraderProfiles' => $flotCreatedTraderProfiles,
         ),
     ));
 }
