@@ -39,7 +39,7 @@ function rm_user_get_profile($uid) {
 function rm_user_get_footer_links() {
     return array(
         array(t('Imprint'), 'node/1', array()),
-        array(t('About us'), 'node/3', array()),
+        array(t('About us'), 'ueberuns', array()),
         array(t('Help & Contact'), 'kontakt', array()),
         array(t('Press'), 'presse', array()),
         array(t('Sitemap'), 'sitemap', array()),
