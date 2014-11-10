@@ -1,1 +1,0 @@
-theme this in [themefolder]/templates/rm_shop_theme_ueberuns.tpl.php
