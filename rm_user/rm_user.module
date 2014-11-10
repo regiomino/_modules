@@ -56,15 +56,25 @@ function rm_user_get_navbar() {
     if($user->uid > 0) {
         $account = user_load($user->uid);
         
-        if($user->uid == 1) $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+        if($user->uid == 1) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Admin'))), 'admin', array('query' => drupal_get_destination(), 'html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+        }
+        //Verwaltungs-Link für Vertriebler
+        else if(in_array('salesguy', $account->roles)) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Sales-Tool'))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+        }
+        //Verwaltungs-Link für Vertriebler
+        else if(in_array('analyst', $account->roles)) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Reports'))), 'manage/sales/salesperformance', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+        }
+        //Verwaltungs-Link für Vertriebler
+        else if(in_array('editor', $account->roles)) {
+            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-wrench', '@linktitle' => t('Content'))), 'admin/content', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
+        }
         
         //Verwaltungs-Link für Verkäufer
         if(in_array('seller', $account->roles)) {
             $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/seller/' . $user->uid, array('html' => TRUE,'attributes' => array('class' => array('navi-link')))) . ' ';
-        }
-        //Verwaltungs-Link für Vertriebler
-        else if(in_array('salesguy', $account->roles)) {
-            $html .= l(t('<span class="@class"></span> @linktitle', array('@class' => 'fa fa-user', '@linktitle' => format_username($user))), 'manage/sales', array('html' => TRUE, 'attributes' => array('class' => array('navi-link')))) . ' ';
         }
         //Verwaltungs-Link für Gastronomen/Kunden
         else {
