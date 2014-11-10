@@ -74,7 +74,7 @@ function rm_sales_menu() {
     $items['manage/sales/salesperformance'] = array(
         'title' => 'Sales Performance',
         'page callback' => 'rm_sales_salesperformance',
-        'access callback' => 'rm_user_is_admin',
+        'access callback' => 'rm_user_is_analyst',
         'file' => 'rm_sales.inc',
         'file path' => drupal_get_path('module', 'rm_sales'),
         'type' => MENU_LOCAL_TASK,
