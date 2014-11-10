@@ -1,5 +1,46 @@
 <?php
 
+function rm_sales_salesperformance() {
+
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+        ->propertyCondition('status', 1)
+        ->execute();
+    $participants = array();
+    if(!empty($tmp['node'])) {
+        $participants = entity_load('node', array_keys($tmp['node']));
+    }
+    $profilecount = count($participants);
+    $gtc_accepted = 0;
+    $invited = 0;
+    $purchasecount = 0;
+    if(!empty($participants)) {
+        foreach($participants as $participant) {
+            if(rm_user_gtc_accepted($participant->nid)) $gtc_accepted++;
+            if(!empty($participant->field_register_hash[LANGUAGE_NONE][0]['value'])) $invited++;
+            $order_items = rm_cart_get_order_items_by_customer($participant->uid);
+            $ordergroup = array();
+            if(!empty($order_items)) {
+                foreach($order_items as $order_item) {
+                    $ordergroup[$order_item->field_order_number[LANGUAGE_NONE][0]['value']] = TRUE;
+                }
+            }
+            $purchasecount += count($ordergroup);
+        }
+    }
+    //pass to tpl
+    return theme('rm_sales_theme_salesperformance', array(
+        'vars' => array(
+            'invited' => $invited,
+            'registered' => $gtc_accepted,
+            'purchasecount' => $purchasecount,
+            'profilecount' => $profilecount,
+        ),
+    ));
+}
+
 function rm_sales_salesguyactivity() {
 
 	global $user;

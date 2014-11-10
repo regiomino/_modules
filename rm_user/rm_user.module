@@ -145,6 +145,24 @@ function rm_user_is_admin($uid = NULL) {
 }
 
 /**
+* Checks if a user has the analyst role
+*
+* @param $uid
+*   The user id of the user to be checked. If left at null, the current user is detected
+*
+* @return boolean
+*/
+function rm_user_is_analyst($uid = NULL) {
+    if(rm_user_is_admin()) return TRUE;
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $account = user_load($uid);
+    return (in_array('analyst', $account->roles)) ? TRUE : FALSE;
+}
+
+/**
 * Returns all users for a given role
 *
 * @param $role
