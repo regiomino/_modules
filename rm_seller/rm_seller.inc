@@ -523,12 +523,10 @@ function rm_seller_offer_form($form, &$form_state) {
                     $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_rrp-' . $tradingunit->nid] = array(
                         '#type' => 'textfield',
                         '#title' => t('RRP'),
-                        '#required' => TRUE,
                         '#title_display' => 'none',
                         '#attributes' => array(
                             'placeholder' => t('RRP'),
                             'class' => array('form-control'),
-                            
                         ),
                     );
                     if(!empty($tradingunit->field_tu_rrp[LANGUAGE_NONE][0]['value'])) $form['offers']['offer_' . $offer->nid]['variation_' . $variation->nid]['tradingunit_' . $tradingunit->nid]['these_fields']['field_tu_rrp-' . $tradingunit->nid]['#default_value'] = str_replace('.', ',', $tradingunit->field_tu_rrp[LANGUAGE_NONE][0]['value']);
