@@ -262,6 +262,15 @@ function rm_shop_menu() {
         'file' => 'rm_shop.inc',
         'file path' => drupal_get_path('module', 'rm_shop'),
     );
+    
+    $items['ueberuns'] = array(
+        'title' => 'About Us',
+        'page callback' => 'rm_shop_about_us',
+        'access arguments' => array('access content'),
+        'file' => 'rm_shop.inc',
+        'file path' => drupal_get_path('module', 'rm_shop'),
+    );
+    
     $items['jobs'] = array(
         'title' => 'Jobs',
         'page callback' => 'rm_shop_jobs',
@@ -793,6 +802,12 @@ function rm_shop_theme() {
         ),
         'rm_shop_theme_sitemap' => array(
             'template' => 'rm_shop_sitemap_theme',
+            'variables' => array(
+                'vars' => NULL,
+            )
+        ),
+        'rm_shop_theme_aboutus' => array(
+            'template' => 'rm_shop_aboutus_theme',
             'variables' => array(
                 'vars' => NULL,
             )
