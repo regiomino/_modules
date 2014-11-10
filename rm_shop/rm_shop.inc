@@ -10,6 +10,12 @@ function rm_shop_suggest() {
     drupal_goto('kontakt', array('query' => array('suggest' => 1)));
 }
 
+function rm_shop_about_us() {
+    return theme('rm_shop_theme_aboutus', array(
+        'vars' => array(),
+    ));
+}
+
 function rm_shop_get_shops($zipcode) {
 
     $_SESSION['regionselect'] = array(
