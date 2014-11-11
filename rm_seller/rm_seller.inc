@@ -234,7 +234,14 @@ function rm_seller_dashboard() {
 function rm_seller_offer_form($form, &$form_state) {
     global $user;
     $uid = $user->uid;
-    $seller_user_object = user_load($uid);
+    
+    
+    $seller_profile_objects = rm_api_get_nodes_by_properties('seller_profile', 1, -1, -1, -1, -1, $uid);
+    $seller_profile_objects_keys = array_keys($seller_profile_objects);
+    $seller_profile_object = $seller_profile_objects[$seller_profile_objects_keys[0]];
+    
+    
+    
     if(rm_user_is_admin()) $uid = 50;
     
     $offers = rm_shop_get_structured_seller_offers($uid, array(0,1));
@@ -269,6 +276,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     'placeholder' => t('Company'),
                     'class' => array('form-control'),
                 ),
+                '#default_value' => $seller_profile_object->field_address[LANGUAGE_NONE][0]['organisation_name'],
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['organisation_name'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_company-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['organisation_name'];
             
@@ -281,7 +289,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     'placeholder' => t('Postal code'),
                     'class' => array('form-control'),
                 ),
-                '#default_value' => $seller_user_object->field_address[LANGUAGE_NONE][0]['postal_code'],
+                '#default_value' => $seller_profile_object->field_address[LANGUAGE_NONE][0]['postal_code'],
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['postal_code'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_zip-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['postal_code'];
             
@@ -294,7 +302,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     'placeholder' => t('Locality'),
                     'class' => array('form-control'),
                 ),
-                '#default_value' => $seller_user_object->field_address[LANGUAGE_NONE][0]['locality'],
+                '#default_value' => $seller_profile_object->field_address[LANGUAGE_NONE][0]['locality'],
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['locality'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_locality-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['locality'];
             
@@ -310,7 +318,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     'class' => array('form-control'),
                     
                 ),
-                '#default_value' => $seller_user_object->field_address[LANGUAGE_NONE][0]['country'],
+                '#default_value' => $seller_profile_object->field_address[LANGUAGE_NONE][0]['country'],
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['country'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_country-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['country'];
             
