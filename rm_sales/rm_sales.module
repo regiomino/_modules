@@ -390,6 +390,95 @@ function rm_sales_get_statistics() {
     );
     
     
+    //Load all order items
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('order_item'))
+        ->execute();
+    $order_items = array();
+    if(!empty($tmp['node'])) {
+        $order_items = entity_load('node', array_keys($tmp['node']));
+    }
+    
+    
+    /**
+     * Determine amount of order items per month
+     */
+    $orderItemsPerMonth = array();
+    if(!empty($order_items)) {
+        foreach($order_items as $order_item) {
+            $orderItemsPerMonth[strtotime(date('Y-m', $order_item->created))][] = TRUE;
+        }
+    }
+    
+    //Transfer to x/y-axis value pairs
+    $flotOrderItems = array();
+    if(!empty($orderItemsPerMonth)) {
+        //Sort ascending by month
+        ksort($orderItemsPerMonth);
+        foreach($orderItemsPerMonth as $yearmonth => $booleans) {
+            $amount = count($booleans);
+            $flotOrderItems[] = array($yearmonth*1000, $amount);
+        }
+    }
+    
+    $graphs['orderitems'] = array(
+        array(
+            'label' => t('Order items'),
+            'data' => $flotOrderItems,
+        ),
+    );
+    
+    
+    
+    /**
+     * Determine sales per month
+     */
+    $orderSalesPerMonth = array();
+    $orderCommissionPerMonth = array();
+    if(!empty($order_items)) {
+        foreach($order_items as $order_item) {
+            $orderSalesPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'];
+            $orderCommissionPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * $order_item->field_commission[LANGUAGE_NONE][0]['value'] / 100;
+        }
+    }
+    
+    //Transfer to x/y-axis value pairs
+    $flotOrderSales = array();
+    if(!empty($orderSalesPerMonth)) {
+        //Sort ascending by month
+        ksort($orderSalesPerMonth);
+        foreach($orderSalesPerMonth as $yearmonth => $amount) {
+            $flotOrderSales[] = array($yearmonth*1000, $amount);
+        }
+    }
+    
+    //Transfer to x/y-axis value pairs
+    $flotOrderCommission = array();
+    if(!empty($orderCommissionPerMonth)) {
+        //Sort ascending by month
+        ksort($orderCommissionPerMonth);
+        foreach($orderCommissionPerMonth as $yearmonth => $amount) {
+            $flotOrderCommission[] = array($yearmonth*1000, $amount);
+        }
+    }
+    
+    $graphs['ordersales'] = array(
+        array(
+            'label' => t('Order sales'),
+            'data' => $flotOrderSales,
+        ),
+        array(
+            'label' => t('Order commission'),
+            'data' => $flotOrderCommission,
+        ),
+    );
+    
+    
+    
+    
+    
     
     
     
