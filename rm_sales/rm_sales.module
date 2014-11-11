@@ -270,10 +270,10 @@ function rm_sales_get_statistics() {
     $createdTraderProfilesPerMonth = array();
     if(!empty($participants)) {
         foreach($participants as $participant) {
-            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
-            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
-            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
-            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
+            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
         }
     }
     
@@ -284,7 +284,7 @@ function rm_sales_get_statistics() {
         ksort($createdProfilesPerMonth);
         foreach($createdProfilesPerMonth as $yearmonth => $participants) {
             $amount = count($participants);
-            $flotCreatedProfiles[] = array($yearmonth, $amount);
+            $flotCreatedProfiles[] = array($yearmonth*1000, $amount);
         }
     }
     
@@ -294,7 +294,7 @@ function rm_sales_get_statistics() {
         ksort($createdCustomerProfilesPerMonth);
         foreach($createdCustomerProfilesPerMonth as $yearmonth => $participants) {
             $amount = count($participants);
-            $flotCreatedCustomerProfiles[] = array($yearmonth, $amount);
+            $flotCreatedCustomerProfiles[] = array($yearmonth*1000, $amount);
         }
     }
     
@@ -304,7 +304,7 @@ function rm_sales_get_statistics() {
         ksort($createdSellerProfilesPerMonth);
         foreach($createdSellerProfilesPerMonth as $yearmonth => $participants) {
             $amount = count($participants);
-            $flotCreatedSellerProfiles[] = array($yearmonth, $amount);
+            $flotCreatedSellerProfiles[] = array($yearmonth*1000, $amount);
         }
     }
     
@@ -314,7 +314,7 @@ function rm_sales_get_statistics() {
         ksort($createdTraderProfilesPerMonth);
         foreach($createdTraderProfilesPerMonth as $yearmonth => $participants) {
             $amount = count($participants);
-            $flotCreatedTraderProfiles[] = array($yearmonth, $amount);
+            $flotCreatedTraderProfiles[] = array($yearmonth*1000, $amount);
         }
     }
     
@@ -348,7 +348,7 @@ function rm_sales_get_statistics() {
             ),
         ),
     );
-    
+    var_dump($graphs); die();
     print json_encode($graphs);
 }
 
