@@ -250,6 +250,9 @@ function rm_sales_menu() {
 }
 
 function rm_sales_get_statistics() {
+
+    $graphs = array();
+    
     //Load all participants
     $query = new EntityFieldQuery();
     $tmp = $query
@@ -318,26 +321,58 @@ function rm_sales_get_statistics() {
         }
     }
     
-    $graphs = array(
-        'profiles' => array(
-            array(
-                'label' => t('created profiles'),
-                'data' => $flotCreatedProfiles,
-            ),
-            array(
-                'label' => t('created customer profiles'),
-                'data' => $flotCreatedCustomerProfiles,
-            ),
-            array(
-                'label' => t('created seller profiles'),
-                'data' => $flotCreatedSellerProfiles,
-            ),
-            array(
-                'label' => t('created trader profiles'),
-                'data' => $flotCreatedTraderProfiles,
-            ),
+    $graphs['profiles'] = array(
+        array(
+            'label' => t('created profiles'),
+            'data' => $flotCreatedProfiles,
+        ),
+        array(
+            'label' => t('created customer profiles'),
+            'data' => $flotCreatedCustomerProfiles,
+        ),
+        array(
+            'label' => t('created seller profiles'),
+            'data' => $flotCreatedSellerProfiles,
+        ),
+        array(
+            'label' => t('created trader profiles'),
+            'data' => $flotCreatedTraderProfiles,
         ),
     );
+    
+    
+    
+    /**
+     * Determine amount of registrations per month
+     */
+    $registrationsPerMonth = array();
+    if(!empty($participants)) {
+        foreach($participants as $participant) {
+            if(rm_user_gtc_accepted($participant->nid)) {
+                $registrationsPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            }
+        }
+    }
+    //Transfer to x/y-axis value pairs
+    $flotRegistrations = array();
+    if(!empty($registrationsPerMonth)) {
+        //Sort ascending by month
+        ksort($registrationsPerMonth);
+        foreach($registrationsPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotRegistrations[] = array($yearmonth*1000, $amount);
+        }
+    }
+    
+    $graphs['registrations'] = array(
+        array(
+            'label' => t('Registrations'),
+            'data' => $flotRegistrations,
+        ),
+    );
+    
+    
+    
     print json_encode($graphs);
 }
 
