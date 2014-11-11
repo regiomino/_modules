@@ -94,7 +94,7 @@ function rm_shop_get_shops($zipcode) {
     }
     
     $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
-    $spread = 1;
+    $spread = 50;
     $rectangle['map_bounds_sw'][0] = $opengeodbinfo['main_region']['lat'] - $spread;
     $rectangle['map_bounds_sw'][1] = $opengeodbinfo['main_region']['lon'] - $spread;
     $rectangle['map_bounds_ne'][0] = $opengeodbinfo['main_region']['lat'] + $spread;
