@@ -276,7 +276,7 @@ function rm_seller_offer_form($form, &$form_state) {
                     'placeholder' => t('Company'),
                     'class' => array('form-control'),
                 ),
-                '#default_value' => $seller_profile_object->field_address[LANGUAGE_NONE][0]['organisation_name'],
+                '#default_value' => $seller_profile_object->field_company_name[LANGUAGE_NONE][0]['value'],
             );
             if(!empty($offer->field_origin[LANGUAGE_NONE][0]['organisation_name'])) $form['offers']['offer_' . $offer->nid]['these_fields']['field_origin_company-' . $offer->nid]['#default_value'] = $offer->field_origin[LANGUAGE_NONE][0]['organisation_name'];
             
