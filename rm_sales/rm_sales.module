@@ -320,32 +320,20 @@ function rm_sales_get_statistics() {
     
     $graphs = array(
         array(
-            'container' => '#createdProfiles',
-            'flotStuff' => array(
-                'label' => t('created profiles'),
-                'data' => $flotCreatedProfiles,
-            ),
+            'label' => t('created profiles'),
+            'data' => $flotCreatedProfiles,
         ),
         array(
-            'container' => '#createdCustomerProfiles',
-            'flotStuff' => array(
-                'label' => t('created customer profiles'),
-                'data' => $flotCreatedCustomerProfiles,
-            ),
+            'label' => t('created customer profiles'),
+            'data' => $flotCreatedCustomerProfiles,
         ),
         array(
-            'container' => '#createdSellerProfiles',
-            'flotStuff' => array(
-                'label' => t('created seller profiles'),
-                'data' => $flotCreatedSellerProfiles,
-            ),
+            'label' => t('created seller profiles'),
+            'data' => $flotCreatedSellerProfiles,
         ),
         array(
-            'container' => '#createdTraderProfiles',
-            'flotStuff' => array(
-                'label' => t('created trader profiles'),
-                'data' => $flotCreatedTraderProfiles,
-            ),
+            'label' => t('created trader profiles'),
+            'data' => $flotCreatedTraderProfiles,
         ),
     );
     print json_encode($graphs);
