@@ -2,10 +2,59 @@
 
 function rm_sales_salesperformance() {
     
+    //Load all participants
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+        ->execute();
+    $participants = array();
+    if(!empty($tmp['node'])) {
+        $participants = entity_load('node', array_keys($tmp['node']));
+    }
+    
+    /**
+     * Determine amount of registrations per month
+     */
+    $registrations = array();
+    $invites = array();
+    if(!empty($participants)) {
+        foreach($participants as $participant) {
+            if(rm_user_gtc_accepted($participant->nid)) {
+                $registrations[strtotime(date('Y-m'))][] = TRUE;
+            }
+            else if(rm_user_invited($participant->nid)) {
+                $invites[strtotime(date('Y-m'))][] = TRUE;
+            }
+        }
+    }
+    //Transfer to x/y-axis value pairs
+    $flotRegistrations = 0;
+    if(!empty($registrations)) {
+        //Sort ascending by month
+        ksort($registrations);
+        foreach($registrations as $yearmonth => $booleans) {
+            $amount = count($booleans);
+            $flotRegistrations = $amount;
+        }
+    }
+    //Transfer to x/y-axis value pairs
+    $flotInvites = 0;
+    if(!empty($invites)) {
+        //Sort ascending by month
+        ksort($invites);
+        foreach($invites as $yearmonth => $booleans) {
+            $amount = count($booleans);
+            $flotInvites = $amount;
+        }
+    }
+   
+    
     //pass to tpl
     return theme('rm_sales_theme_salesperformance', array(
         'vars' => array(
-            'values' => NULL,
+            'registrations' => $flotRegistrations,
+            'invites' => $flotInvites,
         ),
     ));
 }

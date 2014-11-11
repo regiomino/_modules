@@ -341,55 +341,6 @@ function rm_sales_get_statistics() {
     );
     
     
-    
-    /**
-     * Determine amount of registrations per month
-     */
-    $registrations = array();
-    $invites = array();
-    if(!empty($participants)) {
-        foreach($participants as $participant) {
-            if(rm_user_gtc_accepted($participant->nid)) {
-                $registrations[strtotime(date('Y-m'))][] = TRUE;
-            }
-            else if(rm_user_invited($participant->nid)) {
-                $invites[strtotime(date('Y-m'))][] = TRUE;
-            }
-        }
-    }
-    //Transfer to x/y-axis value pairs
-    $flotRegistrations = array();
-    if(!empty($registrations)) {
-        //Sort ascending by month
-        ksort($registrations);
-        foreach($registrations as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotRegistrations[] = array($yearmonth*1000, $amount);
-        }
-    }
-    //Transfer to x/y-axis value pairs
-    $flotInvites = array();
-    if(!empty($invites)) {
-        //Sort ascending by month
-        ksort($invites);
-        foreach($invites as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotInvites[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $graphs['registrations'] = array(
-        array(
-            'label' => t('Registrations'),
-            'data' => $flotRegistrations,
-        ),
-        array(
-            'label' => t('Invites'),
-            'data' => $flotInvites,
-        ),
-    );
-    
-    
     //Load all order items
     $query = new EntityFieldQuery();
     $tmp = $query
