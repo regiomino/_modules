@@ -1,113 +1,11 @@
 <?php
 
 function rm_sales_salesperformance() {
-
-    // $query = new EntityFieldQuery();
-    // $tmp = $query
-        // ->entityCondition('entity_type', 'node')
-        // ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
-        // ->propertyCondition('status', 1)
-        // ->execute();
-    // $participants = array();
-    // if(!empty($tmp['node'])) {
-        // $participants = entity_load('node', array_keys($tmp['node']));
-    // }
-    // $profilecount = count($participants);
-    // $gtc_accepted = 0;
-    // $invited = 0;
-    // $purchasecount = 0;
-    // if(!empty($participants)) {
-        // foreach($participants as $participant) {
-            // if(rm_user_gtc_accepted($participant->nid)) $gtc_accepted++;
-            // if(!empty($participant->field_register_hash[LANGUAGE_NONE][0]['value'])) $invited++;
-            // $order_items = rm_cart_get_order_items_by_customer($participant->uid);
-            // $ordergroup = array();
-            // if(!empty($order_items)) {
-                // foreach($order_items as $order_item) {
-                    // $ordergroup[$order_item->field_order_number[LANGUAGE_NONE][0]['value']] = TRUE;
-                // }
-            // }
-            // $purchasecount += count($ordergroup);
-        // }
-    // }
-    
-    //Load all participants
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
-        ->execute();
-    $participants = array();
-    if(!empty($tmp['node'])) {
-        $participants = entity_load('node', array_keys($tmp['node']));
-    }
-    
-    /**
-     * Determine amount of created profiles per month
-     */
-    $createdProfilesPerMonth = array();
-    $createdCustomerProfilesPerMonth = array();
-    $createdSellerProfilesPerMonth = array();
-    $createdTraderProfilesPerMonth = array();
-    if(!empty($participants)) {
-        foreach($participants as $participant) {
-            $createdProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
-            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
-            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
-            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[date('Y-m', $participant->created)][] = TRUE;
-        }
-    }
-    
-    //Transfer to x/y-axis value pairs
-    $flotCreatedProfiles = array();
-    if(!empty($createdProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdProfilesPerMonth);
-        foreach($createdProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
-            $flotCreatedProfiles[] = array($yearmonth, $amount);
-        }
-    }
-    
-    $flotCreatedCustomerProfiles = array();
-    if(!empty($createdCustomerProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdCustomerProfilesPerMonth);
-        foreach($createdCustomerProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
-            $flotCreatedCustomerProfiles[] = array($yearmonth, $amount);
-        }
-    }
-    
-    $flotCreatedSellerProfiles = array();
-    if(!empty($createdSellerProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdSellerProfilesPerMonth);
-        foreach($createdSellerProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
-            $flotCreatedSellerProfiles[] = array($yearmonth, $amount);
-        }
-    }
-    
-    $flotCreatedTraderProfiles = array();
-    if(!empty($createdTraderProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdTraderProfilesPerMonth);
-        foreach($createdTraderProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
-            $flotCreatedTraderProfiles[] = array($yearmonth, $amount);
-        }
-    }
-    
-    
     
     //pass to tpl
     return theme('rm_sales_theme_salesperformance', array(
         'vars' => array(
-            'createdProfiles' => $flotCreatedProfiles,
-            'createdCustomerProfiles' => $flotCreatedCustomerProfiles,
-            'createdSellerProfiles' => $flotCreatedSellerProfiles,
-            'createdTraderProfiles' => $flotCreatedTraderProfiles,
+            'values' => NULL,
         ),
     ));
 }

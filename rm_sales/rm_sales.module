@@ -80,6 +80,11 @@ function rm_sales_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 4,
     );
+    
+    $items['rm-sales-getstatistics'] = array(
+        'page callback' => 'rm_sales_get_statistics',
+        'access callback' => 'rm_user_is_analyst',
+    );
 	$items['manage/sales/manage'] = array(
         'title' => 'Supervise profiles',
         'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -242,6 +247,109 @@ function rm_sales_menu() {
 		'access arguments' => array(2),
   );
 	return $items;
+}
+
+function rm_sales_get_statistics() {
+    //Load all participants
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+        ->execute();
+    $participants = array();
+    if(!empty($tmp['node'])) {
+        $participants = entity_load('node', array_keys($tmp['node']));
+    }
+    
+    /**
+     * Determine amount of created profiles per month
+     */
+    $createdProfilesPerMonth = array();
+    $createdCustomerProfilesPerMonth = array();
+    $createdSellerProfilesPerMonth = array();
+    $createdTraderProfilesPerMonth = array();
+    if(!empty($participants)) {
+        foreach($participants as $participant) {
+            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+        }
+    }
+    
+    //Transfer to x/y-axis value pairs
+    $flotCreatedProfiles = array();
+    if(!empty($createdProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdProfilesPerMonth);
+        foreach($createdProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $flotCreatedCustomerProfiles = array();
+    if(!empty($createdCustomerProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdCustomerProfilesPerMonth);
+        foreach($createdCustomerProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedCustomerProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $flotCreatedSellerProfiles = array();
+    if(!empty($createdSellerProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdSellerProfilesPerMonth);
+        foreach($createdSellerProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedSellerProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $flotCreatedTraderProfiles = array();
+    if(!empty($createdTraderProfilesPerMonth)) {
+        //Sort ascending by month
+        ksort($createdTraderProfilesPerMonth);
+        foreach($createdTraderProfilesPerMonth as $yearmonth => $participants) {
+            $amount = count($participants);
+            $flotCreatedTraderProfiles[] = array($yearmonth, $amount);
+        }
+    }
+    
+    $graphs = array(
+        array(
+            'container' => '#createdProfiles',
+            'flotStuff' => array(
+                'label' => t('created profiles'),
+                'data' => $flotCreatedProfiles,
+            ),
+        ),
+        array(
+            'container' => '#createdCustomerProfiles',
+            'flotStuff' => array(
+                'label' => t('created customer profiles'),
+                'data' => $flotCreatedCustomerProfiles,
+            ),
+        ),
+        array(
+            'container' => '#createdSellerProfiles',
+            'flotStuff' => array(
+                'label' => t('created seller profiles'),
+                'data' => $flotCreatedSellerProfiles,
+            ),
+        ),
+        array(
+            'container' => '#createdTraderProfiles',
+            'flotStuff' => array(
+                'label' => t('created trader profiles'),
+                'data' => $flotCreatedTraderProfiles,
+            ),
+        ),
+    );
+    
+    print json_encode($graphs);
 }
 
 function rm_sales_publishprofile($nid, $goto = TRUE) {
