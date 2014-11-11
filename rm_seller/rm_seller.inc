@@ -154,9 +154,9 @@ function rm_seller_agreement_edit_submit($form, &$form_state) {
                 if(!is_numeric($index)) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
             }
         }
-				else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
+        else if(count($form_state['values'][$field_name][LANGUAGE_NONE]) > 1) {
             foreach($form_state['values'][$field_name][LANGUAGE_NONE] as $index => $values) {
-                if(!is_array($values) || empty($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
+                if(!is_array($values) || $values['value'] == '' || is_null($values['value'])) unset($form_state['values'][$field_name][LANGUAGE_NONE][$index]);
             }
         }
 		$form_state['values'][$field_name][LANGUAGE_NONE] = array_values($form_state['values'][$field_name][LANGUAGE_NONE]);
