@@ -270,10 +270,10 @@ function rm_sales_get_statistics() {
     $createdTraderProfilesPerMonth = array();
     if(!empty($participants)) {
         foreach($participants as $participant) {
-            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
+            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
+            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
+            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))*1000][] = TRUE;
         }
     }
     
