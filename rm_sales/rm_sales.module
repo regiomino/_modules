@@ -285,8 +285,8 @@ function rm_sales_get_statistics() {
     if(!empty($createdProfilesPerMonth)) {
         //Sort ascending by month
         ksort($createdProfilesPerMonth);
-        foreach($createdProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
+        foreach($createdProfilesPerMonth as $yearmonth => $booleans) {
+            $amount = count($booleans);
             $flotCreatedProfiles[] = array($yearmonth*1000, $amount);
         }
     }
@@ -295,8 +295,8 @@ function rm_sales_get_statistics() {
     if(!empty($createdCustomerProfilesPerMonth)) {
         //Sort ascending by month
         ksort($createdCustomerProfilesPerMonth);
-        foreach($createdCustomerProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
+        foreach($createdCustomerProfilesPerMonth as $yearmonth => $booleans) {
+            $amount = count($booleans);
             $flotCreatedCustomerProfiles[] = array($yearmonth*1000, $amount);
         }
     }
@@ -305,8 +305,8 @@ function rm_sales_get_statistics() {
     if(!empty($createdSellerProfilesPerMonth)) {
         //Sort ascending by month
         ksort($createdSellerProfilesPerMonth);
-        foreach($createdSellerProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
+        foreach($createdSellerProfilesPerMonth as $yearmonth => $booleans) {
+            $amount = count($booleans);
             $flotCreatedSellerProfiles[] = array($yearmonth*1000, $amount);
         }
     }
@@ -315,8 +315,8 @@ function rm_sales_get_statistics() {
     if(!empty($createdTraderProfilesPerMonth)) {
         //Sort ascending by month
         ksort($createdTraderProfilesPerMonth);
-        foreach($createdTraderProfilesPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
+        foreach($createdTraderProfilesPerMonth as $yearmonth => $booleans) {
+            $amount = count($booleans);
             $flotCreatedTraderProfiles[] = array($yearmonth*1000, $amount);
         }
     }
@@ -345,22 +345,36 @@ function rm_sales_get_statistics() {
     /**
      * Determine amount of registrations per month
      */
-    $registrationsPerMonth = array();
+    $registrations = array();
+    $invites = array();
     if(!empty($participants)) {
         foreach($participants as $participant) {
             if(rm_user_gtc_accepted($participant->nid)) {
-                $registrationsPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+                $registrations[strtotime(date('Y-m'))][] = TRUE;
+            }
+            else if(rm_user_invited($participant->nid)) {
+                $invites[strtotime(date('Y-m'))][] = TRUE;
             }
         }
     }
     //Transfer to x/y-axis value pairs
     $flotRegistrations = array();
-    if(!empty($registrationsPerMonth)) {
+    if(!empty($registrations)) {
         //Sort ascending by month
-        ksort($registrationsPerMonth);
-        foreach($registrationsPerMonth as $yearmonth => $participants) {
-            $amount = count($participants);
+        ksort($registrations);
+        foreach($registrations as $yearmonth => $booleans) {
+            $amount = count($booleans);
             $flotRegistrations[] = array($yearmonth*1000, $amount);
+        }
+    }
+    //Transfer to x/y-axis value pairs
+    $flotInvites = array();
+    if(!empty($invites)) {
+        //Sort ascending by month
+        ksort($invites);
+        foreach($invites as $yearmonth => $booleans) {
+            $amount = count($booleans);
+            $flotInvites[] = array($yearmonth*1000, $amount);
         }
     }
     
@@ -369,7 +383,13 @@ function rm_sales_get_statistics() {
             'label' => t('Registrations'),
             'data' => $flotRegistrations,
         ),
+        array(
+            'label' => t('Invites'),
+            'data' => $flotInvites,
+        ),
     );
+    
+    
     
     
     

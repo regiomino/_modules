@@ -606,6 +606,16 @@ function rm_user_gtc_accepted($nid) {
     }
 }
 
+function rm_user_invited($nid) {
+    $profileobject = node_load($nid);
+    if(!rm_user_gtc_accepted($nid) && !empty($profileobject->field_register_hash[LANGUAGE_NONE][0]['value'])) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
+
 function rm_user_address_complete($uid) {
     $userobject = user_load($uid);
     if( !empty($userobject->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
