@@ -416,8 +416,8 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
             ->entityCondition('bundle', array('shipping_agreement'))
             ->propertyCondition('status', 1);
         if(!is_null($seller_id)) $query->propertyCondition('uid', $seller_id);   
+        if(!empty($zipcodecomponents)) $query->fieldCondition('field_shipping_zipcodes', 'value', $zipcodecomponents);
         $tmp = $query
-            ->fieldCondition('field_shipping_zipcodes', 'value', $zipcodecomponents)
             ->fieldCondition('field_user_reference', 'target_id', ($user_id > 0) ? array(0, $user_id) : $user_id)
             ->execute();
     }
