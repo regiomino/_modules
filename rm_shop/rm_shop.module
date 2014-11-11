@@ -403,6 +403,11 @@ function rm_shop_get_commission($user_id, $seller_id) {
 
 function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rectangle = NULL, $filterparams = NULL) {
 
+    $zipcodecomponents = array();
+    for($i=0; $i<strlen($zipcode); $i++) {
+        $zipcodecomponents[] = substr($zipcode, 0, $i+1);
+    }
+    
     if(isset($zipcode) && !empty($zipcode)) {
         //Get all shipping agreements that match the given zipcode
         $query = new EntityFieldQuery();
@@ -412,7 +417,7 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
             ->propertyCondition('status', 1);
         if(!is_null($seller_id)) $query->propertyCondition('uid', $seller_id);   
         $tmp = $query
-            ->fieldCondition('field_shipping_zipcodes', 'value', $zipcode)
+            ->fieldCondition('field_shipping_zipcodes', 'value', $zipcodecomponents)
             ->fieldCondition('field_user_reference', 'target_id', ($user_id > 0) ? array(0, $user_id) : $user_id)
             ->execute();
     }

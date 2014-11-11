@@ -348,7 +348,6 @@ function rm_sales_get_statistics() {
             ),
         ),
     );
-    var_dump($graphs); die();
     print json_encode($graphs);
 }
 
