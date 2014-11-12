@@ -569,6 +569,17 @@ function rm_shop_get_shop_agreements($user_id, $zipcode, $seller_id = NULL, $rec
         }
     }
     
+    return rm_shop_rank_shops($shops);
+}
+
+function rm_shop_rank_shops($shops, $uid = NULL) {
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    
+    //Start Regionalranking
+    
     return $shops;
 }
 
