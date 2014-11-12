@@ -1,6 +1,8 @@
 <?php
 
 function rm_sales_salesperformance() {
+
+    drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales_statistics.js');
     
     //Load all participants
     $query = new EntityFieldQuery();
