@@ -2071,7 +2071,6 @@ function rm_sales_editprofile_validate($form, &$form_state) {
 
 function rm_sales_editprofile_submit($form, &$form_state) {
 	$nodeobject = node_load($form_state['values']['nid']);
-	
 	$nodeobject->title = $form_state['values']['title'];
 	$nodeobject->field_company_name = $form_state['values']['field_company_name'];
 	$nodeobject->field_billingaddress = $form_state['values']['field_billingaddress'];
@@ -2083,7 +2082,8 @@ function rm_sales_editprofile_submit($form, &$form_state) {
 	$nodeobject->field_iban = $form_state['values']['field_iban'];
 	$nodeobject->field_bic = $form_state['values']['field_bic'];
 	$nodeobject->field_taxnumber = $form_state['values']['field_taxnumber'];
-	$nodeobject->field_kleinunternehmer = $form_state['values']['field_kleinunternehmer'];	
+	$nodeobject->field_kleinunternehmer = $form_state['values']['field_kleinunternehmer'];
+    usort($form_state['values']['field_image'][LANGUAGE_NONE], 'rm_sales_usort_image_by_weight');
 	$nodeobject->field_image = $form_state['values']['field_image'];	
 	if(isset($nodeobject->field_sellercategories)) $nodeobject->field_sellercategories = $form_state['values']['field_sellercategories'];
 	$nodeobject->body = $form_state['values']['body'];
@@ -2095,4 +2095,11 @@ function rm_sales_editprofile_submit($form, &$form_state) {
 		'node',
 		$user->uid
 	);
+}
+
+function rm_sales_usort_image_by_weight($a, $b) {
+    if ($a['_weight'] == $b['_weight']) {
+        return 0;
+    }
+    return ($a['_weight'] < $b['_weight']) ? -1 : 1;
 }
