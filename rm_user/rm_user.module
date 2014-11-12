@@ -755,3 +755,10 @@ function rm_user_user_insert(&$edit, $account, $category) {
         );
     }
 }
+
+function rm_user_usort_image_by_weight($a, $b) {
+    if ($a['_weight'] == $b['_weight']) {
+        return 0;
+    }
+    return ($a['_weight'] < $b['_weight']) ? -1 : 1;
+}

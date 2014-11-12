@@ -442,6 +442,7 @@ function rm_user_editprofile_submit($form, &$form_state) {
 	$nodeobject->field_bic = $form_state['values']['field_bic'];
 	$nodeobject->field_taxnumber = $form_state['values']['field_taxnumber'];
 	$nodeobject->field_kleinunternehmer = $form_state['values']['field_kleinunternehmer'];	
+    usort($form_state['values']['field_image'][LANGUAGE_NONE], 'rm_user_usort_image_by_weight');
 	$nodeobject->field_image = $form_state['values']['field_image'];	
 	if(isset($nodeobject->field_sellercategories)) $nodeobject->field_sellercategories = $form_state['values']['field_sellercategories'];
 	$nodeobject->body = $form_state['values']['body'];
