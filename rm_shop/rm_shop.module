@@ -580,6 +580,7 @@ function rm_shop_rank_shops($shops, $uid = NULL) {
     
     //Start Regionalranking
     
+    
     return $shops;
 }
 

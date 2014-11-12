@@ -1,5 +1,54 @@
 <?php
 
+function rm_user_toggle_profile_as_favorite($profileid, $uid = NULL, $goto = TRUE) {
+
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    if($uid > 0) {
+        $profileobject = node_load($profileid);
+        if(!rm_user_profile_is_favorite($profileid)) {
+            $profileobject->field_favorite_of[LANGUAGE_NONE][] = array(
+                'target_id' => $uid,
+            );
+        }
+        else {
+            foreach($profileobject->field_favorite_of[LANGUAGE_NONE] as $key => $favoritee) {
+                if($favoritee['target_id'] == $uid) {
+                    unset($profileobject->field_favorite_of[LANGUAGE_NONE][$key]);
+                }
+            }
+        }
+        node_save($profileobject);
+    }
+    if($goto && !rm_api_is_ajax()) drupal_goto();
+}
+
+function rm_user_profile_is_favorite($profileid, $uid = NULL) {
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    if($uid > 0) {
+        $profileobject = node_load($profileid);
+        if(!empty($profileobject->field_favorite_of[LANGUAGE_NONE])) {
+            foreach($profileobject->field_favorite_of[LANGUAGE_NONE] as $favoritee) {
+                if($favoritee['target_id'] == $uid) {
+                    return TRUE;
+                }
+            }
+        }
+        else {
+            return FALSE;
+        }
+    }
+    else {
+        return FALSE;
+    }
+    return FALSE;
+}
+
 function rm_user_enforce_login($message = NULL, $type = 'status') {
     global $user;
     if($user->uid <= 0) {
@@ -127,6 +176,7 @@ function rm_user_get_profile_completeness($profileid, $bundle) {
     unset($profilefields['field_source_url']);
     unset($profilefields['field_kleinunternehmer']);
     unset($profilefields['field_publicfax']);
+    unset($profilefields['field_favorite_of']);
     $nodeobject = node_load($profileid);
     if($nodeobject->type != 'seller_profile') unset($profilefields['field_sellercategories']);
     $allfields = count($profilefields);
@@ -206,14 +256,11 @@ function rm_user_get_users_by_role($role) {
 function rm_user_menu() {
 	$items = array();
 
-     $items['process-applications'] = array(
-    'title' => 'Transactions',
-    'page callback' => 'rm_user_process_applications',
-		'access arguments' => array('access content'),
-    'file' => 'rm_user.inc',
-    'file path' => drupal_get_path('module', 'rm_user'),
-    'type' => MENU_NORMAL_ITEM,
-  ); 
+    $items['togglefavorite/%'] = array(
+        'page callback' => 'rm_user_toggle_profile_as_favorite',
+        'page arguments' => array(1),
+        'access callback' => 'rm_user_user_is_customer',
+    ); 
   
     $items['manage/customer/%user'] = array(
         'title' => 'Customer',
