@@ -932,8 +932,20 @@ function rm_shop_smartregionselect_validate($form, &$form_state) {
     if(!rm_api_validate_zipcode($form_state['values']['address'])) form_set_error('zipcode', t('Please enter a valid zipcode'));
 }
 
-function rm_shop_smartregionselect_submit($form, &$form_state) {
-    drupal_goto('lieferanten/' . $form_state['values']['address']);
+function rm_shop_smartregionselect_submit($form, &$form_state) {    
+    $meinString = $form_state['complete form']['#action'];
+    $findMich   = '/lieferanten/';
+    $pos = strpos($meinString, $findMich);
+    if ($pos !== false) {
+        if($pos === 0) drupal_goto('lieferanten/' . $form_state['values']['address']);
+    } else {
+        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($form_state['values']['address']);
+        $_SESSION['regionselect'] = array(
+            'zip' => $form_state['values']['address'],
+            'lat' => $opengeodbinfo['main_region']['lat'],
+            'lon' => $opengeodbinfo['main_region']['lon'],
+        );
+    } 
 }
 
 function rm_shop_regionselect($form, &$form_state) {
