@@ -53,7 +53,6 @@ function rm_user_get_latlon($uid = NULL) {
 }
 
 function rm_user_toggle_profile_as_favorite($profileid, $uid = NULL, $goto = TRUE) {
-
     if(is_null($uid)) {
         global $user;
         $uid = $user->uid;
