@@ -580,8 +580,17 @@ function rm_shop_rank_shops($shops, $uid = NULL) {
     
     //Start Regionalranking
     
+    //Push favorites to top
+    uasort($shops, 'rm_shop_make_favorites_sticky');
     
     return $shops;
+}
+
+function rm_shop_make_favorites_sticky($a, $b) {
+    if (rm_user_profile_is_favorite($a->nid) === rm_user_profile_is_favorite($b->nid)) {
+        return 0;
+    }
+    return (rm_user_profile_is_favorite($a->nid) > rm_user_profile_is_favorite($b->nid)) ? -1 : 1;
 }
 
 // Vergleichsfunktion
