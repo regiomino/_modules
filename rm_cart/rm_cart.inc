@@ -235,6 +235,7 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
 
 function rm_cart_checkout($form, &$form_state, $account) {
     global $user;
+    $userobject = user_load($user->uid);
     $form = array();
     $form['checkout'] = array();
     
@@ -257,7 +258,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      *  steht auf -1 wenn keine Einstellung vorhanden ist und neu angelegt werden muss
      */
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
-
+    if($one_click_setting) drupal_set_message('Wir haben die Daten von Ihrem letzten Einkauf übernommen, um Ihnen den Kaufprozess zu erleichtern. Bitte prüfen Sie ob die Adresse von uns richtig ausgefüllt wurde.');
     $form['checkout']['oneclick'] = array(
         '#type' => 'value',
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
@@ -495,7 +496,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_name']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['name_line'];
+        if($one_click_setting) {
+            $form['checkout']['delivery_fs']['shipping_address_name']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['name_line'];
+        }
+        else {
+            $form['checkout']['delivery_fs']['shipping_address_name']['#default_value'] = $userobject->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $userobject->field_last_name[LANGUAGE_NONE][0]['value'];
+        }
         
         $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
@@ -506,7 +512,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_street']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+        if($one_click_setting) {
+            $form['checkout']['delivery_fs']['shipping_address_street']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+        }
+        else {
+            $form['checkout']['delivery_fs']['shipping_address_street']['#default_value'] = $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+        }
         
         $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
@@ -529,7 +540,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
-        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_city']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['locality'];
+        if($one_click_setting) {
+            $form['checkout']['delivery_fs']['shipping_address_city']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['locality'];
+        }
+        else {
+            $form['checkout']['delivery_fs']['shipping_address_city']['#default_value'] = $userobject->field_address[LANGUAGE_NONE][0]['locality'];
+        }
         
     }
     
@@ -622,7 +638,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
-    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_name']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['name_line'];
+    if($one_click_setting) {
+        $form['checkout']['payment_fs']['billing_address_name']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['name_line'];
+    }
+    else {
+        $form['checkout']['payment_fs']['billing_address_name']['#default_value'] = $userobject->field_first_name[LANGUAGE_NONE][0]['value'] . ' ' . $userobject->field_last_name[LANGUAGE_NONE][0]['value'];
+    }
     
     $form['checkout']['payment_fs']['billing_address_street'] = array(
         '#type' => 'textfield',
@@ -633,7 +654,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
-    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_street']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'];
+    if($one_click_setting) {
+        $form['checkout']['payment_fs']['billing_address_street']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'];
+    }
+    else {
+        $form['checkout']['payment_fs']['billing_address_street']['#default_value'] = $userobject->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+    }
     
     $form['checkout']['payment_fs']['billing_address_zip'] = array(
         '#type' => 'textfield',
@@ -644,7 +670,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
-    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_zip']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['postal_code'];
+    if($one_click_setting) {
+        $form['checkout']['payment_fs']['billing_address_zip']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['postal_code'];
+    }
+    else {
+        $form['checkout']['payment_fs']['billing_address_zip']['#default_value'] = $userobject->field_address[LANGUAGE_NONE][0]['postal_code'];
+    }
     
     $form['checkout']['payment_fs']['billing_address_city'] = array(
         '#type' => 'textfield',
@@ -655,7 +686,12 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
-    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_city']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['locality'];
+    if($one_click_setting) {
+        $form['checkout']['payment_fs']['billing_address_city']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['locality'];
+    }
+    else {
+        $form['checkout']['payment_fs']['billing_address_city']['#default_value'] = $userobject->field_address[LANGUAGE_NONE][0]['locality'];
+    }
     
     /*
      *  Submit
