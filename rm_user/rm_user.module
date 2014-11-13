@@ -28,8 +28,8 @@ function rm_user_get_latlon($uid = NULL) {
     }
 
     if(!empty($_SESSION['regionselect']['lat']) && !empty($_SESSION['regionselect']['lon'])) {
-        $latitudeFrom = '';
-        $longitudeFrom = '';
+        $latitudeFrom = $_SESSION['regionselect']['lat'];
+        $longitudeFrom = $_SESSION['regionselect']['lon'];
     }
     else if($uid > 0) {
         $userobject = user_load($uid);
