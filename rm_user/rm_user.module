@@ -1,5 +1,57 @@
 <?php
 
+function rm_user_update_latlon() {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'user')
+        ->propertyCondition('status', 1)
+        ->execute();
+    $users = entity_load('user', array_keys($tmp['user']));
+    foreach($users as $user) {
+        if(!empty($user->field_address[LANGUAGE_NONE][0]) && empty($user->field_location[LANGUAGE_NONE][0])) {
+            $address = $user->field_address[LANGUAGE_NONE][0]['thoroughfare'] . ', ' . $user->field_address[LANGUAGE_NONE][0]['postal_code'] . ' ' . $user->field_address[LANGUAGE_NONE][0]['locality'];
+            $point = geocoder('google',$address);
+            if(!empty($point->coords[0]) && !empty($point->coords[1])) {
+                $user->field_location[LANGUAGE_NONE][0]['lat'] = $point->coords[0];
+                $user->field_location[LANGUAGE_NONE][0]['lon'] = $point->coords[1];
+                user_save($user);
+            }
+        }
+    }
+}
+
+function rm_user_get_latlon($uid = NULL) {
+
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+
+    if(!empty($_SESSION['regionselect']['lat']) && !empty($_SESSION['regionselect']['lon'])) {
+        $latitudeFrom = '';
+        $longitudeFrom = '';
+    }
+    else if($uid > 0) {
+        $userobject = user_load($uid);
+        if(!empty($userobject->field_location[LANGUAGE_NONE][0]['lat']) && !empty($userobject->field_location[LANGUAGE_NONE][0]['lon'])) {
+            $latitudeFrom = $userobject->field_location[LANGUAGE_NONE][0]['lat'];
+            $longitudeFrom = $userobject->field_location[LANGUAGE_NONE][0]['lon'];
+        }
+    }
+    if(empty($latitudeFrom) && empty($longitudeFrom)) {
+        $userobject = user_load(1);
+        if(!empty($userobject->field_location[LANGUAGE_NONE][0]['lat']) && !empty($userobject->field_location[LANGUAGE_NONE][0]['lon'])) {
+            $latitudeFrom = $userobject->field_location[LANGUAGE_NONE][0]['lat'];
+            $longitudeFrom = $userobject->field_location[LANGUAGE_NONE][0]['lon'];
+        }
+        else {
+            $latitudeFrom = 0;
+            $longitudeFrom = 0;
+        }
+    }
+    return array('latitudeFrom' => $latitudeFrom, 'longitudeFrom' => $longitudeFrom);
+}
+
 function rm_user_toggle_profile_as_favorite($profileid, $uid = NULL, $goto = TRUE) {
 
     if(is_null($uid)) {

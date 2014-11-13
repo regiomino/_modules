@@ -18,8 +18,12 @@ function rm_shop_about_us() {
 
 function rm_shop_get_shops($zipcode) {
 
+    $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+    
     $_SESSION['regionselect'] = array(
         'zip' => $zipcode,
+        'lat' => $opengeodbinfo['main_region']['lat'],
+        'lon' => $opengeodbinfo['main_region']['lon'],
     );
 
     global $user;
@@ -28,7 +32,7 @@ function rm_shop_get_shops($zipcode) {
     
     //Map Center
     if(empty($queryparams['map_center'])) {
-        $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
+        if(!isset($opengeodbinfo)) $opengeodbinfo = rm_api_opengeodb_queryinfobyzip($zipcode);
         drupal_add_js(array('rm_shop' => array('map_center' => $opengeodbinfo['main_region']['lat'] . ',' . $opengeodbinfo['main_region']['lon'])), 'setting');
     }
     else {
