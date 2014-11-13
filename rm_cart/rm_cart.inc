@@ -257,6 +257,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      *  steht auf -1 wenn keine Einstellung vorhanden ist und neu angelegt werden muss
      */
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
+
     $form['checkout']['oneclick'] = array(
         '#type' => 'value',
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
@@ -494,6 +495,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
+        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_name']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['name_line'];
+        
         $form['checkout']['delivery_fs']['shipping_address_street'] = array(
             '#type' => 'textfield',
             '#title' => t('Street'),
@@ -503,6 +506,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
+        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_street']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+        
         $form['checkout']['delivery_fs']['shipping_address_zip'] = array(
             '#type' => 'textfield',
             '#title' => t('Postal code'),
@@ -514,6 +519,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
             '#value' => $_SESSION['regionselect']['zip'],
             '#disabled' => TRUE,
         );
+        
         $form['checkout']['delivery_fs']['shipping_address_city'] = array(
             '#type' => 'textfield',
             '#title' => t('Locality'),
@@ -523,6 +529,8 @@ function rm_cart_checkout($form, &$form_state, $account) {
               ),
             ),
         );
+        if($one_click_setting) $form['checkout']['delivery_fs']['shipping_address_city']['#default_value'] = $one_click_setting->field_address[LANGUAGE_NONE][0]['locality'];
+        
     }
     
     /*
@@ -614,6 +622,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
+    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_name']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['name_line'];
     
     $form['checkout']['payment_fs']['billing_address_street'] = array(
         '#type' => 'textfield',
@@ -624,6 +633,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
+    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_street']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'];
     
     $form['checkout']['payment_fs']['billing_address_zip'] = array(
         '#type' => 'textfield',
@@ -634,6 +644,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
+    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_zip']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['postal_code'];
     
     $form['checkout']['payment_fs']['billing_address_city'] = array(
         '#type' => 'textfield',
@@ -644,6 +655,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
           // ),
         // ),
     );
+    if($one_click_setting) $form['checkout']['payment_fs']['billing_address_city']['#default_value'] = $one_click_setting->field_billingaddress[LANGUAGE_NONE][0]['locality'];
     
     /*
      *  Submit
@@ -691,9 +703,40 @@ function rm_cart_checkout_validate($form, &$form_state) {
 }
 
 function rm_cart_checkout_submit($form, &$form_state) {
+    global $user;
+    if($form_state['values']['oneclick'] > 0) {
+        //Load oneclick setting
+        $oneclick = node_load($form_state['values']['oneclick']);
+        //Update values
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['name_line'] = $form_state['values']['billing_address_name'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['billing_address_street'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['billing_address_zip'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['locality'] = $form_state['values']['billing_address_city'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['name_line'] = $form_state['values']['shipping_address_name'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['shipping_address_street'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['shipping_address_zip'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['shipping_address_city'];
+        //Save oneclick setting
+        node_save($oneclick);
+    }
+    else {
+        //Create oneclick setting
+        $oneclick = rm_api_create_new_node('one_click_setting', 'Oneclick U:' . $user->uid . ' S:' . $form_state['values']['chosen_seller'], 'de', $user->uid, 1);
+        $oneclick->field_user_reference[LANGUAGE_NONE][0]['target_id'] = $form_state['values']['chosen_seller'];
+        //Store values
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['name_line'] = $form_state['values']['billing_address_name'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['billing_address_street'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['billing_address_zip'];
+        $oneclick->field_billingaddress[LANGUAGE_NONE][0]['locality'] = $form_state['values']['billing_address_city'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['name_line'] = $form_state['values']['shipping_address_name'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['shipping_address_street'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['shipping_address_zip'];
+        $oneclick->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['shipping_address_city'];
+        //Save oneclick setting
+        node_save($oneclick);
+    }
     $now = time();
     $nowdate = date('d.mY H:i:s', $now);
-    global $user;
     $cart_items = rm_cart_get_cart($form_state['values']['chosen_seller'], $user->uid);
     $longestdelay = 0;
     if(!empty($cart_items)) {
