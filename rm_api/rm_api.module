@@ -1144,7 +1144,7 @@ function rm_api_opengeodb_queryinfobyzip($zip) {
 }
 
 //Returns distance between two points in meters by using the vincentyGreatCircleDistance formula
-function rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $earthRadius = 637100) {
+function rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $earthRadius = 6371000) {
   // convert from degrees to radians
   $latFrom = deg2rad($latitudeFrom);
   $lonFrom = deg2rad($longitudeFrom);
