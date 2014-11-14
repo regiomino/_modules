@@ -105,10 +105,12 @@ function rm_shop_get_shops($zipcode) {
     $rectangle['map_bounds_ne'][1] = $opengeodbinfo['main_region']['lon'] + $spread;
     
     $shops = rm_shop_get_shop_agreements($user->uid, $zipcode, NULL, $rectangle, $queryparams);
+    $alluidkeys = array();
     
     //Add marker to settings
     if(!empty($shops)) {
         foreach($shops as $shop) {
+            $alluidkeys[] = $shop->uid;
             $address = '';
             $image_path = '';
             if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
@@ -140,6 +142,23 @@ function rm_shop_get_shops($zipcode) {
         }
         drupal_add_js(array('rm_shop' => array('map_marker' => $markerarray)), 'setting');
     }
+    $producttitlearray = array();
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node');
+    $query->entityCondition('bundle', array('offer_variation'));
+    $query->propertyCondition('status', 1);
+    $query->propertyCondition('uid', $alluidkeys);
+    $result = $query->execute();
+    $matchingproducts = array();
+    if(isset($result['node'])) {
+        $matchingproducts = entity_load('node', array_keys($result['node']));
+    }
+    if(!empty($matchingproducts)) {
+        foreach($matchingproducts as $matchingproduct) {
+            $producttitlearray[] = $matchingproduct->title;
+        }
+    }
+    drupal_add_js(array('rm_shop' => array('products' => $producttitlearray)), 'setting');
     
     $categorytids = array();
     
