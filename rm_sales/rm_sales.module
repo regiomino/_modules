@@ -346,6 +346,7 @@ function rm_sales_get_statistics() {
     $tmp = $query
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', array('order_item'))
+        ->propertyCondition('uid', 1, '>')
         ->fieldCondition('field_order_status', 'value', array('processing', 'accepted', 'delivered', 'billed'))
         ->execute();
     $order_items = array();
