@@ -372,7 +372,7 @@ function rm_shop_get_filteredshops() {
     }
     if(!empty($matchingproducts)) {
         foreach($matchingproducts as $matchingproduct) {
-            $returnarray['products'] = $matchingproduct->title;
+            $returnarray['products'][] = $matchingproduct->title;
         }
     }
     
