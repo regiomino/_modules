@@ -1270,6 +1270,9 @@ function rm_cart_generate_order_fax($order_number) {
     
     $userobject = user_load($order_item->uid);
     
+    //Load customer profile
+    $customer_profile = rm_api_get_nodes_by_properties('customer_profile', 1, -1, -1, -1, -1, $order_item->uid)
+    
     $html = theme('rm_cart_theme_order_fax', array(
                 'vars' => array(
                     'order_number' => $order_number,
@@ -1287,6 +1290,7 @@ function rm_cart_generate_order_fax($order_number) {
                     'delivery_range_to' => $order_item->field_delivery_range_to[LANGUAGE_NONE][0]['value'],
                     'seller_user' => user_load($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
                     'shop' => rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']),
+                    'customer_profile' => $customer_profile,
                 ),
             ));
      
