@@ -258,7 +258,7 @@ function rm_cart_checkout($form, &$form_state, $account) {
      *  steht auf -1 wenn keine Einstellung vorhanden ist und neu angelegt werden muss
      */
     $one_click_setting = rm_cart_get_one_click_setting($user->uid, $account->uid);
-    if($one_click_setting) drupal_set_message('Wir haben die Daten von Ihrem letzten Einkauf übernommen, um Ihnen den Kaufprozess zu erleichtern. Bitte prüfen Sie ob die Adresse von uns richtig ausgefüllt wurde.');
+    //if($one_click_setting) drupal_set_message('Wir haben die Daten von Ihrem letzten Einkauf übernommen, um Ihnen den Kaufprozess zu erleichtern. Bitte prüfen Sie ob die Adresse von uns richtig ausgefüllt wurde.');
     $form['checkout']['oneclick'] = array(
         '#type' => 'value',
         '#value' => (!empty($one_click_setting)) ? $one_click_setting->nid : -1,
@@ -584,6 +584,9 @@ function rm_cart_checkout($form, &$form_state, $account) {
         '#title_display' => 'none',
         '#options' => $availablepaymenttypes,
     );
+    if($one_click_setting) {
+        $form['checkout']['payment_fs']['paymenttypes']['#default_value'] = $one_click_setting->field_paymenttype[LANGUAGE_NONE][0]['value'];
+    }
     
     /*
      *  Feld für IBAN
@@ -752,6 +755,7 @@ function rm_cart_checkout_submit($form, &$form_state) {
         $oneclick->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['shipping_address_street'];
         $oneclick->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['shipping_address_zip'];
         $oneclick->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['shipping_address_city'];
+        $oneclick->field_paymenttype[LANGUAGE_NONE][0]['value'] = $form_state['values']['paymenttypes'];
         //Save oneclick setting
         node_save($oneclick);
     }
@@ -768,6 +772,7 @@ function rm_cart_checkout_submit($form, &$form_state) {
         $oneclick->field_address[LANGUAGE_NONE][0]['thoroughfare'] = $form_state['values']['shipping_address_street'];
         $oneclick->field_address[LANGUAGE_NONE][0]['postal_code'] = $form_state['values']['shipping_address_zip'];
         $oneclick->field_address[LANGUAGE_NONE][0]['locality'] = $form_state['values']['shipping_address_city'];
+        $oneclick->field_paymenttype[LANGUAGE_NONE][0]['value'] = $form_state['values']['paymenttypes'];
         //Save oneclick setting
         node_save($oneclick);
     }
