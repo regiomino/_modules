@@ -24,6 +24,8 @@ function rm_cart_checkout_confirm_submit($form, &$form_state) {
 
     $shop = rm_shop_get_shop($order_item->field_user_reference[LANGUAGE_NONE][0]['target_id']);
     
+    rm_user_add_profile_trade_with($shop->nid);
+    
     drupal_mail(
         'rm_cart',
         'incoming_order',

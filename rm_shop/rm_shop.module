@@ -583,31 +583,42 @@ function rm_shop_rank_shops($shops, $uid = NULL) {
      */
     
     //Sort by stickyness and distance
-    uasort($shops, 'rm_shop_sort_sellers_by_sticky_and_distance');
+    uasort($shops, 'rm_shop_sort_sellers_by_sticky_history_distance');
     
     return $shops;
 }
 
-function rm_shop_sort_sellers_by_sticky_and_distance($a, $b) {
-
+function rm_shop_sort_sellers_by_sticky_history_distance($a, $b) {
+    //Sort by sticky
     $afavorite = rm_user_profile_is_favorite($a->nid);
     $bfavorite = rm_user_profile_is_favorite($b->nid);
     if ($afavorite == $bfavorite) {
-        $latlon = rm_user_get_latlon();
-        $latitudeFrom = $latlon['latitudeFrom'];
-        $longitudeFrom = $latlon['longitudeFrom'];
-        $alatitudeTo = $a->field_location[LANGUAGE_NONE][0]['lat'];
-        $alongitudeTo = $a->field_location[LANGUAGE_NONE][0]['lon'];
-        $blatitudeTo = $b->field_location[LANGUAGE_NONE][0]['lat'];
-        $blongitudeTo = $b->field_location[LANGUAGE_NONE][0]['lon'];
+    
+        //If equal sort by history
+        $atrades = rm_user_profile_trades_with($a->nid);
+        $btrades = rm_user_profile_trades_with($b->nid);
+        if ($atrades == $btrades) {
+        
+            //If equal sort by distance
+            $latlon = rm_user_get_latlon();
+            $latitudeFrom = $latlon['latitudeFrom'];
+            $longitudeFrom = $latlon['longitudeFrom'];
+            $alatitudeTo = $a->field_location[LANGUAGE_NONE][0]['lat'];
+            $alongitudeTo = $a->field_location[LANGUAGE_NONE][0]['lon'];
+            $blatitudeTo = $b->field_location[LANGUAGE_NONE][0]['lat'];
+            $blongitudeTo = $b->field_location[LANGUAGE_NONE][0]['lon'];
 
-        $adistance = rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $alatitudeTo, $alongitudeTo);
-        $bdistance = rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $blatitudeTo, $blongitudeTo);
+            $adistance = rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $alatitudeTo, $alongitudeTo);
+            $bdistance = rm_api_calculate_latlng_distance($latitudeFrom, $longitudeFrom, $blatitudeTo, $blongitudeTo);
 
-        if ($adistance == $bdistance) {
-            return 0;
+            if ($adistance == $bdistance) {
+                return 0;
+            }
+            return ($adistance < $bdistance) ? -1 : 1;
+            
         }
-        return ($adistance < $bdistance) ? -1 : 1;
+        return ($atrades > $btrades) ? -1 : 1;
+        
     }
     return ($afavorite > $bfavorite) ? -1 : 1;
 

@@ -90,14 +90,41 @@ function rm_user_profile_is_favorite($profileid, $uid = NULL) {
                 }
             }
         }
-        else {
-            return FALSE;
-        }
-    }
-    else {
-        return FALSE;
     }
     return FALSE;
+}
+
+function rm_user_add_profile_trade_with($profileid, $uid = NULL) {
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    if($uid > 0) {
+        $profileobject = node_load($profileid);
+        $profileobject->field_trades_with[LANGUAGE_NONE][] = array(
+            'target_id' => $uid,
+        );
+        node_save($profileobject);
+    }
+}
+
+function rm_user_profile_trades_with($profileid, $uid = NULL) {
+    if(is_null($uid)) {
+        global $user;
+        $uid = $user->uid;
+    }
+    $tradeamounts = 0;
+    if($uid > 0) {
+        $profileobject = node_load($profileid);
+        if(!empty($profileobject->field_trades_with[LANGUAGE_NONE])) {
+            foreach($profileobject->field_trades_with[LANGUAGE_NONE] as $favoritee) {
+                if($favoritee['target_id'] == $uid) {
+                    $tradeamounts++;
+                }
+            }
+        }
+    }
+    return $tradeamounts;
 }
 
 function rm_user_enforce_login($message = NULL, $type = 'status') {
@@ -228,6 +255,7 @@ function rm_user_get_profile_completeness($profileid, $bundle) {
     unset($profilefields['field_kleinunternehmer']);
     unset($profilefields['field_publicfax']);
     unset($profilefields['field_favorite_of']);
+    unset($profilefields['field_trades_with']);
     $nodeobject = node_load($profileid);
     if($nodeobject->type != 'seller_profile') unset($profilefields['field_sellercategories']);
     $allfields = count($profilefields);
