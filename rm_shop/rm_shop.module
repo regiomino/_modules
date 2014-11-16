@@ -1081,8 +1081,8 @@ function rm_shop_get_participantxml() {
     }
     else {
         cache_clear_all('directoryGoogleMap', 'cache', TRUE);
-
-        $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile'), 1);
+    var_dump('test'); die();
+        $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile', 'trader_profile'), 1);
 
         $participants = array();
         foreach($participantobjects as $nid=>$value) {
@@ -1118,7 +1118,7 @@ function rm_shop_get_participantxml() {
 
         cache_set('directoryGoogleMap', $participants);
     }
-    var_dump(count($participants)); die();
+
 
     $dom = new DOMDocument("1.0");
     $node = $dom->createElement("markers");
