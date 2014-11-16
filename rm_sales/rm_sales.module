@@ -255,7 +255,7 @@ function rm_sales_get_statistics() {
     //Cache for 1 day = 86400 seconds
     $cacheexpire = $time - 86400;
     //Get children of parent item (cache this)
-    $cached = cache_get('directoryGoogleMap');
+    $cached = cache_get('salesStatistics');
     if($cached && $cached->created > $cacheexpire) {
         $graphs = $cached->data;
     }
@@ -264,16 +264,7 @@ function rm_sales_get_statistics() {
         
         $graphs = array();
         
-        //Load all participants
-        $query = new EntityFieldQuery();
-        $tmp = $query
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
-            ->execute();
-        $participants = array();
-        if(!empty($tmp['node'])) {
-            $participants = entity_load('node', array_keys($tmp['node']));
-        }
+        $participants = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'));
         
         /**
          * Determine amount of created profiles per month

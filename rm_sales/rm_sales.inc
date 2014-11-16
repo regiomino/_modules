@@ -4,59 +4,65 @@ function rm_sales_salesperformance() {
 
     drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales_statistics.js');
     
-    //Load all participants
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
-        ->execute();
-    $participants = array();
-    if(!empty($tmp['node'])) {
-        $participants = entity_load('node', array_keys($tmp['node']));
+    $time = time();
+    //Cache for 1 day = 86400 seconds
+    $cacheexpire = $time - 86400;
+    //Get children of parent item (cache this)
+    $cached = cache_get('salesStatisticsData');
+    if($cached && $cached->created > $cacheexpire) {
+        $data = $cached->data;
     }
-    
-    /**
-     * Determine amount of registrations per month
-     */
-    $registrations = array();
-    $invites = array();
-    if(!empty($participants)) {
-        foreach($participants as $participant) {
-            if(rm_user_gtc_accepted($participant->nid)) {
-                $registrations[strtotime(date('Y-m'))][] = TRUE;
+    else {
+        cache_clear_all('salesStatisticsData', 'cache', TRUE);
+        
+        $data = array();
+        
+        $participants = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'));
+        
+        /**
+         * Determine amount of registrations per month
+         */
+        $registrations = array();
+        $invites = array();
+        if(!empty($participants)) {
+            foreach($participants as $participant) {
+                if(rm_user_gtc_accepted($participant->nid)) {
+                    $registrations[strtotime(date('Y-m'))][] = TRUE;
+                }
+                else if(rm_user_invited($participant->nid)) {
+                    $invites[strtotime(date('Y-m'))][] = TRUE;
+                }
             }
-            else if(rm_user_invited($participant->nid)) {
-                $invites[strtotime(date('Y-m'))][] = TRUE;
+        }
+        //Transfer to x/y-axis value pairs
+        $data['flotRegistrations'] = 0;
+        if(!empty($registrations)) {
+            //Sort ascending by month
+            ksort($registrations);
+            foreach($registrations as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $data['flotRegistrations'] = $amount;
             }
         }
-    }
-    //Transfer to x/y-axis value pairs
-    $flotRegistrations = 0;
-    if(!empty($registrations)) {
-        //Sort ascending by month
-        ksort($registrations);
-        foreach($registrations as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotRegistrations = $amount;
+        //Transfer to x/y-axis value pairs
+        $data['flotInvites'] = 0;
+        if(!empty($invites)) {
+            //Sort ascending by month
+            ksort($invites);
+            foreach($invites as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $data['flotInvites'] = $amount;
+            }
         }
-    }
-    //Transfer to x/y-axis value pairs
-    $flotInvites = 0;
-    if(!empty($invites)) {
-        //Sort ascending by month
-        ksort($invites);
-        foreach($invites as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotInvites = $amount;
-        }
-    }
-   
+           
+        cache_set('salesStatisticsData', $graphs);
+    } 
     
     //pass to tpl
     return theme('rm_sales_theme_salesperformance', array(
         'vars' => array(
-            'registrations' => $flotRegistrations,
-            'invites' => $flotInvites,
+            'registrations' => $data['flotRegistrations'],
+            'invites' => $data['flotInvites'],
         ),
     ));
 }
