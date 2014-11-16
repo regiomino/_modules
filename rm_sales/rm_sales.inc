@@ -17,23 +17,54 @@ function rm_sales_salesperformance() {
         
         $data = array();
         
-        $participants = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'));
+        $query = db_select('node', 'n');
+        $query->join('field_data_field_gtc_accepted', 'a', 'n.nid = a.entity_id');
+        $query->condition('a.entity_type', 'node');
+        $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
+        $query->groupBy('n.nid');
+        $query->fields('a', array('field_gtc_accepted_value'));
+        $query->fields('n', array('nid'));
+
+        $result = $query->execute();
+        
         
         /**
          * Determine amount of registrations per month
          */
         $registrations = array();
-        $invites = array();
-        if(!empty($participants)) {
-            foreach($participants as $participant) {
-                if(rm_user_gtc_accepted($participant->nid)) {
-                    $registrations[strtotime(date('Y-m'))][] = TRUE;
-                }
-                else if(rm_user_invited($participant->nid)) {
-                    $invites[strtotime(date('Y-m'))][] = TRUE;
-                }
+        $allregisterednids = array();
+        $record = array();
+        while($record = $result->fetchAssoc()) {
+            if($record['field_gtc_accepted_value'] == 1) {
+                $registrations[strtotime(date('Y-m'))][] = TRUE;
+                $allregisterednids[] = $record['nid'];
             }
         }
+        
+        
+        
+        $query = db_select('node', 'n');
+        $query->join('field_data_field_register_hash', 'r', 'n.nid = r.entity_id');
+        $query->condition('r.entity_type', 'node');
+        $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
+        $query->groupBy('n.nid');
+        $query->fields('r', array('field_register_hash_value'));
+        $query->fields('n', array('nid'));
+
+        $result = $query->execute();
+        /**
+         * Determine amount of invites per month
+         */
+         
+        $invites = array();
+        $record = array();
+        while($record = $result->fetchAssoc()) {
+            if(!in_array($record['nid'], $allregisterednids) && !empty($record['field_register_hash_value'])) {
+                $invites[strtotime(date('Y-m'))][] = TRUE;
+            }
+        }
+        
+
         //Transfer to x/y-axis value pairs
         $data['flotRegistrations'] = 0;
         if(!empty($registrations)) {
@@ -55,7 +86,7 @@ function rm_sales_salesperformance() {
             }
         }
            
-        cache_set('salesStatisticsData', $graphs);
+        cache_set('salesStatisticsData', $data);
     } 
     
     //pass to tpl

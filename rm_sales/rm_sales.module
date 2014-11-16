@@ -264,7 +264,10 @@ function rm_sales_get_statistics() {
         
         $graphs = array();
         
-        $participants = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'));
+        $result = db_select('node', 'n')
+            ->fields('n', array('created', 'type'))
+            ->condition('type', array('seller_profile', 'customer_profile', 'trader_profile'), 'IN')
+            ->execute();
         
         /**
          * Determine amount of created profiles per month
@@ -273,14 +276,14 @@ function rm_sales_get_statistics() {
         $createdCustomerProfilesPerMonth = array();
         $createdSellerProfilesPerMonth = array();
         $createdTraderProfilesPerMonth = array();
-        if(!empty($participants)) {
-            foreach($participants as $participant) {
-                $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-                if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-                if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-                if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            }
+        
+        while($record = $result->fetchAssoc()) {
+            $createdProfilesPerMonth[strtotime(date('Y-m', $record['created']))][] = TRUE;
+            if($record['type'] == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $record['created']))][] = TRUE;
+            if($record['type'] == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $record['created']))][] = TRUE;
+            if($record['type'] == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $record['created']))][] = TRUE;
         }
+
         
         //Transfer to x/y-axis value pairs
         $flotCreatedProfiles = array();
@@ -356,6 +359,31 @@ function rm_sales_get_statistics() {
             $order_items = entity_load('node', array_keys($tmp['node']));
         }
         
+        $query = db_select('node', 'n');
+        $query->join('field_data_field_order_status', 's', 'n.nid = s.entity_id');
+        $query->join('field_data_field_order_amount', 'a', 'n.nid = a.entity_id');
+        $query->join('field_data_field_tu_price', 'p', 'n.nid = p.entity_id');
+        $query->join('field_data_field_commission', 'c', 'n.nid = c.entity_id');
+        $query->condition('s.entity_type', 'node');
+        $query->condition('a.entity_type', 'node');
+        $query->condition('p.entity_type', 'node');
+        $query->condition('c.entity_type', 'node');
+        $query->condition('n.type', array('order_item'), 'IN');
+        $query->condition('n.uid', 1, '>');
+        $query->condition('s.field_order_status_value', array('processing', 'accepted', 'delivered', 'billed'), 'IN');
+        $query->groupBy('n.nid');
+        $query->fields('s', array('field_order_status_value'));
+        $query->fields('a', array('field_order_amount_value'));
+        $query->fields('p', array('field_tu_price_value'));
+        $query->fields('c', array('field_commission_value'));
+        $query->fields('n', array('created'));
+
+        $result = $query->execute();
+        
+        $order_items = array();
+        while($record = $result->fetchAssoc()) {
+            $order_items[] = $record;
+        }
         
         /**
          * Determine amount of order items per month
@@ -363,7 +391,7 @@ function rm_sales_get_statistics() {
         $orderItemsPerMonth = array();
         if(!empty($order_items)) {
             foreach($order_items as $order_item) {
-                $orderItemsPerMonth[strtotime(date('Y-m', $order_item->created))][] = TRUE;
+                $orderItemsPerMonth[strtotime(date('Y-m', $order_item['created']))][] = TRUE;
             }
         }
         
@@ -394,8 +422,8 @@ function rm_sales_get_statistics() {
         $orderCommissionPerMonth = array();
         if(!empty($order_items)) {
             foreach($order_items as $order_item) {
-                $orderSalesPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'];
-                $orderCommissionPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * $order_item->field_commission[LANGUAGE_NONE][0]['value'] / 100;
+                $orderSalesPerMonth[strtotime(date('Y-m', $order_item['created']))] += $order_item['field_tu_price_value'] * $order_item['field_order_amount_value'];
+                $orderCommissionPerMonth[strtotime(date('Y-m', $order_item['created']))] += $order_item['field_tu_price_value'] * $order_item['field_order_amount_value'] * $order_item['field_commission_value'] / 100;
             }
         }
         
