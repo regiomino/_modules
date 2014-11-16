@@ -1081,9 +1081,9 @@ function rm_shop_get_participantxml() {
     }
     else {
         cache_clear_all('directoryGoogleMap', 'cache', TRUE);
-    var_dump('test'); die();
-        $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile', 'trader_profile'), 1);
 
+        $participantobjects = rm_api_get_nodes_by_properties(array('customer_profile', 'seller_profile', 'trader_profile'), 1);
+    var_dump($participantobjects); die();
         $participants = array();
         foreach($participantobjects as $nid=>$value) {
 
