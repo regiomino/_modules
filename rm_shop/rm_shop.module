@@ -1115,7 +1115,7 @@ function rm_shop_get_participantxml() {
                    $index = $record['type'];
                 }
                 $participants[$index][] = array(
-                    'title' => l($record['title'], 'node/' . $nid),
+                    'title' => l($record['title'], 'node/' . $record['nid']),
                     'address' => $address,
                     'lat' => $record['field_location_lat'],
                     'lon' => $record['field_location_lon'],
