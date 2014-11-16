@@ -1072,7 +1072,8 @@ function rm_shop_get_spotxml($suid) {
 function rm_shop_get_participantxml() {
 
     $time = time();
-    $cacheexpire = $time - 1;
+    //Cache for 1 day = 86400 seconds
+    $cacheexpire = $time - 86400;
     //Get children of parent item (cache this)
     $cached = cache_get('directoryGoogleMap');
     if($cached && $cached->created > $cacheexpire) {

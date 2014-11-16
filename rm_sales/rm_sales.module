@@ -250,191 +250,199 @@ function rm_sales_menu() {
 }
 
 function rm_sales_get_statistics() {
+    
+    $time = time();
+    //Cache for 1 day = 86400 seconds
+    $cacheexpire = $time - 86400;
+    //Get children of parent item (cache this)
+    $cached = cache_get('directoryGoogleMap');
+    if($cached && $cached->created > $cacheexpire) {
+        $graphs = $cached->data;
+    }
+    else {
+        cache_clear_all('salesStatistics', 'cache', TRUE);
+        
+        $graphs = array();
+        
+        //Load all participants
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+            ->execute();
+        $participants = array();
+        if(!empty($tmp['node'])) {
+            $participants = entity_load('node', array_keys($tmp['node']));
+        }
+        
+        /**
+         * Determine amount of created profiles per month
+         */
+        $createdProfilesPerMonth = array();
+        $createdCustomerProfilesPerMonth = array();
+        $createdSellerProfilesPerMonth = array();
+        $createdTraderProfilesPerMonth = array();
+        if(!empty($participants)) {
+            foreach($participants as $participant) {
+                $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+                if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+                if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+                if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
+            }
+        }
+        
+        //Transfer to x/y-axis value pairs
+        $flotCreatedProfiles = array();
+        if(!empty($createdProfilesPerMonth)) {
+            //Sort ascending by month
+            ksort($createdProfilesPerMonth);
+            foreach($createdProfilesPerMonth as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $flotCreatedProfiles[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $flotCreatedCustomerProfiles = array();
+        if(!empty($createdCustomerProfilesPerMonth)) {
+            //Sort ascending by month
+            ksort($createdCustomerProfilesPerMonth);
+            foreach($createdCustomerProfilesPerMonth as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $flotCreatedCustomerProfiles[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $flotCreatedSellerProfiles = array();
+        if(!empty($createdSellerProfilesPerMonth)) {
+            //Sort ascending by month
+            ksort($createdSellerProfilesPerMonth);
+            foreach($createdSellerProfilesPerMonth as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $flotCreatedSellerProfiles[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $flotCreatedTraderProfiles = array();
+        if(!empty($createdTraderProfilesPerMonth)) {
+            //Sort ascending by month
+            ksort($createdTraderProfilesPerMonth);
+            foreach($createdTraderProfilesPerMonth as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $flotCreatedTraderProfiles[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $graphs['profiles'] = array(
+            array(
+                'label' => t('created profiles'),
+                'data' => $flotCreatedProfiles,
+            ),
+            array(
+                'label' => t('created customer profiles'),
+                'data' => $flotCreatedCustomerProfiles,
+            ),
+            array(
+                'label' => t('created seller profiles'),
+                'data' => $flotCreatedSellerProfiles,
+            ),
+            array(
+                'label' => t('created trader profiles'),
+                'data' => $flotCreatedTraderProfiles,
+            ),
+        );
+        
+        
+        //Load all order items
+        $query = new EntityFieldQuery();
+        $tmp = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('order_item'))
+            ->propertyCondition('uid', 1, '>')
+            ->fieldCondition('field_order_status', 'value', array('processing', 'accepted', 'delivered', 'billed'))
+            ->execute();
+        $order_items = array();
+        if(!empty($tmp['node'])) {
+            $order_items = entity_load('node', array_keys($tmp['node']));
+        }
+        
+        
+        /**
+         * Determine amount of order items per month
+         */
+        $orderItemsPerMonth = array();
+        if(!empty($order_items)) {
+            foreach($order_items as $order_item) {
+                $orderItemsPerMonth[strtotime(date('Y-m', $order_item->created))][] = TRUE;
+            }
+        }
+        
+        //Transfer to x/y-axis value pairs
+        $flotOrderItems = array();
+        if(!empty($orderItemsPerMonth)) {
+            //Sort ascending by month
+            ksort($orderItemsPerMonth);
+            foreach($orderItemsPerMonth as $yearmonth => $booleans) {
+                $amount = count($booleans);
+                $flotOrderItems[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $graphs['orderitems'] = array(
+            array(
+                'label' => t('Order items'),
+                'data' => $flotOrderItems,
+            ),
+        );
+        
+        
+        
+        /**
+         * Determine sales per month
+         */
+        $orderSalesPerMonth = array();
+        $orderCommissionPerMonth = array();
+        if(!empty($order_items)) {
+            foreach($order_items as $order_item) {
+                $orderSalesPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'];
+                $orderCommissionPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * $order_item->field_commission[LANGUAGE_NONE][0]['value'] / 100;
+            }
+        }
+        
+        //Transfer to x/y-axis value pairs
+        $flotOrderSales = array();
+        if(!empty($orderSalesPerMonth)) {
+            //Sort ascending by month
+            ksort($orderSalesPerMonth);
+            foreach($orderSalesPerMonth as $yearmonth => $amount) {
+                $flotOrderSales[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        //Transfer to x/y-axis value pairs
+        $flotOrderCommission = array();
+        if(!empty($orderCommissionPerMonth)) {
+            //Sort ascending by month
+            ksort($orderCommissionPerMonth);
+            foreach($orderCommissionPerMonth as $yearmonth => $amount) {
+                $flotOrderCommission[] = array($yearmonth*1000, $amount);
+            }
+        }
+        
+        $graphs['ordersales'] = array(
+            array(
+                'label' => t('Order sales'),
+                'data' => $flotOrderSales,
+            ),
+            array(
+                'label' => t('Order commission'),
+                'data' => $flotOrderCommission,
+            ),
+        );
+        
+        
+        cache_set('salesStatistics', $graphs);
+    }  
 
-    $graphs = array();
-    
-    //Load all participants
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
-        ->execute();
-    $participants = array();
-    if(!empty($tmp['node'])) {
-        $participants = entity_load('node', array_keys($tmp['node']));
-    }
-    
-    /**
-     * Determine amount of created profiles per month
-     */
-    $createdProfilesPerMonth = array();
-    $createdCustomerProfilesPerMonth = array();
-    $createdSellerProfilesPerMonth = array();
-    $createdTraderProfilesPerMonth = array();
-    if(!empty($participants)) {
-        foreach($participants as $participant) {
-            $createdProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'customer_profile') $createdCustomerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'seller_profile') $createdSellerProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-            if($participant->type == 'trader_profile') $createdTraderProfilesPerMonth[strtotime(date('Y-m', $participant->created))][] = TRUE;
-        }
-    }
-    
-    //Transfer to x/y-axis value pairs
-    $flotCreatedProfiles = array();
-    if(!empty($createdProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdProfilesPerMonth);
-        foreach($createdProfilesPerMonth as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotCreatedProfiles[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $flotCreatedCustomerProfiles = array();
-    if(!empty($createdCustomerProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdCustomerProfilesPerMonth);
-        foreach($createdCustomerProfilesPerMonth as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotCreatedCustomerProfiles[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $flotCreatedSellerProfiles = array();
-    if(!empty($createdSellerProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdSellerProfilesPerMonth);
-        foreach($createdSellerProfilesPerMonth as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotCreatedSellerProfiles[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $flotCreatedTraderProfiles = array();
-    if(!empty($createdTraderProfilesPerMonth)) {
-        //Sort ascending by month
-        ksort($createdTraderProfilesPerMonth);
-        foreach($createdTraderProfilesPerMonth as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotCreatedTraderProfiles[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $graphs['profiles'] = array(
-        array(
-            'label' => t('created profiles'),
-            'data' => $flotCreatedProfiles,
-        ),
-        array(
-            'label' => t('created customer profiles'),
-            'data' => $flotCreatedCustomerProfiles,
-        ),
-        array(
-            'label' => t('created seller profiles'),
-            'data' => $flotCreatedSellerProfiles,
-        ),
-        array(
-            'label' => t('created trader profiles'),
-            'data' => $flotCreatedTraderProfiles,
-        ),
-    );
-    
-    
-    //Load all order items
-    $query = new EntityFieldQuery();
-    $tmp = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', array('order_item'))
-        ->propertyCondition('uid', 1, '>')
-        ->fieldCondition('field_order_status', 'value', array('processing', 'accepted', 'delivered', 'billed'))
-        ->execute();
-    $order_items = array();
-    if(!empty($tmp['node'])) {
-        $order_items = entity_load('node', array_keys($tmp['node']));
-    }
-    
-    
-    /**
-     * Determine amount of order items per month
-     */
-    $orderItemsPerMonth = array();
-    if(!empty($order_items)) {
-        foreach($order_items as $order_item) {
-            $orderItemsPerMonth[strtotime(date('Y-m', $order_item->created))][] = TRUE;
-        }
-    }
-    
-    //Transfer to x/y-axis value pairs
-    $flotOrderItems = array();
-    if(!empty($orderItemsPerMonth)) {
-        //Sort ascending by month
-        ksort($orderItemsPerMonth);
-        foreach($orderItemsPerMonth as $yearmonth => $booleans) {
-            $amount = count($booleans);
-            $flotOrderItems[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $graphs['orderitems'] = array(
-        array(
-            'label' => t('Order items'),
-            'data' => $flotOrderItems,
-        ),
-    );
-    
-    
-    
-    /**
-     * Determine sales per month
-     */
-    $orderSalesPerMonth = array();
-    $orderCommissionPerMonth = array();
-    if(!empty($order_items)) {
-        foreach($order_items as $order_item) {
-            $orderSalesPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'];
-            $orderCommissionPerMonth[strtotime(date('Y-m', $order_item->created))] += $order_item->field_tu_price[LANGUAGE_NONE][0]['value'] * $order_item->field_order_amount[LANGUAGE_NONE][0]['value'] * $order_item->field_commission[LANGUAGE_NONE][0]['value'] / 100;
-        }
-    }
-    
-    //Transfer to x/y-axis value pairs
-    $flotOrderSales = array();
-    if(!empty($orderSalesPerMonth)) {
-        //Sort ascending by month
-        ksort($orderSalesPerMonth);
-        foreach($orderSalesPerMonth as $yearmonth => $amount) {
-            $flotOrderSales[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    //Transfer to x/y-axis value pairs
-    $flotOrderCommission = array();
-    if(!empty($orderCommissionPerMonth)) {
-        //Sort ascending by month
-        ksort($orderCommissionPerMonth);
-        foreach($orderCommissionPerMonth as $yearmonth => $amount) {
-            $flotOrderCommission[] = array($yearmonth*1000, $amount);
-        }
-    }
-    
-    $graphs['ordersales'] = array(
-        array(
-            'label' => t('Order sales'),
-            'data' => $flotOrderSales,
-        ),
-        array(
-            'label' => t('Order commission'),
-            'data' => $flotOrderCommission,
-        ),
-    );
-    
-    
-    
-    
-    
-    
-    
-    
     print json_encode($graphs);
 }
 
