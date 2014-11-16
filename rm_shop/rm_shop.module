@@ -1081,53 +1081,51 @@ function rm_shop_get_participantxml() {
     }
     else {
         cache_clear_all('directoryGoogleMap', 'cache', TRUE);
-    
-        $query = new EntityFieldQuery();
-        $result = $query
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('customer_profile', 'seller_profile', 'trader_profile'))
-            ->propertyCondition('status', 1)
-            ->execute();
-        $participantobjects = array();
-        if(isset($result['node'])) {
-            $participantobjects = entity_load('node', array_keys($result['node']));
-        }
         
-        $participants = array();
-        foreach($participantobjects as $nid=>$value) {
+        $query = db_select('node', 'n');
+        $query->join('field_data_field_address', 'a', 'n.nid = a.entity_id');
+        $query->condition('status', 1);
+        $query->condition('type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
+        $query->join('field_data_field_location', 'l', 'n.nid = l.entity_id');
+        $query->fields('a', array('field_address_thoroughfare', 'field_address_locality', 'field_address_premise', 'field_address_postal_code'));
+        $query->fields('l', array('field_location_lat', 'field_location_lon'));
+        $query->fields('n', array('status', 'prospect', 'type', 'title', 'nid'));
+        $result = $query->execute();
 
-            if( !empty($value->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
-                !empty($value->field_address[LANGUAGE_NONE][0]['locality']) &&
-                !empty($value->field_location[LANGUAGE_NONE][0]['lat']) &&
-                !empty($value->field_location[LANGUAGE_NONE][0]['lon'])
+        $participants = array();
+        while($record = $result->fetchAssoc()) {
+            if( !empty($record['field_address_thoroughfare']) &&
+                !empty($record['field_address_locality']) &&
+                !empty($record['field_location_lat']) &&
+                !empty($record['field_location_lon'])
                 ) {
-                $address = $value->field_address[LANGUAGE_NONE][0]['thoroughfare'];
-                if(isset($value->field_address[LANGUAGE_NONE][0]['premise']) && !empty($value->field_address[LANGUAGE_NONE][0]['premise'])) {
-                    $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['premise'];
+                $address = $record['field_address_thoroughfare'];
+                if(!empty($record['field_address_premise'])) {
+                    $address .= ', ' . $record['field_address_premise'];
                 }
-                if(!empty($value->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $value->field_address[LANGUAGE_NONE][0]['postal_code'];
-                $address .= ' ' . $value->field_address[LANGUAGE_NONE][0]['locality'];
-                if($value->status != 1 && $value->prospect != 1) {
+                if(!empty($record['field_address_postal_code'])) $address .= ', ' . $record['field_address_postal_code'];
+                $address .= ' ' . $record['field_address_locality'];
+                if($record['status'] != 1 && $record['prospect'] != 1) {
                    $index = 'inactive_profile';
                 }
-                elseif($value->status != 1 && $value->prospect == 1) {
+                elseif($record['status'] != 1 && $record['prospect'] == 1) {
                    $index = 'prospect_profile';
                 }
                 else {
-                   $index = $value->type;
+                   $index = $record['type'];
                 }
                 $participants[$index][] = array(
-                    'title' => l($value->title, 'node/' . $nid),
+                    'title' => l($record['title'], 'node/' . $nid),
                     'address' => $address,
-                    'lat' => $value->field_location[LANGUAGE_NONE][0]['lat'],
-                    'lon' => $value->field_location[LANGUAGE_NONE][0]['lon'],
+                    'lat' => $record['field_location_lat'],
+                    'lon' => $record['field_location_lon'],
                 );
             }
+            
         }
-
         cache_set('directoryGoogleMap', $participants);
     }
-
+    
 
     $dom = new DOMDocument("1.0");
     $node = $dom->createElement("markers");

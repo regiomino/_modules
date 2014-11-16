@@ -198,11 +198,32 @@ function rm_shop_jobs() {
 }
 
 function rm_shop_sitemap() {
-    $nodes = rm_api_get_nodes_by_properties(array('simple_page', 'faq', 'customer_profile', 'job', 'seller_profile', 'media_object', 'press_report', 'labels'), 1);
-    
-    $groupednodes = array();
-    foreach($nodes as $nid => $nodeobject) {
-        $groupednodes[$nodeobject->type][] = $nodeobject;
+
+    $time = time();
+    //Cache for 1 day = 86400 seconds
+    $cacheexpire = $time - 86400;
+    //Get children of parent item (cache this)
+    $cached = cache_get('shopSitemapData');
+    if($cached && $cached->created > $cacheexpire) {
+        $groupednodes = $cached->data;
+    }
+    else {
+        cache_clear_all('shopSitemapData', 'cache', TRUE);
+        
+        $result = db_select('node', 'n')
+            ->fields('n', array('nid', 'title', 'type'))
+            ->condition('status', 1)
+            ->condition('type', array('simple_page', 'faq', 'customer_profile', 'job', 'seller_profile', 'trader_profile', 'media_object', 'press_report', 'labels'), 'IN')
+            ->execute();
+        
+        $groupednodes = array();
+        while($record = $result->fetchAssoc()) {
+            $groupednodes[$record['type']][] = array(
+                'title' => $record['title'],
+                'nid' => $record['nid']
+            );
+        }
+        cache_set('shopSitemapData', $groupednodes);
     }
     
     return	theme('rm_shop_theme_sitemap', array(

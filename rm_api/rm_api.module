@@ -498,7 +498,7 @@ function rm_api_get_nodes_by_properties($types = -1, $status = -1, $sticky = -1,
         if($suppressed >= 0) $query->propertyCondition('suppressed', $suppressed);
         if($prospect >= 0) $query->propertyCondition('prospect', $prospect);
         if($uid >= 0) $query->propertyCondition('uid', $uid);
-        $query->propertyOrderBy('nid', $order);
+        if(!is_null($order)) $query->propertyOrderBy('nid', $order);
         $result = $query->execute();
         if(isset($result['node'])) {
             $resobjects[$typeoffset][$status][$sticky][$promote][$suppressed][$prospect][$uid][$order] = entity_load('node', array_keys($result['node']));
