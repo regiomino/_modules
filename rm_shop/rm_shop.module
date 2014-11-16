@@ -1118,7 +1118,7 @@ function rm_shop_get_participantxml() {
 
         cache_set('directoryGoogleMap', $participants);
     }
-
+    var_dump(count($participants)); die();
 
     $dom = new DOMDocument("1.0");
     $node = $dom->createElement("markers");
