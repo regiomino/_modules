@@ -320,51 +320,52 @@ function rm_shop_get_filteredshops() {
                         'shops' => $shops,
                     ),
                  ));
-       
+
     $returnarray['html'] = $html;
     $returnarray['marker'] = array();
     $returnarray['products'] = array();
     $alluidkeys = array();
     //Get marker
-    
-    foreach($shops as $shop) {
-        $alluidkeys[] = $shop->uid;
-        $address = '';
-        $image_path = '';
-        if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
-            !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
-            !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
-            !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
-            $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
-            if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
-                $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+    if(isset($shops)) {
+        foreach($shops as $shop) {
+            $alluidkeys[] = $shop->uid;
+            $address = '';
+            $image_path = '';                           
+            if( !empty($shop->field_address[LANGUAGE_NONE][0]['thoroughfare']) &&
+                !empty($shop->field_address[LANGUAGE_NONE][0]['locality']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lat']) &&
+                !empty($shop->field_location[LANGUAGE_NONE][0]['lon']) ) {
+                $address = $shop->field_address[LANGUAGE_NONE][0]['thoroughfare'];
+                if(isset($shop->field_address[LANGUAGE_NONE][0]['premise']) && !empty($shop->field_address[LANGUAGE_NONE][0]['premise'])) {
+                    $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['premise'];
+                }
+                if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
+                $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
             }
-            if(!empty($shop->field_address[LANGUAGE_NONE][0]['postal_code'])) $address .= ', ' . $shop->field_address[LANGUAGE_NONE][0]['postal_code'];
-            $address .= ' ' . $shop->field_address[LANGUAGE_NONE][0]['locality'];
-        }
-        
-        if( !empty($shop->field_image[LANGUAGE_NONE][0]['uri']) ) {
-            $image_path = image_style_url('mappopup_thumb', $shop->field_image[LANGUAGE_NONE][0]['uri']);
-           }
-        
-        $returnarray['marker'][] = array(
-            'name' => $shop->title,
-            'url' => url('node/' . $shop->nid),
-            'address' => $address,
-            'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
-            'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
-            'type' => $shop->type,
-            'marker_id' => $shop->nid,
-            'image_path' => $image_path 
-        );
 
+            if( !empty($shop->field_image[LANGUAGE_NONE][0]['uri']) ) {
+                $image_path = image_style_url('mappopup_thumb', $shop->field_image[LANGUAGE_NONE][0]['uri']);
+               }
+
+            $returnarray['marker'][] = array(
+                'name' => $shop->title,
+                'url' => url('node/' . $shop->nid),
+                'address' => $address,
+                'lat' => $shop->field_location[LANGUAGE_NONE][0]['lat'],
+                'lon' => $shop->field_location[LANGUAGE_NONE][0]['lon'],
+                'type' => $shop->type,
+                'marker_id' => $shop->nid,
+                'image_path' => $image_path 
+            );
+
+        }
     }
     
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node');
     $query->entityCondition('bundle', array('offer_variation'));
     $query->propertyCondition('status', 1);
-    $query->propertyCondition('uid', $alluidkeys);
+    if(!empty($alluidkeys)) $query->propertyCondition('uid', $alluidkeys);
     $result = $query->execute();
     $matchingproducts = array();
     if(isset($result['node'])) {
