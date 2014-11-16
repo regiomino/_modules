@@ -1139,5 +1139,27 @@ function rm_shop_get_participantxml() {
         }
     }
 
-    echo $dom->saveXML();
+    $xml = $dom->saveXML();
+    echo $xml;
+}
+
+function rm_shop_update_latlon() {
+    $query = new EntityFieldQuery();
+    $tmp = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('customer_profile', 'seller_profile', 'trader_profile'))
+        ->propertyCondition('status', 1)
+        ->execute();
+    $nodes = entity_load('node', array_keys($tmp['node']));
+    foreach($nodes as $node) {
+        if(!empty($node->field_address[LANGUAGE_NONE][0]) && empty($node->field_location[LANGUAGE_NONE][0])) {
+            $address = $node->field_address[LANGUAGE_NONE][0]['thoroughfare'] . ', ' . $node->field_address[LANGUAGE_NONE][0]['postal_code'] . ' ' . $node->field_address[LANGUAGE_NONE][0]['locality'];
+            $point = geocoder('google',$address);
+            if(!empty($point->coords[0]) && !empty($point->coords[1])) {
+                $node->field_location[LANGUAGE_NONE][0]['lat'] = $point->coords[0];
+                $node->field_location[LANGUAGE_NONE][0]['lon'] = $point->coords[1];
+                node_save($node);
+            }
+        }
+    }
 }
