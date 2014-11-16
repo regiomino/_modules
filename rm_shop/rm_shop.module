@@ -1139,5 +1139,6 @@ function rm_shop_get_participantxml() {
         }
     }
 
-    echo $dom->saveXML();
+    $xml = $dom->saveXML();
+    echo $xml;
 }
