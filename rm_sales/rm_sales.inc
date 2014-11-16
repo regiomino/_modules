@@ -361,12 +361,12 @@ function rm_sales_useraccounts_form($form, &$form_state) {
         'actions' => t('Actions'),
 	);
     
-    
+    if(!rm_user_is_admin()) {
         $query = new EntityFieldQuery();
         $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
-        if(!rm_user_is_admin()) $query->fieldCondition('field_salesguy', 'target_id', $user->uid);
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
+            ->fieldCondition('field_salesguy', 'target_id', $user->uid);
         $tmp = $query
             ->execute();
         $alluids = array();
@@ -378,21 +378,21 @@ function rm_sales_useraccounts_form($form, &$form_state) {
                 }
             }
         }
-    
-    if(!empty($alluids)) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'user');
-        if(!rm_user_is_admin()) $query->propertyCondition('uid', array_keys($alluids));
-        $tmp = $query
-            ->tableSort($header)
-            ->pager(100)
-            ->execute();
-            
-        $alluseraccounts = array();
-        
-        //Remove anonymous user
-        unset($tmp['user'][0]);
     }
+    
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'user');
+    if(!rm_user_is_admin() && !empty($alluids)) $query->propertyCondition('uid', array_keys($alluids));
+    $tmp = $query
+        ->tableSort($header)
+        ->pager(100)
+        ->execute();
+        
+    $alluseraccounts = array();
+    
+    //Remove anonymous user
+    unset($tmp['user'][0]);
+
     if(!empty($tmp['user'])) {
         $alluseraccounts = entity_load('user', array_keys($tmp['user']));
         
