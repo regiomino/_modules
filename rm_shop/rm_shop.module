@@ -1073,7 +1073,7 @@ function rm_shop_get_participantxml() {
 
     $time = time();
     //Cache for 1 day = 86400 seconds
-    $cacheexpire = $time - 86400;
+    $cacheexpire = $time - 1;
     //Get children of parent item (cache this)
     $cached = cache_get('directoryGoogleMap');
     if($cached && $cached->created > $cacheexpire) {
@@ -1082,21 +1082,52 @@ function rm_shop_get_participantxml() {
     else {
         cache_clear_all('directoryGoogleMap', 'cache', TRUE);
         
+        // $result = db_query("
+            // SELECT
+                // n.nid, n.status, n.prospect, n.type, n.title,
+                // a.field_address_thoroughfare, a.field_address_premise, a.field_address_postal_code, a.field_address_locality,
+                // l.field_location_lat, l.field_location_lon
+            // FROM
+                // {node} n,
+                // {field_data_field_address} a,
+                // {field_data_field_location} l
+            // WHERE
+                // n.nid = a.entity_id
+                // AND a.entity_type = 'node'
+                // AND n.nid = l.entity_id
+                // AND l.entity_type = 'node'
+                // AND (
+                    // n.type = 'seller_profile'
+                    // OR n.type = 'customer_profile'
+                    // OR n.type = 'trader_profile'
+                // )
+            // GROUP BY
+                // n.nid
+            // ");
+            
+            
+            
+            
+            
+            
         $query = db_select('node', 'n');
         $query->join('field_data_field_address', 'a', 'n.nid = a.entity_id');
         $query->join('field_data_field_location', 'l', 'a.entity_id = l.entity_id');
+        $query->condition('a.entity_type', 'node');
+        $query->condition('l.entity_type', 'node');
         $query->condition('n.status', 1);
         $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
-        // $query->groupBy('n.nid');
+        $query->groupBy('n.nid');
         $query->fields('a', array('field_address_thoroughfare', 'field_address_locality', 'field_address_premise', 'field_address_postal_code'));
         $query->fields('l', array('field_location_lat', 'field_location_lon'));
-        $query->fields('n', array('status', 'prospect', 'type', 'title', 'nid', 'vid'));
+        $query->fields('n', array('status', 'prospect', 'type', 'title', 'nid'));
 
         
         $result = $query->execute();
 
         $participants = array();
         while($record = $result->fetchAssoc()) {
+
             if( !empty($record['field_address_thoroughfare']) &&
                 !empty($record['field_address_locality']) &&
                 !empty($record['field_location_lat']) &&
@@ -1117,7 +1148,7 @@ function rm_shop_get_participantxml() {
                 else {
                    $index = $record['type'];
                 }
-                $participants[$index][$record['nid']] = array(
+                $participants[$index][] = array(
                     'title' => l($record['title'], 'node/' . $record['nid']),
                     'address' => $address,
                     'lat' => $record['field_location_lat'],
@@ -1129,7 +1160,6 @@ function rm_shop_get_participantxml() {
         cache_set('directoryGoogleMap', $participants);
     }
     
-
     $dom = new DOMDocument("1.0");
     $node = $dom->createElement("markers");
     $parnode = $dom->appendChild($node);
