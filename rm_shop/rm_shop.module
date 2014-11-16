@@ -1084,13 +1084,15 @@ function rm_shop_get_participantxml() {
         
         $query = db_select('node', 'n');
         $query->join('field_data_field_address', 'a', 'n.nid = a.entity_id');
-        $query->join('field_data_field_location', 'l', 'n.nid = l.entity_id');
-        $query->groupBy('n.nid');
-        $query->condition('status', 1);
-        $query->condition('type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
+        $query->join('field_data_field_location', 'l', 'a.entity_id = l.entity_id');
+        $query->condition('n.status', 1);
+        $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
+        // $query->groupBy('n.nid');
         $query->fields('a', array('field_address_thoroughfare', 'field_address_locality', 'field_address_premise', 'field_address_postal_code'));
         $query->fields('l', array('field_location_lat', 'field_location_lon'));
-        $query->fields('n', array('status', 'prospect', 'type', 'title', 'nid'));
+        $query->fields('n', array('status', 'prospect', 'type', 'title', 'nid', 'vid'));
+
+        
         $result = $query->execute();
 
         $participants = array();
@@ -1115,7 +1117,7 @@ function rm_shop_get_participantxml() {
                 else {
                    $index = $record['type'];
                 }
-                $participants[$index][] = array(
+                $participants[$index][$record['nid']] = array(
                     'title' => l($record['title'], 'node/' . $record['nid']),
                     'address' => $address,
                     'lat' => $record['field_location_lat'],
