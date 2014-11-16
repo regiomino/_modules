@@ -85,7 +85,8 @@ function rm_cart_menu() {
         'title' => t('Thank you!'),
         'page callback' => 'rm_cart_thankyou',
         'page arguments' => array(1),
-        'access arguments' => array('access content'),
+        'access callback' => 'rm_cart_user_owns_order',
+        'access arguments' => array(1),
     );
 	return $items;
 }
@@ -97,6 +98,23 @@ function rm_cart_thankyou($order_number) {
 		watchdog('thankyou', $result);
 	}
 
+    $order_items = rm_cart_get_order($order_number);
+    $order_items_keys = array_keys($order_items);
+    $order_item_one = $order_items[$order_items_keys[0]];
+    if(!isset($order_item_one->field_tracked[LANGUAGE_NONE][0]['value']) || $order_item_one->field_tracked[LANGUAGE_NONE][0]['value'] != 1) {
+        //Track in GA
+        //drupal_add_js
+        //ga('require', 'ecommerce', 'ecommerce.js');
+        
+        //then set to tracked
+        // if(!empty($order_items)) {
+            // foreach($order_items as $order_item) {
+                // $order_item->field_tracked[LANGUAGE_NONE][0]['value'] = 1;
+                // node_save($order_item);
+            // }
+        // }
+    }
+    
     $output = t('You will now receive an email with further information about your order @order_number.', array('@order_number' => $order_number));
 	$output .= '<div id="trustedShopsCheckout" style="display:none;"></div>';
 	return $output;
