@@ -97,7 +97,6 @@ function rm_sales_create_offers_from_import($oa) {
                     $trading_unit->field_tu_price[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Preis'];
                     $trading_unit->field_tu_deposit[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Pfand'];
                     $trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value'] = $tu['Gebinde MwSt'];
-                    var_dump($trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value']); die();
                     $trading_unit->field_tu_packaging[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Art'];
                     if(!empty($tu['Gebinde UVP'])) $trading_unit->field_tu_rrp[LANGUAGE_NONE][0]['value'] = $tu['Gebinde UVP'];
                     
