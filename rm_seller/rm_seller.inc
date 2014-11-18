@@ -782,44 +782,6 @@ function rm_seller_offer_form_submit($form, &$form_state) {
     drupal_set_message(t('All offers have been updated with the given values'), 'status');
 }
 
-function rm_seller_add_tradingunit($nid) {
-    $variation = node_load($nid);
-	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $variation->uid, 0, 0, 0, 0);
-    $new_trading_unit->status = 1;
-    node_save($new_trading_unit);
-    $variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
-    node_save($variation);
-    drupal_goto();
-}
-
-function rm_seller_add_offervariation($nid) {
-    $offerdescription = node_load($nid);
-	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $offerdescription->uid, 0, 0, 0, 0);
-    $new_trading_unit->status = 1;
-    node_save($new_trading_unit);
-	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $offerdescription->uid, 0, 0, 0, 0);
-    $new_offer_variation->status = 1;
-    $new_offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
-    node_save($new_offer_variation);
-    $offerdescription->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
-    node_save($offerdescription);
-    drupal_goto();
-}
-
-function rm_seller_add_offerdescription($uid) {
-	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $uid, 0, 0, 0, 0);
-    $new_trading_unit->status = 1;
-    node_save($new_trading_unit);
-	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $uid, 0, 0, 0, 0);
-    $new_offer_variation->status = 1;
-	$new_offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $uid, 0, 0, 0, 0);
-    $new_offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
-    node_save($new_offer_variation);
-    $new_offer_description->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
-    node_save($new_offer_description);
-    drupal_goto();
-}
-
 function rm_seller_editprofile($form, &$form_state) {
     $form = array();
     return $form;

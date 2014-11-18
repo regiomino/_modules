@@ -1,10 +1,116 @@
 <?php
 
-/**
- * Form builder.
- * @ingroup forms
- * @see system_settings_form()
- */
+function rm_sales_admin_offer_import() {
+	//Cart preservation. Maximum number of days, inactive cart items should be preserved
+	$form['offer_import'] = array(
+		'#type' => 'submit',
+		'#value' => t('Import from importfile_offers.xls'),
+		'#description' => t('Place importfile_offers.xls in private file directory and make sure it is correctly formatted. Click import only once!'),
+	);
+    
+    return $form;
+}
+
+function rm_sales_admin_offer_import_submit() {
+	$dir = file_stream_wrapper_get_instance_by_uri('private://')->realpath();
+    $filename = 'importfile_offers.xls';
+    $path = "$dir/$filename";
+    $result = rm_api_excel_import($path);
+    global $user;
+    $offerarray = array();
+    foreach($result as $sheet) {
+        foreach($sheet as $line) {            
+            if($user->uid == 1) {
+                
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Titel'] = $line['Produkt Titel'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft Firma'] = $line['Produkt Herkunft Firma'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft PLZ'] = $line['Produkt Herkunft PLZ'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft Ort'] = $line['Produkt Herkunft Ort'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft Land'] = $line['Produkt Herkunft Land'];
+                
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Titel'] = $line['Variante Titel'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Beschreibung'] = $line['Variante Beschreibung'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Angebotsnummer'] = $line['Variante Angebotsnummer'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Produkteinheit Anzahl'] = $line['Variante Produkteinheit Anzahl'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Produkteinheit Einheit'] = $line['Variante Produkteinheit Einheit'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante EAN'] = $line['Variante EAN'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Bestand'] = $line['Variante Bestand'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Haltbarkeit'] = $line['Variante Haltbarkeit'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante MHD'] = $line['Variante MHD'];
+                
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Anzahl'] = $line['Gebinde Anzahl'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Art'] = $line['Gebinde Art'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Preis'] = $line['Gebinde Preis'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde MwSt'] = $line['Gebinde MwSt'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Pfand'] = $line['Gebinde Pfand'];
+                
+            }
+        }
+    }
+    rm_sales_create_offers_from_import($offerarray);
+}
+
+function rm_sales_create_offers_from_import($oa) {
+
+    foreach($oa as $suid => $odesc) {
+        foreach($odesc['offer_description'] as $od) {
+            //Create new offer description
+            $offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $suid, 0, 0, 0, 0);
+            
+            //Add fields to offer decsription
+            $offer_description->title = $od['Produkt Titel'];
+            if(!empty($od['Produkt Herkunft Firma'])) $offer_description->field_origin[LANGUAGE_NONE][0]['organisation_name'] = $od['Produkt Herkunft Firma'];
+            if(!empty($od['Produkt Herkunft PLZ'])) $offer_description->field_origin[LANGUAGE_NONE][0]['postal_code'] = $od['Produkt Herkunft PLZ'];
+            if(!empty($od['Produkt Herkunft Ort'])) $offer_description->field_origin[LANGUAGE_NONE][0]['locality'] = $od['Produkt Herkunft Ort'];
+            if(!empty($od['Produkt Herkunft Land'])) $offer_description->field_origin[LANGUAGE_NONE][0]['country'] = $od['Produkt Herkunft Land'];
+            
+            foreach($od['offer_variation'] as $ov) {
+                //Create new offer variation and link it to offer description
+                $offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $suid, 0, 0, 0, 0);
+                $offer_description->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $offer_variation->nid;
+                
+                $offer_variation->title = $ov['Variante Titel'];
+                $offer_variation->body[LANGUAGE_NONE][0]['value'] = $ov['Variante Beschreibung'];
+                $filepath = drupal_realpath(drupal_get_path('module', 'rm_sales') . '/no-image.png');
+                $file = (object) array(
+                    'uid' => 1,
+                    'uri' => $filepath,
+                    'filemime' => file_get_mimetype($filepath),
+                    'status' => 1,
+                );
+                $file = file_copy($file, 'public://');
+                $offer_variation->field_image[LANGUAGE_NONE][0] = (array)$file;
+                $offer_variation->field_sku[LANGUAGE_NONE][0]['value'] = $ov['Variante Angebotsnummer'];
+                $offer_variation->field_productunit[LANGUAGE_NONE][0]['first'] = $ov['Variante Produkteinheit Anzahl'];
+                $offer_variation->field_productunit[LANGUAGE_NONE][0]['second'] = $ov['Variante Produkteinheit Einheit'];
+                if(!empty($ov['Variante EAN'])) $offer_variation->field_gtin[LANGUAGE_NONE][0]['value'] = $ov['Variante EAN'];
+                if(!empty($ov['Variante Vorlaufzeit'])) $offer_variation->field_leadtime[LANGUAGE_NONE][0]['value'] = $ov['Variante Vorlaufzeit'];
+                if(!empty($ov['Variante Haltbarkeit'])) $offer_variation->field_use_within[LANGUAGE_NONE][0]['value'] = $ov['Variante Haltbarkeit'];
+                if(!empty($ov['Variante MHD'])) $offer_variation->field_expiration_date[LANGUAGE_NONE][0]['value'] = $ov['Variante MHD'];
+                
+                foreach($ov['trading_unit'] as $tu) {
+                    //Create new trading unit and link it to offer variation
+                    $trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $suid, 0, 0, 0, 0);
+                    $offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $trading_unit->nid;
+                    
+                    $trading_unit->field_tu_amount[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Anzahl'];
+                    $trading_unit->field_tu_price[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Preis'];
+                    $trading_unit->field_tu_deposit[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Pfand'];
+                    $trading_unit->field_tu_vat[LANGUAGE_NONE][0]['value'] = $tu['Gebinde MwSt'] * 100;
+                    $trading_unit->field_tu_packaging[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Art'];
+                    if(!empty($tu['Gebinde UVP'])) $trading_unit->field_tu_rrp[LANGUAGE_NONE][0]['value'] = $tu['Gebinde UVP'];
+                    
+                    node_save($trading_unit);
+                }
+                
+                node_save($offer_variation);
+            }
+            
+            node_save($offer_description);
+        }
+    }
+}
+
 function rm_sales_admin_profile_import() {
 	//Cart preservation. Maximum number of days, inactive cart items should be preserved
 	$form['profile_import'] = array(

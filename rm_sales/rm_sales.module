@@ -25,6 +25,16 @@ function rm_sales_menu() {
         'file' => 'rm_sales.admin.inc', // look for a function describing this form in this file
         'file path' => drupal_get_path('module', 'rm_sales'),
     );
+	$items['admin/config/rmsales/offerimport'] = array(
+        'title' => 'Regiomino offer import',
+        'description' => 'Import offers from xls files.',
+        'page callback' => 'drupal_get_form', // function called when path is requested
+        'page arguments' => array('rm_sales_admin_offer_import'), // form id passed to the function
+        'access arguments' => array('administer site configuration'),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'rm_sales.admin.inc', // look for a function describing this form in this file
+        'file path' => drupal_get_path('module', 'rm_sales'),
+    );
     $items['presse'] = array(
         'title' => 'Press',
         'page callback' => 'rm_sales_press',

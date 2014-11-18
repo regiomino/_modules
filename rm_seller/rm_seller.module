@@ -100,8 +100,6 @@ function rm_seller_menu() {
         'page callback' => 'rm_seller_add_offerdescription',
         'page arguments' => array(1),
         'access callback' => 'rm_seller_user_is_seller',
-        'file' => 'rm_seller.inc',
-        'file path' => drupal_get_path('module', 'rm_seller'),
     );
     $items['addoffervariation/%'] = array(
         'title' => 'Seller',
@@ -109,8 +107,6 @@ function rm_seller_menu() {
         'page arguments' => array(1),
         'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
-        'file' => 'rm_seller.inc',
-        'file path' => drupal_get_path('module', 'rm_seller'),
     );
     $items['addtradingunit/%'] = array(
         'title' => 'Seller',
@@ -118,8 +114,6 @@ function rm_seller_menu() {
         'page arguments' => array(1),
         'access callback' => 'rm_seller_user_owns_node',
         'access arguments' => array(1),
-        'file' => 'rm_seller.inc',
-        'file path' => drupal_get_path('module', 'rm_seller'),
     );
     $items['changeorderstatus/%/%'] = array(
         'title' => 'Seller',
@@ -194,6 +188,59 @@ function rm_seller_menu() {
         'file path' => drupal_get_path('module', 'rm_seller'),
     );
 	return $items;
+}
+
+function rm_seller_add_tradingunit($nid, $goto = TRUE) {
+    $variation = node_load($nid);
+	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $variation->uid, 0, 0, 0, 0);
+    $new_trading_unit->status = 1;
+    node_save($new_trading_unit);
+    $variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
+    node_save($variation);
+    if($goto) {
+        drupal_goto();
+    }
+    else {
+        return array('tu' => $new_trading_unit);
+    }
+}
+
+function rm_seller_add_offervariation($nid, $goto = TRUE) {
+    $offerdescription = node_load($nid);
+	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $offerdescription->uid, 0, 0, 0, 0);
+    $new_trading_unit->status = 1;
+    node_save($new_trading_unit);
+	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $offerdescription->uid, 0, 0, 0, 0);
+    $new_offer_variation->status = 1;
+    $new_offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
+    node_save($new_offer_variation);
+    $offerdescription->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
+    node_save($offerdescription);
+    if($goto) {
+        drupal_goto();
+    }
+    else {
+        return array('ov' => $new_offer_variation, 'tu' => $new_trading_unit);
+    }
+}
+
+function rm_seller_add_offerdescription($uid, $goto = TRUE) {
+	$new_trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $uid, 0, 0, 0, 0);
+    $new_trading_unit->status = 1;
+    node_save($new_trading_unit);
+	$new_offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $uid, 0, 0, 0, 0);
+    $new_offer_variation->status = 1;
+	$new_offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $uid, 0, 0, 0, 0);
+    $new_offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $new_trading_unit->nid;
+    node_save($new_offer_variation);
+    $new_offer_description->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $new_offer_variation->nid;
+    node_save($new_offer_description);
+    if($goto) {
+        drupal_goto();
+    }
+    else {
+        return array('od' => $new_offer_description, 'ov' => $new_offer_variation, 'tu' => $new_trading_unit);
+    }
 }
 
 function rm_seller_user_responsible_for_order($order_number) {
