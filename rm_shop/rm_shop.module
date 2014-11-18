@@ -128,7 +128,7 @@ function rm_shop_init() {
         // }
     // }
     
-    drupal_add_js('https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false', 'external');
+    // drupal_add_js('https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false', 'external');
     
     global $base_url;
     if(drupal_is_front_page() && strpos($_SERVER['HTTP_REFERER'],$base_url) === FALSE && empty($_SESSION['messages'])) {
