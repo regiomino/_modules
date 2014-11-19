@@ -67,6 +67,7 @@ function rm_sales_create_offers_from_import($oa) {
             foreach($od['offer_variation'] as $ov) {
                 //Create new offer variation and link it to offer description
                 $offer_variation = rm_api_create_new_node('offer_variation', node_type_get_name('offer_variation'), 'de', $suid, 0, 0, 0, 0);
+                $offer_variation->status = 1;
                 $offer_description->field_offer_variation_reference[LANGUAGE_NONE][]['target_id'] = $offer_variation->nid;
                 
                 $offer_variation->title = $ov['Variante Titel'];
@@ -91,6 +92,7 @@ function rm_sales_create_offers_from_import($oa) {
                 foreach($ov['trading_unit'] as $tu) {
                     //Create new trading unit and link it to offer variation
                     $trading_unit = rm_api_create_new_node('trading_unit', node_type_get_name('trading_unit'), 'de', $suid, 0, 0, 0, 0);
+                    $trading_unit->status = 1;
                     $offer_variation->field_trading_unit_reference[LANGUAGE_NONE][]['target_id'] = $trading_unit->nid;
                     
                     $trading_unit->field_tu_amount[LANGUAGE_NONE][0]['value'] = $tu['Gebinde Anzahl'];
@@ -107,6 +109,7 @@ function rm_sales_create_offers_from_import($oa) {
             }
             
             node_save($offer_description);
+            drupal_set_message(t('Offer @offertitle has been saved', array('@offertitle' => $offer_description->titles)));
         }
     }
 }

@@ -828,17 +828,18 @@ function rm_sales_suggest_form($form, &$form_state) {
     );
 	$form['suggest']['necessary']['type'] = array(
 		'#type' => 'radios',
-		'#title' => t('Vendor or gastronomy'),
+		'#title' => t('Vendor, gastronomy or trader'),
 		'#options' => array(
-			'seller_profile' => t('Suggest vendor'),
-			'customer_profile' => t('Suggest gastronomy'),
+			'seller_profile' => t('Vendor'),
+			'customer_profile' => t('Gastronomy'),
+			'trader_profile' => t('Trader'),
 		),
 		'#required' => TRUE,
 	);
 	
 	$form['suggest']['necessary']['title'] = array(
 		'#type' => 'textfield',
-		'#title' => t('Name of the vendor or gastronomy'),
+		'#title' => t('Name of the vendor, gastronomy or trader'),
 		'#required' => TRUE,
 	);
 

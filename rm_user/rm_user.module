@@ -453,7 +453,7 @@ function rm_user_may_be_shadowed($cuid, $tuid) {
         $query = new EntityFieldQuery();
         $tmp = $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
             ->fieldCondition('field_salesguy', 'target_id', $user->uid)
             ->execute();
         $alluids = array();

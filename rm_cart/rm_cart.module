@@ -1289,7 +1289,7 @@ function rm_cart_generate_order_fax($order_number) {
     $userobject = user_load($order_item->uid);
     
     //Load customer profile
-    $customer_profile = rm_api_get_nodes_by_properties('customer_profile', 1, -1, -1, -1, -1, $order_item->uid);
+    $customer_profile = rm_api_get_nodes_by_properties(array('customer_profile', 'trader_profile'), 1, -1, -1, -1, -1, $order_item->uid);
     
     $html = theme('rm_cart_theme_order_fax', array(
                 'vars' => array(
