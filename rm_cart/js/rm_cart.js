@@ -277,7 +277,7 @@ jQuery(document).ready(function ($) {
             mapTypeId: 'roadmap'
         });
     
-      console.info(Drupal.settings.suid);
+      
         downloadUrl(Drupal.settings.basePath + 'rm-shop-spotxml/' + Drupal.settings.suid, function(data) {
         var xml = data.responseXML;
         var markers = xml.documentElement.getElementsByTagName("marker");
