@@ -109,7 +109,7 @@ function rm_sales_create_offers_from_import($oa) {
             }
             
             node_save($offer_description);
-            drupal_set_message(t('Offer @offertitle has been saved', array('@offertitle' => $offer_description->titles)));
+            drupal_set_message(t('Offer @offertitle has been saved', array('@offertitle' => $offer_description->title)));
         }
     }
 }

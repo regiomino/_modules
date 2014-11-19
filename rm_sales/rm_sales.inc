@@ -17,6 +17,9 @@ function rm_sales_salesperformance() {
         
         $data = array();
         
+        /**
+         * Determine amount of registrations per month
+         */
         $query = db_select('node', 'n');
         $query->join('field_data_field_gtc_accepted', 'a', 'n.nid = a.entity_id');
         $query->condition('a.entity_type', 'node');
@@ -28,9 +31,6 @@ function rm_sales_salesperformance() {
         $result = $query->execute();
         
         
-        /**
-         * Determine amount of registrations per month
-         */
         $registrations = array();
         $allregisterednids = array();
         $record = array();
@@ -42,7 +42,9 @@ function rm_sales_salesperformance() {
         }
         
         
-        
+        /**
+         * Determine amount of invites per month
+         */
         $query = db_select('node', 'n');
         $query->join('field_data_field_register_hash', 'r', 'n.nid = r.entity_id');
         $query->condition('r.entity_type', 'node');
@@ -52,9 +54,6 @@ function rm_sales_salesperformance() {
         $query->fields('n', array('nid'));
 
         $result = $query->execute();
-        /**
-         * Determine amount of invites per month
-         */
          
         $invites = array();
         $record = array();
@@ -64,6 +63,19 @@ function rm_sales_salesperformance() {
             }
         }
         
+        
+        
+        /**
+         * Determine amount of offers per month
+         */
+        $query = new EntityFieldQuery;
+        $offercount = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'offer_variation')
+            ->propertyCondition('status', 1)
+            ->count()
+            ->execute();
+        $data['flotOffers'] = $offercount;
 
         //Transfer to x/y-axis value pairs
         $data['flotRegistrations'] = 0;
@@ -94,6 +106,7 @@ function rm_sales_salesperformance() {
         'vars' => array(
             'registrations' => $data['flotRegistrations'],
             'invites' => $data['flotInvites'],
+            'offers' => $data['flotOffers'],
         ),
     ));
 }
