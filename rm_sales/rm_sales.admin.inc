@@ -43,6 +43,7 @@ function rm_sales_admin_offer_import_submit() {
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Preis'] = $line['Gebinde Preis'];
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde MwSt'] = $line['Gebinde MwSt'];
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde Pfand'] = $line['Gebinde Pfand'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['trading_unit'][md5($line['Gebinde Anzahl'])]['Gebinde UVP'] = $line['Gebinde UVP'];
                 
             }
         }
