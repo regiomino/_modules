@@ -357,7 +357,7 @@ function rm_seller_create_shipping_agreement() {
 
         $selleruids = array();
         foreach($sellerprofiles as $sellerprofile) {
-            $selleruids[$sellerprofile->uid] = TRUE;
+            $selleruids[$sellerprofile->uid] = $sellerprofile;
         }
 
         $query = new EntityFieldQuery();
@@ -378,10 +378,10 @@ function rm_seller_create_shipping_agreement() {
             
             if(!empty($selleruids)) {
                 
-                foreach($selleruids as $suid => $bool) {
+                foreach($selleruids as $suid => $profile) {
 
                     $field_minimum_order_value[LANGUAGE_NONE][0]['value'] = '100';
-                    $field_shipping_zipcodes[LANGUAGE_NONE][0]['value'] = '912';
+                    $field_shipping_zipcodes[LANGUAGE_NONE][0]['value'] = substr($profile->field_address[LANGUAGE_NONE][0]['postal_code'], 0, 3);
                     $field_surcharge[LANGUAGE_NONE][0]['value'] = '0';
                     $field_user_reference[LANGUAGE_NONE][0]['target_id'] = '0';
                     

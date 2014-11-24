@@ -1,4 +1,4 @@
-<?php
+<?php
 
 function rm_sales_admin_offer_import() {
 	//Cart preservation. Maximum number of days, inactive cart items should be preserved
@@ -27,6 +27,7 @@ function rm_sales_admin_offer_import_submit() {
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft PLZ'] = $line['Produkt Herkunft PLZ'];
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft Ort'] = $line['Produkt Herkunft Ort'];
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Produkt Herkunft Land'] = $line['Produkt Herkunft Land'];
+                $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['Status'] = $line['Status'];
                 
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Titel'] = $line['Variante Titel'];
                 $offerarray[$line['Verkäufer UID']]['offer_description'][md5($line['Produkt Titel'])]['offer_variation'][md5($line['Variante Titel'])]['Variante Beschreibung'] = $line['Variante Beschreibung'];
@@ -56,7 +57,7 @@ function rm_sales_create_offers_from_import($oa) {
     foreach($oa as $suid => $odesc) {
         foreach($odesc['offer_description'] as $od) {
             //Create new offer description
-            $offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $suid, 0, 0, 0, 0);
+            $offer_description = rm_api_create_new_node('offer_description', node_type_get_name('offer_description'), 'de', $suid, $od['Status'], 0, 0, 0);
             
             //Add fields to offer decsription
             $offer_description->title = $od['Produkt Titel'];
