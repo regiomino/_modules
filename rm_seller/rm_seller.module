@@ -377,6 +377,7 @@ function rm_seller_create_shipping_agreement() {
             }
             
             if(!empty($selleruids)) {
+                
                 foreach($selleruids as $suid => $bool) {
 
                     $field_minimum_order_value[LANGUAGE_NONE][0]['value'] = '100';
@@ -389,222 +390,30 @@ function rm_seller_create_shipping_agreement() {
                     $field_regular_times[LANGUAGE_NONE][0]['day'] = 1;
                     $field_regular_times[LANGUAGE_NONE][0]['daydelta'] = 0;
                     
-                    // $field_regular_times[LANGUAGE_NONE][1]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][1]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][1]['day'] = 1;
-                    // $field_regular_times[LANGUAGE_NONE][1]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][2]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][2]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][2]['day'] = 1;
-                    // $field_regular_times[LANGUAGE_NONE][2]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][3]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][3]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][3]['day'] = 1;
-                    // $field_regular_times[LANGUAGE_NONE][3]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][4]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][4]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][4]['day'] = 1;
-                    // $field_regular_times[LANGUAGE_NONE][4]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][5]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][5]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][5]['day'] = 1;
-                    // $field_regular_times[LANGUAGE_NONE][5]['daydelta'] = 5;
-                    
-                    
-                    
                     $field_regular_times[LANGUAGE_NONE][6]['starthours'] = '0800';
                     $field_regular_times[LANGUAGE_NONE][6]['endhours'] = '1800';
                     $field_regular_times[LANGUAGE_NONE][6]['day'] = 2;
                     $field_regular_times[LANGUAGE_NONE][6]['daydelta'] = 0;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][7]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][7]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][7]['day'] = 2;
-                    // $field_regular_times[LANGUAGE_NONE][7]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][8]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][8]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][8]['day'] = 2;
-                    // $field_regular_times[LANGUAGE_NONE][8]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][9]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][9]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][9]['day'] = 2;
-                    // $field_regular_times[LANGUAGE_NONE][9]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][10]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][10]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][10]['day'] = 2;
-                    // $field_regular_times[LANGUAGE_NONE][10]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][11]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][11]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][11]['day'] = 2;
-                    // $field_regular_times[LANGUAGE_NONE][11]['daydelta'] = 5;
-                    
-                    
                     
                     $field_regular_times[LANGUAGE_NONE][12]['starthours'] = '0800';
                     $field_regular_times[LANGUAGE_NONE][12]['endhours'] = '1800';
                     $field_regular_times[LANGUAGE_NONE][12]['day'] = 3;
                     $field_regular_times[LANGUAGE_NONE][12]['daydelta'] = 0;
                     
-                    // $field_regular_times[LANGUAGE_NONE][13]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][13]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][13]['day'] = 3;
-                    // $field_regular_times[LANGUAGE_NONE][13]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][14]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][14]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][14]['day'] = 3;
-                    // $field_regular_times[LANGUAGE_NONE][14]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][15]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][15]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][15]['day'] = 3;
-                    // $field_regular_times[LANGUAGE_NONE][15]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][16]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][16]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][16]['day'] = 3;
-                    // $field_regular_times[LANGUAGE_NONE][16]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][17]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][17]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][17]['day'] = 3;
-                    // $field_regular_times[LANGUAGE_NONE][17]['daydelta'] = 5;
-                    
-                    
-                    
                     $field_regular_times[LANGUAGE_NONE][18]['starthours'] = '0800';
                     $field_regular_times[LANGUAGE_NONE][18]['endhours'] = '1800';
                     $field_regular_times[LANGUAGE_NONE][18]['day'] = 4;
                     $field_regular_times[LANGUAGE_NONE][18]['daydelta'] = 0;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][19]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][19]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][19]['day'] = 4;
-                    // $field_regular_times[LANGUAGE_NONE][19]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][20]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][20]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][20]['day'] = 4;
-                    // $field_regular_times[LANGUAGE_NONE][20]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][21]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][21]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][21]['day'] = 4;
-                    // $field_regular_times[LANGUAGE_NONE][21]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][22]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][22]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][22]['day'] = 4;
-                    // $field_regular_times[LANGUAGE_NONE][22]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][23]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][23]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][23]['day'] = 4;
-                    // $field_regular_times[LANGUAGE_NONE][23]['daydelta'] = 5;
-                    
-                    
                     
                     $field_regular_times[LANGUAGE_NONE][24]['starthours'] = '0800';
                     $field_regular_times[LANGUAGE_NONE][24]['endhours'] = '1800';
                     $field_regular_times[LANGUAGE_NONE][24]['day'] = 5;
                     $field_regular_times[LANGUAGE_NONE][24]['daydelta'] = 0;
                     
-                    // $field_regular_times[LANGUAGE_NONE][25]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][25]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][25]['day'] = 5;
-                    // $field_regular_times[LANGUAGE_NONE][25]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][26]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][26]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][26]['day'] = 5;
-                    // $field_regular_times[LANGUAGE_NONE][26]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][27]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][27]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][27]['day'] = 5;
-                    // $field_regular_times[LANGUAGE_NONE][27]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][28]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][28]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][28]['day'] = 5;
-                    // $field_regular_times[LANGUAGE_NONE][28]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][29]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][29]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][29]['day'] = 5;
-                    // $field_regular_times[LANGUAGE_NONE][29]['daydelta'] = 5;
-                    
-                    
-                    
                     $field_regular_times[LANGUAGE_NONE][30]['starthours'] = '0800';
                     $field_regular_times[LANGUAGE_NONE][30]['endhours'] = '1200';
                     $field_regular_times[LANGUAGE_NONE][30]['day'] = 6;
                     $field_regular_times[LANGUAGE_NONE][30]['daydelta'] = 0;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][31]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][31]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][31]['day'] = 6;
-                    // $field_regular_times[LANGUAGE_NONE][31]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][32]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][32]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][32]['day'] = 6;
-                    // $field_regular_times[LANGUAGE_NONE][32]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][33]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][33]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][33]['day'] = 6;
-                    // $field_regular_times[LANGUAGE_NONE][33]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][34]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][34]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][34]['day'] = 6;
-                    // $field_regular_times[LANGUAGE_NONE][34]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][35]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][35]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][35]['day'] = 6;
-                    // $field_regular_times[LANGUAGE_NONE][35]['daydelta'] = 5;
-                    
-                    
-                    
-                    // $field_regular_times[LANGUAGE_NONE][36]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][36]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][36]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][36]['daydelta'] = 0;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][37]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][37]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][37]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][37]['daydelta'] = 1;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][38]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][38]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][38]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][38]['daydelta'] = 2;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][39]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][39]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][39]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][39]['daydelta'] = 3;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][40]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][40]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][40]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][40]['daydelta'] = 4;
-                    
-                    // $field_regular_times[LANGUAGE_NONE][41]['starthours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][41]['endhours'] = '';
-                    // $field_regular_times[LANGUAGE_NONE][41]['day'] = 0;
-                    // $field_regular_times[LANGUAGE_NONE][41]['daydelta'] = 5;
 
                     $title = node_type_get_name('shipping_agreement');
                     $new_node = rm_api_create_new_node('shipping_agreement', $title, 'de', $suid, 1, 0, 0, 0);    
