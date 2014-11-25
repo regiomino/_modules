@@ -19,11 +19,11 @@ jQuery(document).ready(function ($) {
         
         init : function() {
             var _self = this;
-          
-            if(!_self.cartTooHigh()) {
-                _self.addAffix();
-            };
-            _self.setEventHandlers();
+         
+         // if(!_self.cartTooHigh()) {
+         //     _self.addAffix();
+         // };
+         _self.setEventHandlers();
         },
         
         setEventHandlers : function() {
@@ -154,7 +154,8 @@ jQuery(document).ready(function ($) {
                 type: 'POST',
                 data: data,
                 success: function(data) {
-                    _self.$cart.html(data);
+                    console.info(data);
+                    _self.$cartContainer.html(data);
                   _self.cartTooHigh() ;
                 }
             });
@@ -319,4 +320,13 @@ jQuery(document).ready(function ($) {
  function doNothing() {
     
  }
+
+var $sidebar = $('#flexfix-sidebar');
+var $cartToggle = $('#cart-toggle');
+
+$cartToggle.on('click.cartToggle', function() {
+    $(this).toggleClass('active');
+    $sidebar.toggleClass('active');
+});
+                
 });
