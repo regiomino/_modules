@@ -12,7 +12,7 @@ function rm_user_orders() {
 
 function rm_user_dashboard() {
     global $user;
-    $profiles = rm_api_get_nodes_by_properties(array('customer_profile'), 1, -1, -1, -1, -1, $user->uid);
+    $profiles = rm_api_get_nodes_by_properties(array('customer_profile', 'trader_profile'), 1, -1, -1, -1, -1, $user->uid);
     $profile = array();
     $profilecompleteness = 0;
     if(!empty($profiles)) {
@@ -354,7 +354,7 @@ function rm_user_myaccount($form, &$form_state, $node_type) {
 function rm_user_editprofile($form, &$form_state, $account) {
 
     global $user;
-    $profilenodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile'), -1, -1, -1, -1, -1, $user->uid);
+    $profilenodes = rm_api_get_nodes_by_properties(array('seller_profile', 'customer_profile', 'trader_profile'), -1, -1, -1, -1, -1, $user->uid);
     $profilekeys = array_keys($profilenodes);
 	$profileobject = $profilenodes[$profilekeys[0]];
     

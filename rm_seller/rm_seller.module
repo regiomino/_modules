@@ -340,3 +340,92 @@ function rm_seller_theme() {
 		),
 	);
 }
+
+function rm_seller_create_shipping_agreement() {
+
+    $query = new EntityFieldQuery();
+    $result = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', array('seller_profile'))
+        ->propertyCondition('status', 1)
+        ->execute();
+        
+            
+    $sellerprofiles = array();
+    if(!empty($result['node'])) {
+        $sellerprofiles = entity_load('node', array_keys($result['node']));
+
+        $selleruids = array();
+        foreach($sellerprofiles as $sellerprofile) {
+            $selleruids[$sellerprofile->uid] = $sellerprofile;
+        }
+
+        $query = new EntityFieldQuery();
+        $saresult = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', array('shipping_agreement'))
+            ->propertyCondition('uid', array_keys($selleruids))
+            ->execute();
+            
+        $shippingagreements = array();
+        if(!empty($saresult['node'])) {
+            $shippingagreements = entity_load('node', array_keys($saresult['node']));
+            
+            $shippinguids = array();
+            foreach($shippingagreements as $shippingagreement) {
+                unset($selleruids[$shippingagreement->uid]);
+            }
+            
+            if(!empty($selleruids)) {
+                
+                foreach($selleruids as $suid => $profile) {
+
+                    $field_minimum_order_value[LANGUAGE_NONE][0]['value'] = '100';
+                    $field_shipping_zipcodes[LANGUAGE_NONE][0]['value'] = substr($profile->field_address[LANGUAGE_NONE][0]['postal_code'], 0, 3);
+                    $field_surcharge[LANGUAGE_NONE][0]['value'] = '0';
+                    $field_user_reference[LANGUAGE_NONE][0]['target_id'] = '0';
+                    
+                    $field_regular_times[LANGUAGE_NONE][0]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][0]['endhours'] = '1800';
+                    $field_regular_times[LANGUAGE_NONE][0]['day'] = 1;
+                    $field_regular_times[LANGUAGE_NONE][0]['daydelta'] = 0;
+                    
+                    $field_regular_times[LANGUAGE_NONE][6]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][6]['endhours'] = '1800';
+                    $field_regular_times[LANGUAGE_NONE][6]['day'] = 2;
+                    $field_regular_times[LANGUAGE_NONE][6]['daydelta'] = 0;
+                    
+                    $field_regular_times[LANGUAGE_NONE][12]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][12]['endhours'] = '1800';
+                    $field_regular_times[LANGUAGE_NONE][12]['day'] = 3;
+                    $field_regular_times[LANGUAGE_NONE][12]['daydelta'] = 0;
+                    
+                    $field_regular_times[LANGUAGE_NONE][18]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][18]['endhours'] = '1800';
+                    $field_regular_times[LANGUAGE_NONE][18]['day'] = 4;
+                    $field_regular_times[LANGUAGE_NONE][18]['daydelta'] = 0;
+                    
+                    $field_regular_times[LANGUAGE_NONE][24]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][24]['endhours'] = '1800';
+                    $field_regular_times[LANGUAGE_NONE][24]['day'] = 5;
+                    $field_regular_times[LANGUAGE_NONE][24]['daydelta'] = 0;
+                    
+                    $field_regular_times[LANGUAGE_NONE][30]['starthours'] = '0800';
+                    $field_regular_times[LANGUAGE_NONE][30]['endhours'] = '1200';
+                    $field_regular_times[LANGUAGE_NONE][30]['day'] = 6;
+                    $field_regular_times[LANGUAGE_NONE][30]['daydelta'] = 0;
+
+                    $title = node_type_get_name('shipping_agreement');
+                    $new_node = rm_api_create_new_node('shipping_agreement', $title, 'de', $suid, 1, 0, 0, 0);    
+                    
+                    $new_node->field_minimum_order_value = $field_minimum_order_value;
+                    $new_node->field_shipping_zipcodes = $field_shipping_zipcodes;
+                    $new_node->field_surcharge = $field_surcharge;
+                    $new_node->field_user_reference = $field_user_reference;
+                    $new_node->field_regular_times = $field_regular_times;
+                    node_save($new_node);
+                }
+            }
+        }
+    }
+}

@@ -17,6 +17,9 @@ function rm_sales_salesperformance() {
         
         $data = array();
         
+        /**
+         * Determine amount of registrations per month
+         */
         $query = db_select('node', 'n');
         $query->join('field_data_field_gtc_accepted', 'a', 'n.nid = a.entity_id');
         $query->condition('a.entity_type', 'node');
@@ -28,9 +31,6 @@ function rm_sales_salesperformance() {
         $result = $query->execute();
         
         
-        /**
-         * Determine amount of registrations per month
-         */
         $registrations = array();
         $allregisterednids = array();
         $record = array();
@@ -42,7 +42,9 @@ function rm_sales_salesperformance() {
         }
         
         
-        
+        /**
+         * Determine amount of invites per month
+         */
         $query = db_select('node', 'n');
         $query->join('field_data_field_register_hash', 'r', 'n.nid = r.entity_id');
         $query->condition('r.entity_type', 'node');
@@ -52,9 +54,6 @@ function rm_sales_salesperformance() {
         $query->fields('n', array('nid'));
 
         $result = $query->execute();
-        /**
-         * Determine amount of invites per month
-         */
          
         $invites = array();
         $record = array();
@@ -64,6 +63,19 @@ function rm_sales_salesperformance() {
             }
         }
         
+        
+        
+        /**
+         * Determine amount of offers per month
+         */
+        $query = new EntityFieldQuery;
+        $offercount = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'offer_variation')
+            ->propertyCondition('status', 1)
+            ->count()
+            ->execute();
+        $data['flotOffers'] = $offercount;
 
         //Transfer to x/y-axis value pairs
         $data['flotRegistrations'] = 0;
@@ -94,6 +106,7 @@ function rm_sales_salesperformance() {
         'vars' => array(
             'registrations' => $data['flotRegistrations'],
             'invites' => $data['flotInvites'],
+            'offers' => $data['flotOffers'],
         ),
     ));
 }
@@ -542,7 +555,7 @@ function rm_sales_profilecare_form() {
 	$query = new EntityFieldQuery();
 	$query
 		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('seller_profile', 'customer_profile'));
+		->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'));
     
     //Filter injections
     if(!empty($queryparams['sales_step'])) {
@@ -629,7 +642,7 @@ function rm_sales_profilecare_form() {
         $query2 = new EntityFieldQuery();
         $tmp = $query2
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
             ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
             ->execute();
         if(isset($tmp['node'])) {
@@ -644,7 +657,7 @@ function rm_sales_profilecare_form() {
         $query3 = new EntityFieldQuery();
         $tmp = $query3
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
             ->propertyCondition('nid', $resultingnids)
             ->tableSort($header)
             ->pager(100)
@@ -793,7 +806,7 @@ function rm_sales_profilecare_form() {
                 $profileowner = user_load($profileobject->uid);
                 $sugcount = $sugqry
                     ->entityCondition('entity_type', 'node')
-                    ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
+                    ->entityCondition('bundle', array('customer_profile', 'seller_profile', 'trader_profile'))
                     ->fieldCondition('field_suggester', 'value', $profileowner->mail)
                     ->count()
                     ->execute();
@@ -891,8 +904,9 @@ function rm_sales_profilecare_form() {
             if($profileobject->uid > 0) $shadowpossiblestring = '<br>' . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info'))));
             
             switch($profileobject->type) {
-				case "customer_profile": $nodetypename = 'seller_profile'; break;
-				case "seller_profile": $nodetypename = 'customer_profile'; break;
+				case "customer_profile": $nodetypename = 'seller_profile'; $nodetypename2 = 'trader_profile'; break;
+				case "seller_profile": $nodetypename = 'customer_profile'; $nodetypename2 = 'trader_profile'; break;
+				case "trader_profile": $nodetypename = 'customer_profile'; $nodetypename2 = 'seller_profile'; break;
 			}
             
             $suggestedcount = 0;
@@ -925,7 +939,7 @@ function rm_sales_profilecare_form() {
             }
             
             if($profileobject->sticky) {
-                $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
+                $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename2))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename2, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
             }
             else {
                 $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
@@ -1315,7 +1329,7 @@ function rm_sales_export_profiles() {
         $query = new EntityFieldQuery();
         $query
             ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', array('seller_profile', 'customer_profile'));
+            ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'));
         
         //Filter injections
         if(!empty($queryparams['sales_step'])) {
@@ -1398,7 +1412,7 @@ function rm_sales_export_profiles() {
             $query2 = new EntityFieldQuery();
             $tmp = $query2
                 ->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
                 ->fieldCondition('field_salesguy', 'target_id', array($allbutme))
                 ->execute();
             if(isset($tmp['node'])) {
@@ -1413,7 +1427,7 @@ function rm_sales_export_profiles() {
             $query3 = new EntityFieldQuery();
             $tmp = $query3
                 ->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', array('seller_profile', 'customer_profile'))
+                ->entityCondition('bundle', array('seller_profile', 'customer_profile', 'trader_profile'))
                 ->propertyCondition('nid', $resultingnids)
                 ->execute();
         }
@@ -1467,7 +1481,7 @@ function rm_sales_export_profiles() {
             $profileowner = user_load($profileobject->uid);
             $sugcount = $sugqry
                 ->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', array('customer_profile', 'seller_profile'))
+                ->entityCondition('bundle', array('customer_profile', 'seller_profile', 'trader_profile'))
                 ->fieldCondition('field_suggester', 'value', $profileowner->mail)
                 ->count()
                 ->execute();
@@ -1605,7 +1619,7 @@ function rm_sales_profilequeue_form() {
 	$query = new EntityFieldQuery();
 	$tmp = $query
 		->entityCondition('entity_type', 'node')
-		->entityCondition('bundle', array('customer_profile', 'seller_profile'))
+		->entityCondition('bundle', array('customer_profile', 'seller_profile', 'trader_profile'))
 		->propertyCondition('status', 0)
 		->propertyCondition('sticky', 0)
 		->tableSort($header)
@@ -1643,8 +1657,9 @@ function rm_sales_profilequeue_form() {
 			}
 			
 			switch($profileobject->type) {
-				case "customer_profile": $nodetypename = 'seller_profile'; break;
-				case "seller_profile": $nodetypename = 'customer_profile'; break;
+				case "customer_profile": $nodetypename = 'seller_profile'; $nodetypename2 = 'trader_profile'; break;
+				case "seller_profile": $nodetypename = 'customer_profile';  $nodetypename2 = 'trader_profile'; break;
+				case "trader_profile": $nodetypename = 'customer_profile';  $nodetypename2 = 'seller_profile'; break;
 			}
 			
 			$options[$nid] = array(
@@ -1656,7 +1671,7 @@ function rm_sales_profilequeue_form() {
 				'field_address_zip' => $zip,
 				'field_address_street' => $street,
 				'field_publicphone' => $publicphone, */
-				'actions' => l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
+				'actions' => l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . ' ' . l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger')))) . ' ' . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . ' ' . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename2))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename2, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))),
 			);
 		}
 		
@@ -1756,6 +1771,7 @@ function rm_sales_conflate_profiles_form($form, &$form_state, $default) {
 		'#options' => array(
 			'seller_profile' => t('Suggest vendor'),
 			'customer_profile' => t('Suggest gastronomy'),
+			'trader_profile' => t('Suggest trader'),
 		),
         '#default_value' => $nodeobjects[0]->type,
 		'#required' => TRUE,

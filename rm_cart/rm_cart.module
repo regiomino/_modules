@@ -1096,13 +1096,23 @@ function rm_cart_block_view($delta = '') {
     switch($delta){
         
         case 'rm_cart_block':
-
+            $cart_items = rm_cart_get_cart($suid);
+            if(!empty($cart_items)) {
+                $cart_contents = array();
+                foreach($cart_items as $cart_item) {
+                    $cart_contents[] = array(
+                        'itemid' => $cart_item->nid,
+                        'itemamount' => $cart_item->field_quantity[LANGUAGE_NONE][0]['value'],
+                    );
+                }
+                drupal_add_js(array('rm_cart' => array('cart_content' => $cart_contents)), 'setting');
+            }
 			$block['subject'] = t('Your shopping cart');
 			if(user_access('access content')) {
                 
 				$block['content'] = theme('rm_cart_theme_cart_block', array(
                                         'vars' => array(
-                                            'cart' => rm_cart_get_cart($suid),
+                                            'cart' => $cart_items,
                                             'suid' => $suid,
                                         ),
                                     ));
@@ -1289,7 +1299,7 @@ function rm_cart_generate_order_fax($order_number) {
     $userobject = user_load($order_item->uid);
     
     //Load customer profile
-    $customer_profile = rm_api_get_nodes_by_properties('customer_profile', 1, -1, -1, -1, -1, $order_item->uid);
+    $customer_profile = rm_api_get_nodes_by_properties(array('customer_profile', 'trader_profile'), 1, -1, -1, -1, -1, $order_item->uid);
     
     $html = theme('rm_cart_theme_order_fax', array(
                 'vars' => array(
