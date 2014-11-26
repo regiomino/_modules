@@ -5,8 +5,8 @@ function rm_sales_salesperformance() {
     drupal_add_js(drupal_get_path('module', 'rm_sales') . '/js/rm_sales_statistics.js');
     
     $time = time();
-    //Cache for 1 day = 86400 seconds
-    $cacheexpire = $time - 86400;
+    //Cache for 1 hour = 3600 seconds
+    $cacheexpire = $time - 1;
     //Get children of parent item (cache this)
     $cached = cache_get('salesStatisticsData');
     if($cached && $cached->created > $cacheexpire) {
@@ -18,7 +18,68 @@ function rm_sales_salesperformance() {
         $data = array();
         
         /**
-         * Determine amount of registrations per month
+        * Determine amount of purchases
+        */
+        $query = db_select('node', 'o');
+        $query->condition('o.type', 'order_item');
+        $query->join('node', 'p', 'o.uid = p.uid');
+        $query->condition('p.type', array('seller_profile', 'customer_profile', 'trader_profile'), 'IN');
+        $query->fields('o', array('nid'));
+        $query->fields('p', array('type', 'uid'));
+
+        $result = $query->execute();
+        
+        $record = array();
+        $data['purchaseCount'] = array();
+        $data['purchaseCount']['seller_profile']['count'] = 0;
+        $data['purchaseCount']['seller_profile']['users'] = array();
+        $data['purchaseCount']['customer_profile']['count'] = 0;
+        $data['purchaseCount']['customer_profile']['users'] = array();
+        $data['purchaseCount']['trader_profile']['count'] = 0;
+        $data['purchaseCount']['trader_profile']['users'] = array();
+        while($record = $result->fetchAssoc()) {
+
+            $data['purchaseCount'][$record['type']]['count'] += 1;
+
+            if(empty($data['purchasingCount'][$record['type']]['users'][$record['uid']])) {
+                $data['purchasingCount'][$record['type']]['users'][$record['uid']] = 1;
+            }
+            else {
+                $data['purchasingCount'][$record['type']]['users'][$record['uid']] += 1;
+            }
+        }
+        
+        /**
+         * Count profiles
+         */
+        $data['profileCounts'] = array();
+        $query = new EntityFieldQuery();
+        $data['profileCounts']['seller_profile'] = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'seller_profile')
+            ->count()
+            ->execute();
+        if(empty($data['profileCounts']['seller_profile'])) $data['profileCounts']['seller_profile'] = 0;       
+        
+        $query = new EntityFieldQuery();
+        $data['profileCounts']['customer_profile'] = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'customer_profile')
+            ->count()
+            ->execute();
+        if(empty($data['profileCounts']['customer_profile'])) $data['profileCounts']['customer_profile'] = 0;  
+        
+        $query = new EntityFieldQuery();
+        $data['profileCounts']['trader_profile'] = $query
+            ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'trader_profile')
+            ->count()
+            ->execute();
+        if(empty($data['profileCounts']['trader_profile'])) $data['profileCounts']['trader_profile'] = 0;  
+            
+        
+        /**
+         * Determine amount of gtc acceptances per month
          */
         $query = db_select('node', 'n');
         $query->join('field_data_field_gtc_accepted', 'a', 'n.nid = a.entity_id');
@@ -26,7 +87,7 @@ function rm_sales_salesperformance() {
         $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
         $query->groupBy('n.nid');
         $query->fields('a', array('field_gtc_accepted_value'));
-        $query->fields('n', array('nid'));
+        $query->fields('n', array('nid', 'type'));
 
         $result = $query->execute();
         
@@ -36,7 +97,7 @@ function rm_sales_salesperformance() {
         $record = array();
         while($record = $result->fetchAssoc()) {
             if($record['field_gtc_accepted_value'] == 1) {
-                $registrations[strtotime(date('Y-m'))][] = TRUE;
+                $registrations[strtotime(date('Y-m'))][] = $record['type'];
                 $allregisterednids[] = $record['nid'];
             }
         }
@@ -51,7 +112,7 @@ function rm_sales_salesperformance() {
         $query->condition('n.type', array('customer_profile', 'seller_profile', 'trader_profile'), 'IN');
         $query->groupBy('n.nid');
         $query->fields('r', array('field_register_hash_value'));
-        $query->fields('n', array('nid'));
+        $query->fields('n', array('nid', 'type'));
 
         $result = $query->execute();
          
@@ -59,32 +120,47 @@ function rm_sales_salesperformance() {
         $record = array();
         while($record = $result->fetchAssoc()) {
             if(!in_array($record['nid'], $allregisterednids) && !empty($record['field_register_hash_value'])) {
-                $invites[strtotime(date('Y-m'))][] = TRUE;
+                $invites[strtotime(date('Y-m'))][] = $record['type'];
             }
         }
         
         
+        $query = db_select('field_data_field_offer_variation_reference', 'ov');
+        $query->condition('ov.bundle', 'offer_description');
+        $query->join('node', 'n', 'n.nid = ov.entity_id');
+        $query->condition('n.status', 1);
+        $query->fields('ov', array('field_offer_variation_reference_target_id'));
+        $query->fields('n', array('uid'));
+        $query->groupBy('ov.field_offer_variation_reference_target_id');
         
-        /**
-         * Determine amount of offers per month
-         */
-        $query = new EntityFieldQuery;
-        $offercount = $query
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'offer_variation')
-            ->propertyCondition('status', 1)
-            ->count()
-            ->execute();
-        $data['flotOffers'] = $offercount;
+        $result = $query->execute();
+        
+        $activeoffervariations = array();
+        while($record = $result->fetchAssoc()) {
+            $activeoffervariations['total'][] = $record['field_offer_variation_reference_target_id'];
+            $activeoffervariations['sellers'][$record['uid']] = TRUE;
+        }
+        $data['flotOffers'] = array();
+        $data['flotOffers']['total'] = count($activeoffervariations['total']);
+        $data['flotOffers']['sellers'] = count($activeoffervariations['sellers']);
+
 
         //Transfer to x/y-axis value pairs
         $data['flotRegistrations'] = 0;
         if(!empty($registrations)) {
             //Sort ascending by month
             ksort($registrations);
-            foreach($registrations as $yearmonth => $booleans) {
-                $amount = count($booleans);
-                $data['flotRegistrations'] = $amount;
+            foreach($registrations as $yearmonth => $types) {
+                $data['flotRegistrations'] = array();
+                $data['flotRegistrations']['total'] = count($types);
+                foreach($types as $type) {
+                    if(empty($data['flotRegistrations'][$type])) {
+                        $data['flotRegistrations'][$type] = 1;
+                    }
+                    else {
+                        $data['flotRegistrations'][$type] += 1;
+                    }
+                }
             }
         }
         //Transfer to x/y-axis value pairs
@@ -92,9 +168,17 @@ function rm_sales_salesperformance() {
         if(!empty($invites)) {
             //Sort ascending by month
             ksort($invites);
-            foreach($invites as $yearmonth => $booleans) {
-                $amount = count($booleans);
-                $data['flotInvites'] = $amount;
+            foreach($invites as $yearmonth => $types) {
+                $data['flotInvites'] = array();
+                $data['flotInvites']['total'] = count($types);
+                foreach($types as $type) {
+                    if(empty($data['flotInvites'][$type])) {
+                        $data['flotInvites'][$type] = 1;
+                    }
+                    else {
+                        $data['flotInvites'][$type] += 1;
+                    }
+                }
             }
         }
            
@@ -107,6 +191,9 @@ function rm_sales_salesperformance() {
             'registrations' => $data['flotRegistrations'],
             'invites' => $data['flotInvites'],
             'offers' => $data['flotOffers'],
+            'profilecounts' => $data['profileCounts'],
+            'purchasecounts' => $data['purchaseCount'],
+            'purchasingcounts' => $data['purchasingCount'],
         ),
     ));
 }
