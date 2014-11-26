@@ -6,7 +6,7 @@ function rm_sales_salesperformance() {
     
     $time = time();
     //Cache for 1 hour = 3600 seconds
-    $cacheexpire = $time - 1;
+    $cacheexpire = $time - 3600;
     //Get children of parent item (cache this)
     $cached = cache_get('salesStatisticsData');
     if($cached && $cached->created > $cacheexpire) {
