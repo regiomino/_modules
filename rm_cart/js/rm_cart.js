@@ -3,7 +3,8 @@ jQuery(document).ready(function ($) {
     var rmCart = function() {
         this.$cartContainer = $('.cart-container');
         this.$cart = $('#cart');
-        this.cartH = this.$cart.height();
+        /*this.cartH = this.$cart.height();*/
+        this.$add2CartArea = $('.add-to-cart-area');
         this.$add2CartButtons = $('.add2Cart');
         this.CART_ADD_STEP = 1;
         this.DELETE_ITEM_CLASS = '.delete-item';
@@ -30,13 +31,22 @@ jQuery(document).ready(function ($) {
             var _self = this;
           
             // Add2Cart
-            _self.$add2CartButtons.on('click.add2Cart', function(e) {
+
+            _self.$add2CartArea.on('click', 'button.add2Cart', function(e) {
                 e.preventDefault();
+                console.info("AA");
+                $(this).text("100 im Warenkorb");
+                $(this).parent().addClass('filled');
+            });
+
+           /* _self.$add2CartButtons.on('click.add2Cart', function(e) {
+                e.preventDefault();
+                console.info ("add 2 Cart ");
                 var $el = $(this),
                     data = _self.getItemData($el);
                     
                 _self.addToCart(data);
-            });
+            });*/
             
             //Remove
             _self.$cartContainer.on('click.removeFromCart', '' + _self.DELETE_ITEM_CLASS + '', function(e){
@@ -321,12 +331,30 @@ jQuery(document).ready(function ($) {
     
  }
 
-var $sidebar = $('#flexfix-sidebar');
-var $cartToggle = $('#cart-toggle');
+    var $sidebar = $('#flexfix-sidebar');
+    var $cartToggle = $('#cart-toggle');
 
-$cartToggle.on('click.cartToggle', function() {
-    $(this).toggleClass('active');
-    $sidebar.toggleClass('active');
-});
+    $cartToggle.on('click.cartToggle', function() {
+        $(this).toggleClass('active');
+        $sidebar.toggleClass('active');
+    });
+
+    /*$('.add-to-cart-area').click(function(){
+        
+        var $el = $(this);
+        
+        if (!$el.hasClass('btn-activated')) {
+           
+        $el.addClass('btn-activated');
+        $el.find('.fa-shopping-cart').addClass('hidden');
+        $el.find('.fa-check-circle').removeClass('hidden');
+        
+            timeout = setTimeout(function(){
+                $el.find('.fa-shopping-cart').toggleClass('hidden');
+                $el.find('.fa-check-circle').toggleClass('hidden');
+                $el.removeClass('btn-activated');
+            },860);
+        }
+    });*/
                 
 });
