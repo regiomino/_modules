@@ -1,5 +1,15 @@
 <?php
 
+function rm_cart_contains_trading_unit($suid, $tuid) {
+    $cart_items = rm_cart_get_cart($suid);
+    foreach($cart_items as $cart_item) {
+        if($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] == $tuid) {
+            return $cart_item->field_quantity[LANGUAGE_NONE][0]['value'];
+        }
+    }
+    return 0;
+}
+
 /**
 * Implements hook_menu().
 */
