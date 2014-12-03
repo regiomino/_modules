@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-
+ 
 var RC = RC || {};
 window.RC = RC;  
 
@@ -14,15 +14,53 @@ Affix
 */
 
 RC.sidebar =  {};
+RC.sidebar.navBarHeight = 65;
+RC.sidebar.breadCrumbsHeight = 47;
+RC.sidebar.chromeHeight = RC.sidebar.navBarHeight + RC.sidebar.breadCrumbsHeight;
 RC.sidebar.$sidebar = $('#flexfix-sidebar');
 RC.sidebar.$cartToggle = $('#cart-toggle');
 RC.sidebar.$itemDisplay = $('#item-amount');
+
+RC.sidebar.getWindowH = function(){
+    return $(window).height();
+}
+
+RC.sidebar.getViewportH = function(){
+     var _self = this;
+     var h = _self.getWindowH() - _self.chromeHeight ;
+     return h;
+}
+RC.sidebar.getCartHeight = function() {
+    return RC.products.$cartContainer.height();
+};
+RC.sidebar.cartTooHigh = function(){
+    var _self = this;
+    var sidebarArea = _self.getViewportH();
+    var cartH = _self.getCartHeight();
+
+    if(cartH > sidebarArea) {
+        return true;
+    } else {
+        return false;
+    }
+
+};
 
 RC.sidebar.init = function(){
     var _self = this;
     _self.updateItemAmount();
     _self.addListeners();
-    _self.addAffix();
+
+    if (!_self.cartTooHigh()) {
+        _self.addAffix();
+ 
+      /*  if (typeof(window.bs.affix) !== 'undefined') { 
+            console.info("yes:   affixed");
+        }
+        else {
+            console.info("no: no affix");
+        }*/
+    }
     
 };
 
@@ -38,6 +76,18 @@ RC.sidebar.addAffix = function(){
             }
         }
     });
+};
+
+RC.sidebar.removeAffix = function(){
+    var _self = this;
+
+ 
+    $(window).off('.affix');
+    RC.products.$cartContainer
+    .removeClass("affix affix-top affix-bottom")
+    .removeData("bs.affix");
+ 
+
 };
 
 RC.sidebar.addListeners = function(){
@@ -84,17 +134,14 @@ RC.products.LOADER_CLASS_NAME ='loader';
 RC.products.inputValCache = null;
 
 
-
-
-RC.products.buttonDisplay = function(data_attr, prop_name, new_val ){
+RC.products.updateButton = function(data_attr, new_val) {
+    var _self = this;
 
     $( "[data-" + data_attr +"]" ).each( function() {
-
-        var $el= $( this );
-        var $cartArea = $el.find(RC.products.addToCartArea_CLASS);
-        var $add2CartButton = $('button.add2Cart',$cartArea);
-    
-        $el.attr('data-'+prop_name, new_val);
+         
+        var $el= $( this ),
+            $cartArea = $el.find(RC.products.addToCartArea_CLASS),
+            $add2CartButton = $('button.add2Cart',$cartArea);
 
         if (new_val === 0) {
            $cartArea.removeClass(RC.products.buttonActive_CLASS_NAME);
@@ -111,31 +158,71 @@ RC.products.buttonDisplay = function(data_attr, prop_name, new_val ){
     });
 };
 
+RC.products.updateUi = function(id, data_attr, tu, new_val,tuVisible ){
+    var _self = this;
+    $( "[data-" + data_attr +"]" ).each( function() {
+
+        var $el= $( this );
+
+        if ($el.is('.product-item')) {
+            var $cartArea = $el.find(RC.products.addToCartArea_CLASS);
+                $add2CartButton = $('button.add2Cart',$cartArea),
+                hasMulti = ($el.find('.dropdown-menu').length > 0) ? true : false;
+            
+            if (hasMulti) {
+                var selectedTu = $el.find('.label-area > .price').data('tradingunit');
+                $el.find('.label-area > .price').attr('data-currentamount',new_val);
+                $el.find('.dropdown-menu li.hidden').find('a .price').attr('data-currentamount',new_val);
+            }
+
+            if (tuVisible) {
+                if (new_val === 0) {
+                   $cartArea.removeClass(RC.products.buttonActive_CLASS_NAME);
+                   $add2CartButton.html(RC.products.buttonDefaultHTML);
+                }
+
+                else {
+                    if (!$cartArea.hasClass(RC.products.buttonActive_CLASS_NAME)) {
+                        $cartArea.addClass(RC.products.buttonActive_CLASS_NAME);
+                    }
+
+                    $add2CartButton.html(''+ new_val + ' '+ RC.products.buttonActiveHTML);
+                }
+             }
+        }
+    });
+};
+
 RC.products.DataBinder = function( object_id ) {
-  var pubSub = $({});
-  var data_attr = "bind-" + object_id,
-      message = object_id + ":change";
+    var pubSub = $({}),
+        data_attr = "bind-" + object_id;
+
+    pubSub.on("visible:change", function( evt,new_val) {
+        
+        RC.products.updateButton(data_attr, new_val);
+    });
  
-  pubSub.on( message, function( evt, prop_name, new_val, ajaxUpdate ) {
-    
-    if (ajaxUpdate) { 
-        RC.ajax.updateCart(object_id, function(){
-            RC.products.buttonDisplay(data_attr, prop_name, new_val );
+    pubSub.on("amount:change", function( evt, tu, new_val, ajaxUpdate ) {
+   
+        if (ajaxUpdate) { 
+ 
+            RC.ajax.updateCart(object_id, tu, function(){
+                var tuVisible = (RC.products.offers[object_id].isVisible(tu) ) ? true : false;
+                RC.products.updateUi(object_id, data_attr, tu, new_val, tuVisible );
+            });
 
-        }  );
+        } else {
+            RC.products.updateUi(object_id, data_attr, tu, new_val );
+        }
+    });
 
-    } else {
-        RC.products.buttonDisplay(data_attr, prop_name, new_val );
-    }
-  });
-
-  return pubSub;
+    return pubSub;
 };
 
 RC.products.init = function(){
     var _self = this;
     _self.buildProducts();
-    _self.addListeners();
+    _self.addListeners();  
 };
 
 
@@ -143,57 +230,88 @@ RC.products.buildProducts = function(){
     var _self = this;
 
     _self.$items.each(function() {
-        var $el  = $(this),
+        var tu = {},
+            $el  = $(this),
+            id = $el.data('id'),
             offerid = $el.data('offerid'),
             variation = $el.data('variation'),
-            visibletradingunit = $el.find('.label-area > .price').data('tradingunit'),
-            ca = parseInt($el.data('currentamount'),10);
+            visibletradingunit = $el.find('.label-area > .price').data('tradingunit');
+           
+            if ($el.find('.dropdown-menu').length > 0) {
+               
+                $el.find('.dropdown-menu li a .price').each(function(){
+                    var $el = $(this),
+                        id = $el.data('tradingunit'),
+                        amount = $el.data('currentamount');
 
-            _self.offers[ variation  ] = new _self.Item(offerid, variation, visibletradingunit);
-            _self.offers[ variation  ].set('currentamount', ca, false);
+                    tu[id] = amount;
+                });
+            } 
+            else {
+                var amount = $el.find('.label-area > .price').data('currentamount');
+                tu[visibletradingunit] = amount;
+            }
+
+            _self.offers[ id  ] = new _self.Item(id, offerid, variation, visibletradingunit,tu);
+            _self.offers[ id  ].setVisible(visibletradingunit)
+ 
     });
+ 
 };
 
-RC.products.Item = function( offerid, variation, visibletradingunit ) {
+RC.products.Item = function(id, offerid, variation, visibletradingunit, tradingunits ) {
     
-    var binder = new RC.products.DataBinder(variation);
-    var step = 1;
+    var binder = new RC.products.DataBinder(id);
      
-    /*var $item = $('#'+ offerid);
-    var $addToCart = $item.find('button.add2Cart');
-    var $plusBtn =  $item.find('button.addItem');
-    var $minusBtn =  $item.find('button.removeItem');*/
-
     var item = {
         props : {
             offerid : offerid,
             variation : variation,
-            visibletradingunit : visibletradingunit
+            visibletradingunit : visibletradingunit,
+            tradingunits : tradingunits
+        },
+       
+        get : function(attr_name){
+            return this.props[attr_name];
         },
 
-        set : function(attr_name, val, ajaxUpdate) {
-            this.props[ attr_name ] = val;
-            if (attr_name === "currentamount") { 
-                binder.trigger(variation + ":change", [attr_name, val, ajaxUpdate, this ] ); 
+        setVisible : function(tu_id) {
+            this.props.visibletradingunit = tu_id;
+           var amount = this.getAmount(this.props.visibletradingunit);
+            binder.trigger("visible:change", [amount] ); 
+        },
+
+        isVisible : function(tu_id) {
+            if (this.getVisible()  === tu_id) {
+                return true;
+            }
+            else {
+                return false;
             }
         },
 
-        get : function(attr_name) {
-            return this.props[ attr_name ];
+        getVisible : function() {
+            return this.props.visibletradingunit;
         },
 
-        getAll : function() {
-            return this.props;
+        setAmount : function(tu_id, val, ajaxUpdate) {
+            this.props.tradingunits[ tu_id ] = val;
+            binder.trigger("amount:change", [tu_id, val, ajaxUpdate] ); 
         },
 
-        increase : function(){
-            var newVal = this.get('currentamount') + 1;
-            this.set('currentamount', newVal, true);
+        getAmount : function(tu_id) { 
+            return this.props.tradingunits[ tu_id ];
         },
 
-        decrease : function(){
-            var newVal = this.get('currentamount') - 1 ;
-            this.set('currentamount', newVal, true) ;
+
+        increase : function(tu_id) {
+            var newVal = this.getAmount(tu_id) + 1;
+            this.setAmount(tu_id,newVal,true);
+        },
+
+        decrease : function(tu_id){
+            var newVal = this.getAmount(tu_id) - 1;
+            this.setAmount(tu_id,newVal,true);
         }
     };
 
@@ -202,13 +320,10 @@ RC.products.Item = function( offerid, variation, visibletradingunit ) {
 
 RC.products.addListeners = function() {
     var _self = this;
-     
     _self.$addToCart.on('click.add2Cart',{obj: _self}, _self.handleAdd2Cart); 
     _self.$plusBtn.on('click.plus',{obj: _self}, _self.handlePlus); 
     _self.$minusBtn.on('click.minus',{obj: _self}, _self.handleMinus); 
     _self.$dropdownMenuLi.on('click.dropdown',{obj: _self}, _self.handleDropdownSwitch);
-
-    
 
     //Shopping Cart
 
@@ -229,8 +344,9 @@ RC.products.handleDeleteClick = function(e) {
     var _self = e.data.obj;
     var $el = $(this);
     var $cont = $el.parents('.cart-item');
-    var variation = $cont.data('variation');
-    _self.offers[variation].set('currentamount', 0,true);
+    var id = $cont.data('id');
+    var tu =  $cont.data('tradingunit');
+    _self.offers[id].setAmount(tu, 0,true);
     _self.addLoader($cont);
 }
 
@@ -244,13 +360,15 @@ RC.products.handleinputChange = function(e) {
     if ( (numeric) && (inputVal <= maxItems)  ) {
        
         var $cont  =  $el.parents('.cart-item');
-        var variation = $cont.data('variation');
+        var id = $cont.data('id');
+        var tu = $cont.data('tradingunit');
 
-        _self.offers[variation].set('currentamount', inputVal,true);
+        _self.offers[id].setAmount(tu, inputVal,true);
         _self.addLoader($cont);
-    } else {
+
+    } else { 
         
-        $el.val(_self.inputValCache) ;
+        $el.val(_self.inputValCache);
     }
 }
 
@@ -267,25 +385,23 @@ RC.products.handleStepperClick = function(e) {
     var _self = e.data.obj;
     var $el = $(this);
     var $cont  =  $el.parents('.cart-item');
-    var variation = parseInt($cont.data('variation'),10);
+    var tu = parseInt($cont.data('tradingunit'),10);
+    var id = parseInt($cont.data('id'),10);
     var $qty = $el.closest('.stepper').find('input.stepper-qty');
     var qtyVal = parseInt($qty.val(),10);
     var items =  qtyVal + (1 * $el.data('operation'));
-    _self.offers[variation].set('currentamount', items,true);
+    _self.offers[id].setAmount(tu, items,true);
     _self.addLoader($cont);
 };
 
 RC.products.handleDropdownSwitch = function(e){
-    var _self = e.data.obj;
-    var $el = $(this);
-    var $anchor = $el.find('a');
-    var variation = $(this).closest('.product-item').data('variation');
-    var selectedTradingUnit = $anchor.find('.price').data('tradingunit');
-
-
-     _self.offers[variation].set('visibletradingunit', selectedTradingUnit,false);
-     //set amount
-
+    var _self = e.data.obj,
+        $el = $(this),
+        $anchor = $el.find('a'),
+        amount = parseInt($anchor.find('.price').attr('data-currentamount'),10),
+        selectedTu = parseInt($anchor.find('.price').attr('data-tradingunit'),10),
+        id = parseInt($el.parents('.product-item').attr('data-id'),10);
+    
     var newContent = $anchor.html();
         
     $el.closest( '.btn-group' )
@@ -294,41 +410,54 @@ RC.products.handleDropdownSwitch = function(e){
         .children( '.dropdown-toggle' ).dropdown( 'toggle' );
     $el.siblings().removeClass('hidden');
     $el.addClass('hidden');
+
+    _self.offers[id].setVisible(selectedTu);
     
     return false;
 };
 
 RC.products.handleAdd2Cart = function(e){
-    var _self = e.data.obj;
-    var $el = $(this);
-    var variation = $el.parents('.product-item').data('variation');
-    _self.offers[variation].set('currentamount', 1,true);
-};
-
+    var _self = e.data.obj,
+        $el = $(this),
+        id = $el.parents('.product-item').data('id'),
+        item = _self.offers[id],
+        visTu = item.getVisible();
+ 
+    item.setAmount(visTu, 1,true);
+ };
+  
 RC.products.handlePlus = function(e){
-    var _self = e.data.obj;
-    var $el = $(this);
-    var variation = $el.parents('.product-item').data('variation');
-     _self.offers[variation].increase();
+    var _self = e.data.obj,
+        $el = $(this),
+        id = $el.parents('.product-item').data('id'),
+        item = _self.offers[id],
+        visTu = item.getVisible();
+
+    _self.offers[id].increase(visTu);
 };
 
 RC.products.handleMinus = function(e) {
-    var _self = e.data.obj;
-    var $el = $(this);
-    var variation = $el.parents('.product-item').data('variation');
-    _self.offers[variation].decrease();
+    var _self = e.data.obj,
+        $el = $(this),
+        id = $el.parents('.product-item').data('id'),
+        item = _self.offers[id],
+        visTu = item.getVisible();
+
+    _self.offers[id].decrease(visTu);
 };
 
 RC.ajax = {};
 
-RC.ajax.updateCart = function(offerid, callback, uid) {
-    var _self  = this;
+RC.ajax.updateCart = function(offerid, tu, callback, uid) {
+    var _self  = this,
+       /* visibletradingunit = RC.products.offers[offerid].get('visibletradingunit'),*/
+        am = RC.products.offers[offerid].getAmount(tu);
 
     var item_data = {
         offerid : RC.products.offers[offerid].get('offerid'),
         variation : RC.products.offers[offerid].get('variation'),
-        tradingunit :RC.products.offers[offerid].get('visibletradingunit'),
-        amount : RC.products.offers[offerid].get('currentamount'),
+        tradingunit : tu,
+        amount : am,
         add : 0
     };
 
@@ -344,16 +473,16 @@ RC.ajax.updateCart = function(offerid, callback, uid) {
         type: 'POST',
         data: data
     }).done(function() {
+
         _self.injectCartHtml(callback);
         
     });
-
 };
 
 RC.ajax.injectCartHtml = function(cb){
     var _self = this,
         data = {};
-        
+       
     data['module'] = 'rm_cart';
     data['block'] = 'rm_cart_block';
     var callback_url = Drupal.settings.basePath + 'invokeblock';
@@ -365,8 +494,16 @@ RC.ajax.injectCartHtml = function(cb){
         success: function(data) {
             
             RC.products.$cartContainer.html(data);
+            if(RC.sidebar.cartTooHigh()) {
+                RC.sidebar.removeAffix();
+            } 
+            else {
+                RC.sidebar.addAffix();
+            }
+
             RC.sidebar.updateItemAmount();
             cb();
+
            
         }
     });
