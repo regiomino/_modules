@@ -46,8 +46,109 @@ RC.init = function () {
     var _self = this;
     _self.sidebar.init();
     _self.products.init();
+    _self.ta.init();
 }
 
+RC.ta = {};
+RC.ta.bloodhounds = {};
+RC.ta.$clear = $('#clearQuery');
+RC.ta.$searchSubmit = $('#searchSubmit');
+RC.ta.$ta_input;
+RC.ta.$productGrid = $('#product-grid-container').find('.product-grid');
+
+RC.ta.init = function(){
+    var _self = this;
+    _self.initBloodhounds();
+    _self.initTypeahead();
+    _self.addListeners();
+};
+
+RC.ta.addListeners = function(){
+    var _self = this;
+    
+    
+    _self.$ta_input.on('typeahead:selected',function(evt,data){
+         _self.filterStuff(data.value);
+    });
+     
+    _self.$ta_input.on('keyup.typeah',{obj: _self},_self.keyUp);
+    _self.$clear.on('click.clear',$.proxy(_self.clearInput,_self));
+    _self.$searchSubmit.on('click.submit',$.proxy(_self.submit,_self));
+};
+
+RC.ta.submit = function(){
+    var _self = this;
+    var string = _self.$ta_input.val().trim();
+    
+    if (string.length > 0) {
+         _self.filterStuff(string);
+    }
+    else {return;}
+};
+
+RC.ta.keyUp = function(e){
+    var _self = e.data.obj;
+    var $el = $(this);
+    
+    var string = $el.val().trim();
+    
+    if (string.length > 0) {
+        _self.$clear.show();
+            if(e.which == 13) {
+               _self.filterStuff(string);
+            }
+    } else {
+        _self.$clear.hide();
+        _self.filterStuff('');
+    }
+};
+
+RC.ta.clearInput = function(){
+    var _self = this;
+    _self.$ta_input.val('');
+    _self.filterStuff('');
+    _self.$clear.hide();
+};
+
+RC.ta.filterStuff = function(val) {
+    var _self = this;
+    var rex = new RegExp(val, 'i');
+    _self.$productGrid.find('.grid-item').hide();
+    _self.$productGrid.find('.grid-item').filter(function () {
+        return rex.test($(this).text());
+    }).show();
+
+};
+
+RC.ta.initBloodhounds = function(){
+    var _self = this;
+    
+    _self.bloodhounds.products = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        local: $.map(Drupal.settings.rm_shop.products, function(v) { return { value: v }; }),
+        limit  : 7
+    });
+    
+    _self.bloodhounds.products.initialize();
+  
+};
+
+RC.ta.initTypeahead = function(){
+    var _self = this;
+    
+    _self.$ta_input = $('#filterProducts').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 1
+        },
+        {
+            name: 'products',
+            displayKey: 'value',
+            source: _self.bloodhounds.products.ttAdapter()
+        }
+    );
+};
 
 RC.sidebar =  {};
 RC.sidebar.navBarHeight = 65;
