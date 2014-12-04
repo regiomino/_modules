@@ -1,7 +1,46 @@
 jQuery(document).ready(function ($) {
  
+
 var RC = RC || {};
 window.RC = RC;  
+RC.debounce = function(func, wait, immediate) {
+    var timeout;
+    return function() {
+            var context = this, args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(function() {
+                    timeout = null;
+                    if (!immediate) func.apply(context, args);
+            }, wait);
+            if (immediate && !timeout) func.apply(context, args);
+    };
+};
+
+RC.getViewport  = function () {
+    var e = window, a = 'inner';
+    if (!('innerWidth' in window )) {
+        a = 'client';
+        e = document.documentElement || document.body;
+    }
+    return { width : e[ a+'Width' ] , height : e[ a+'Height' ] };
+};
+
+RC.getViewportName = function () {
+    
+    var vp = RC.getViewport();
+    
+    if( vp.width <=991) {
+        return "mobile";
+    }
+    
+    else if( vp.width > 991 ) {
+        
+        return "desktop";
+    }
+    
+}
+
+RC.windowSize = RC.getViewportName();
 
 RC.init = function () {
     var _self = this;
@@ -9,9 +48,6 @@ RC.init = function () {
     _self.products.init();
 }
 
-/*
-Affix
-*/
 
 RC.sidebar =  {};
 RC.sidebar.navBarHeight = 65;
@@ -22,21 +58,24 @@ RC.sidebar.$cartToggle = $('#cart-toggle');
 RC.sidebar.$itemDisplay = $('#item-amount');
 
 RC.sidebar.getWindowH = function(){
-    return $(window).height();
-}
+    var vp = RC.getViewport();
+    return vp.height;
+};
 
-RC.sidebar.getViewportH = function(){
+RC.sidebar.getVisibleSidebarH = function(){
      var _self = this;
      var h = _self.getWindowH() - _self.chromeHeight ;
      return h;
-}
+};
+
 RC.sidebar.getCartHeight = function() {
     return RC.products.$cartContainer.height();
 };
+
 RC.sidebar.cartTooHigh = function(){
     var _self = this;
-    var sidebarArea = _self.getViewportH();
-    var cartH = _self.getCartHeight();
+    var sidebarArea = _self.getVisibleSidebarH();
+    var cartH = _self.getCartHeight() - 50;
 
     if(cartH > sidebarArea) {
         return true;
@@ -50,18 +89,7 @@ RC.sidebar.init = function(){
     var _self = this;
     _self.updateItemAmount();
     _self.addListeners();
-
-    if (!_self.cartTooHigh()) {
-        _self.addAffix();
- 
-      /*  if (typeof(window.bs.affix) !== 'undefined') { 
-            console.info("yes:   affixed");
-        }
-        else {
-            console.info("no: no affix");
-        }*/
-    }
-    
+    $(window).resize();
 };
 
 RC.sidebar.addAffix = function(){
@@ -81,17 +109,31 @@ RC.sidebar.addAffix = function(){
 RC.sidebar.removeAffix = function(){
     var _self = this;
 
- 
     $(window).off('.affix');
     RC.products.$cartContainer
     .removeClass("affix affix-top affix-bottom")
     .removeData("bs.affix");
- 
-
 };
 
 RC.sidebar.addListeners = function(){
     var _self = this;
+
+    $(window).on('resize.sidebar', RC.debounce(function(){
+        var size = RC.getViewportName();
+        if(size === "desktop") {
+            if (!_self.cartTooHigh()) {
+                _self.addAffix(); 
+            }
+
+            else {
+                _self.removeAffix();
+            }
+        } 
+        else if (size === "mobile") {
+            _self.removeAffix();
+        }
+
+    },300));
 
     _self.$cartToggle.on('click.cartToggle', function() {
         $(this).toggleClass('active');
@@ -419,7 +461,7 @@ RC.products.handleDropdownSwitch = function(e){
 RC.products.handleAdd2Cart = function(e){
     var _self = e.data.obj,
         $el = $(this),
-        id = $el.parents('.product-item').data('id'),
+        id = parseInt($el.parents('.product-item').attr('data-id'),10),
         item = _self.offers[id],
         visTu = item.getVisible();
  
@@ -494,12 +536,20 @@ RC.ajax.injectCartHtml = function(cb){
         success: function(data) {
             
             RC.products.$cartContainer.html(data);
-            if(RC.sidebar.cartTooHigh()) {
-                RC.sidebar.removeAffix();
-            } 
-            else {
-                RC.sidebar.addAffix();
-            }
+
+           var size = RC.getViewportName();
+           if(size === "desktop") {
+               if (!RC.sidebar.cartTooHigh()) {
+                   RC.sidebar.addAffix(); 
+               }
+
+               else {
+                   RC.sidebar.removeAffix();
+               }
+           } 
+           else if (size === "mobile") {
+               RC.sidebar.removeAffix();
+           }
 
             RC.sidebar.updateItemAmount();
             cb();
@@ -510,6 +560,88 @@ RC.ajax.injectCartHtml = function(cb){
 };
  
 RC.init();
+
+    $('#pickupModalToggle').on('click.pickupModal', function(e){
+         e.preventDefault();
+        $('#pickupModal').modal();
+    });
+ 
+ $('#pickupModal').on('shown.bs.modal', function() {
+     var pathToTheme = Drupal.settings.basePath + "sites/all/themes/" + Drupal.settings.ajaxPageState.theme;
+        var pickupIcon = pathToTheme + '/images/markers/pickup_icon.png';
+        var infoWindow = new google.maps.InfoWindow;
+        var latlng = [];
+   
+    var map = new google.maps.Map(document.getElementById("pickupMap"), {
+            maxZoom: 15,
+            mapTypeId: 'roadmap'
+        });
+    
+      
+        downloadUrl(Drupal.settings.basePath + 'rm-shop-spotxml/' + Drupal.settings.suid, function(data) {
+        var xml = data.responseXML;
+        var markers = xml.documentElement.getElementsByTagName("marker");
+        
+        for (var i = 0; i < markers.length; i++) {
+             
+            var address = markers[i].getAttribute("address");
+            var id = markers[i].getAttribute("nid");
+            
+            var point = new google.maps.LatLng(
+                parseFloat(markers[i].getAttribute("lat")),
+                parseFloat(markers[i].getAttribute("lng"))
+                );
+            
+            latlng.push(point)
+                
+            var html = "<b>" + address + "</b>";
+            
+            var marker = new google.maps.Marker({
+                map: map,
+                position: point,
+                icon: pickupIcon,
+                 
+            });
+            bindInfoWindow(marker, map, infoWindow, html);
+        }
+        
+        var latlngbounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < latlng.length; i++) {
+            latlngbounds.extend(latlng[i]);
+        }
+        map.setCenter(latlngbounds.getCenter());
+        map.fitBounds(latlngbounds);
+    }); 
+  
+});
+
+ function downloadUrl(url,callback) {
+    var request = window.ActiveXObject ?
+        new ActiveXObject('Microsoft.XMLHTTP') :
+        new XMLHttpRequest;
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            request.onreadystatechange = doNothing;
+            callback(request, request.status);
+        }
+    };
+
+    request.open('GET', url, true);
+    request.send(null);
+}
+
+function bindInfoWindow(marker, map, infoWindow, html) {
+    google.maps.event.addListener(marker, 'click', function() {
+        infoWindow.setContent(html);
+        infoWindow.open(map, marker);
+    });
+}
+
+
+function doNothing() {
+    
+ }
 
  
  
