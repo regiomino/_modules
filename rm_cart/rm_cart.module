@@ -1094,6 +1094,16 @@ function rm_cart_block_info() {
     return $blocks;
 }
 
+function rm_cart_contains_trading_unit($suid, $tuid) {
+    $cart_items = rm_cart_get_cart($suid);
+    foreach($cart_items as $cart_item) {
+        if($cart_item->field_trading_unit_reference[LANGUAGE_NONE][0]['target_id'] == $tuid) {
+            return $cart_item->field_quantity[LANGUAGE_NONE][0]['value'];
+        }
+    }
+    return 0;
+}
+
 /**
 * Implementation of hook_block_view().
 */
@@ -1107,16 +1117,6 @@ function rm_cart_block_view($delta = '') {
         
         case 'rm_cart_block':
             $cart_items = rm_cart_get_cart($suid);
-            if(!empty($cart_items)) {
-                $cart_contents = array();
-                foreach($cart_items as $cart_item) {
-                    $cart_contents[] = array(
-                        'itemid' => $cart_item->nid,
-                        'itemamount' => $cart_item->field_quantity[LANGUAGE_NONE][0]['value'],
-                    );
-                }
-                drupal_add_js(array('rm_cart' => array('cart_content' => $cart_contents)), 'setting');
-            }
 			$block['subject'] = t('Your shopping cart');
 			if(user_access('access content')) {
                 
