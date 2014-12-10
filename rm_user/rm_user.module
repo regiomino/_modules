@@ -499,9 +499,12 @@ function rm_user_shadow($cuid, $tuid) {
     $cuserobject = user_load($user->uid);
     $user = user_load($tuid);
     $login_array = array ('name' => $user->name);
-    drupal_set_message(t('You are now logged in as @username', array('@username' => format_username($user))));
+    //drupal_set_message(t('You are now logged in as @username', array('@username' => format_username($user))));
+    $url = 'manage/';
+    $url .= in_array('seller', $user->roles) ? 'seller/' : 'customer/';
+    $url .= $user->uid;
     user_login_finalize($login_array);
-    drupal_goto();
+    drupal_goto($url);
 }
 
 /**
