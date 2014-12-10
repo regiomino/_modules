@@ -385,6 +385,16 @@ function rm_user_menu() {
         'type' => MENU_LOCAL_TASK,
         'weight' => 3,
     );
+	$items['manage/customer/%user/delete'] = array(
+        'title' => 'Delete account',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('rm_user_deleteuser', 2),
+        'access callback' => 'rm_user_is_admin',
+        'file' => 'rm_user.inc',
+        'file path' => drupal_get_path('module', 'rm_user'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 2,
+    );
   
   $items['manage/myaccount'] = array(
     'title' => 'Transactions',

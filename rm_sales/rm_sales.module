@@ -809,6 +809,7 @@ function rm_sales_user_is_salesguy() {
 }
 
 function rm_sales_assignprofile_access($nid, $uid) {
+    if(rm_user_is_admin()) return TRUE;
 	$userobject = user_load($uid);
 	if(!in_array('salesguy', $userobject->roles)) return FALSE;
 	$nodeobject = node_load($nid);

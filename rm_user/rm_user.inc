@@ -1,5 +1,42 @@
 <?php
 
+function rm_user_deleteuser($form, &$form_state, $account) {
+
+	$form['rm_deleteuser']['uid'] = array(
+		'#type' => 'value',
+		'#value' => $account->uid,
+	);
+	
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Delete'),
+		'#prefix' => '<p>' . t('Do you really want to delete the user "@user" and all his data (incl. - if exists - profile, products, agreements, etc.)?', array('@user' => $account->name)) . '</p>',
+		'#suffix' => l(t('Cancel'), $_GET['destination']),
+	);
+	
+	return $form;
+}
+
+function rm_user_deleteuser_submit($form, &$form_state) {
+    $query = new EntityFieldQuery();
+    $result = $query
+        ->entityCondition('entity_type', 'node')
+        ->propertyCondition('uid', $form_state['values']['uid'])
+        ->execute();
+
+    $nodes = array();
+    if(!empty($result['node'])) {
+        foreach($result['node'] as $nid => $bla) {
+            node_delete($nid);
+            drupal_set_message(t('Deleted node @node', array('@node' => $nid)), 'status');
+        }
+    }
+    user_delete($form_state['values']['uid']);
+	drupal_set_message(t('Deleted user @user', array('@user' => $form_state['values']['uid'])), 'status');
+    global $user;
+	rm_user_activity(t('Deleted user @user', array('@user' => $userobject->name)), NULL, NULL, $user->uid);
+}
+
 function rm_user_orders() {
     global $user;
     $orders = rm_cart_get_orders_grouped_by_order_number($user->uid, array(), 0, 'customer');

@@ -985,7 +985,12 @@ function rm_sales_profilecare_form() {
 			if(empty($publishingpossible) && $profileobject->status == 0) $publishingpossiblestring = '<br>' . l(t('Publish'), 'manage/sales/' . $nid . '/publish', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
             
             $deletepossiblestring = '';
-            if($profileobject->status == 0) $deletepossiblestring = l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            if($profileobject->status == 0) {
+                $deletepossiblestring = l(t('Delete'), 'manage/sales/' . $nid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            }
+            else if($profileobject->status == 1 && rm_user_is_admin()) {
+                $deletepossiblestring = l(t('Delete'), 'manage/customer/' . $profileobject->uid . '/delete', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-danger'))));
+            }
             
             $shadowpossiblestring = '';
             if($profileobject->uid > 0) $shadowpossiblestring = '<br>' . l(t('Shadow log in'), 'user/' . $user->uid . '/shadow/' . $profileobject->uid, array('attributes' => array('class' => array('btn', 'btn-sm', 'btn-info'))));
@@ -1029,7 +1034,7 @@ function rm_sales_profilecare_form() {
                 $action_buttons = l(t('edit'), 'manage/sales/' . $nid . '/edit', array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-warning')))) . l(t('Add note'), 'manage/sales/addnote/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-primary')))) . $deletepossiblestring . l(($profileobject->prospect) ? t('Remove prospect') : t('Make prospect'), ($profileobject->prospect) ? 'manage/sales/removeprospect/' . $nid : 'manage/sales/makeprospect/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(($profileobject->suppressed) ? t('Unsuppress') : t('Suppress'), ($profileobject->suppressed) ? 'manage/sales/unsuppress/' . $nid : 'manage/sales/suppress/' . $nid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-info')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . l(t('Change to "@nodetype"', array('@nodetype' => node_type_get_name($nodetypename2))), 'manage/sales/changeprofiletype/' . $nid . '/' . $nodetypename2, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-default')))) . $salesguynid;
             }
             else {
-                $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success'))));
+                $action_buttons = l(t('Take over'), 'manage/sales/assignprofile/' . $nid . '/' . $user->uid, array('query' => drupal_get_destination(), 'attributes' => array('class' => array('btn', 'btn-sm', 'btn-success')))) . $deletepossiblestring;
             }
 			$profiletitle = ($profileobject->status) ? l($profileobject->title, 'node/' . $profileobject->nid) : $profileobject->title;
             
