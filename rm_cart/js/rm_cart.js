@@ -618,7 +618,7 @@ RC.ajax.updateCart = function(offerid, tu, callback, uid) {
         data: data
     }).done(function() {
 
-        _self.injectCartHtml(callback);
+         _self.injectCartHtml(callback); 
         
     });
 };
@@ -636,8 +636,8 @@ RC.ajax.injectCartHtml = function(cb){
         type: 'POST',
         data: data,
         success: function(data) {
-            
-            RC.products.$cartContainer.html(data);
+             
+            document.getElementById('cart-container').innerHTML = data;
 
            var size = RC.getViewportName();
            if(size === "desktop") {
@@ -655,8 +655,6 @@ RC.ajax.injectCartHtml = function(cb){
 
             RC.sidebar.updateItemAmount();
             cb();
-
-           
         }
     });
 };
