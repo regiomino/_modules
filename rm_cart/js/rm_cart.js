@@ -239,6 +239,7 @@ RC.sidebar.addListeners = function(){
     _self.$cartToggle.on('click.cartToggle', function() {
         $(this).toggleClass('active');
         _self.$sidebar.toggleClass('active');
+        $('body').toggleClass('modal-open');
     });
 }
 
