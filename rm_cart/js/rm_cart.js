@@ -511,15 +511,16 @@ RC.products.handleinputChange = function(e) {
         _self.addLoader($cont);
 
     } else { 
-        
         $el.val(_self.inputValCache);
     }
 }
 
 RC.products.handleinputFocus = function(e) {
+    e.preventDefault();
     var _self = e.data.obj;
     var $el = $(this);
     $el.mouseup(function(e) { return false; });
+    this.focus();
     $el.select();
     _self.inputValCache= $el.val();
 }
@@ -660,6 +661,12 @@ RC.ajax.injectCartHtml = function(cb){
 };
  
 RC.init();
+
+    $('#detailModal').on('shown.bs.modal', function() {
+        $('#seller-image-carousel').carousel({
+            interval: false
+        });
+    });
 
     $('#pickupModalToggle').on('click.pickupModal', function(e){
          e.preventDefault();
