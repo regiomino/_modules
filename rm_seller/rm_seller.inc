@@ -213,7 +213,7 @@ function rm_seller_dashboard() {
     $profiles = rm_api_get_nodes_by_properties(array('seller_profile'), 1, -1, -1, -1, -1, $user->uid);
     $profileskeys = array_keys($profiles);
     $profile = $profiles[$profileskeys[0]];
-    $sortedorders = rm_cart_get_orders_grouped_by_order_number($user->uid, array('processing', 'accepted', 'delivered'));
+    $sortedorders = rm_cart_get_orders_grouped_by_order_number($user->uid, array('processing', 'accepted'));
     //pass to tpl
     return theme('rm_seller_theme_dashboard', array(
         'vars' => array(
